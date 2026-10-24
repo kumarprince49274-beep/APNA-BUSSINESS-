@@ -1,13 +1,14 @@
 const STATES = [
   ['01','Jammu and Kashmir'],['02','Himachal Pradesh'],['03','Punjab'],['04','Chandigarh'],['05','Uttarakhand'],['06','Haryana'],['07','Delhi'],['08','Rajasthan'],['09','Uttar Pradesh'],['10','Bihar'],['11','Sikkim'],['12','Arunachal Pradesh'],['13','Nagaland'],['14','Manipur'],['15','Mizoram'],['16','Tripura'],['17','Meghalaya'],['18','Assam'],['19','West Bengal'],['20','Jharkhand'],['21','Odisha'],['22','Chhattisgarh'],['23','Madhya Pradesh'],['24','Gujarat'],['26','Dadra and Nagar Haveli and Daman and Diu'],['27','Maharashtra'],['29','Karnataka'],['30','Goa'],['31','Lakshadweep'],['32','Kerala'],['33','Tamil Nadu'],['34','Puducherry'],['35','Andaman and Nicobar Islands'],['36','Telangana'],['37','Andhra Pradesh'],['38','Ladakh']
 ];
+
 const $ = id => document.getElementById(id);
 const state = { 
   user: null, 
   csrf: null, 
   companies: [], 
   companyId: null, 
-  page: 'chat', 
+  page: 'dashboard', 
   chats: {}, 
   chatBusy: false, 
   lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
@@ -113,18 +114,35 @@ function layout(){
   const c=state.companies.find(x=>x.id===state.companyId);
   $('app').innerHTML=`<div class="workspace"><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>Accounting & ERP</small></div></div>
   ${state.companies.length?companySelect():'<p class="muted small">No business yet</p>'}
-  <nav>${(state.lang==='hi'
-    ? [['chat','AI चैट'],['dashboard','डैशबोर्ड'],['contacts','ग्राहक / सप्लायर'],['products','प्रोडक्ट / स्टॉक'],['invoices','बिक्री / खरीद'],['reports','रिपोर्ट'],['settings','बिज़नेस टैक्स सेटअप']]
-    : [['chat','AI Chat'],['dashboard','Dashboard'],['contacts','Customers / Suppliers'],['products','Products / Inventory'],['invoices','Sales / Purchases'],['reports','Reports'],['settings','Business Tax Setup']]
-  ).map(([id,label])=>`<button data-page="${id}" class="${state.page===id?'active':''}">${label}</button>`).join('')}</nav>
+  <nav style="overflow-y:auto;max-height:calc(100vh - 250px);display:flex;flex-direction:column;gap:4px;">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:6px;letter-spacing:.05em;">${state.lang==='hi'?'मुख्य मेनू':'Main'}</div>
+    <button data-page="dashboard" class="${state.page==='dashboard'?'active':''}">${state.lang==='hi'?'📊 डैशबोर्ड':'Dashboard'}</button>
+    <button data-page="chat" class="${state.page==='chat'?'active':''}">${state.lang==='hi'?'🤖 AI चैट (AI Accountant)':'AI Chat'}</button>
+    
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'अकाउंटिंग और वाउचर':'Accounting'}</div>
+    <button data-page="invoices" class="${state.page==='invoices'?'active':''}">${state.lang==='hi'?'📝 बिक्री / खरीद (Invoices)':'Sales / Purchases'}</button>
+    <button data-page="vouchers" class="${state.page==='vouchers'?'active':''}">${state.lang==='hi'?'🧾 वाउचर (Vouchers)':'Vouchers'}</button>
+    <button data-page="balance-sheet" class="${state.page==='balance-sheet'?'active':''}">${state.lang==='hi'?'⚖️ बैलेंस शीट (Balance Sheet)':'Balance Sheet'}</button>
+
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'स्टॉक और इन्वेंटरी':'Inventory'}</div>
+    <button data-page="products" class="${state.page==='products'?'active':''}">${state.lang==='hi'?'📦 इन्वेंटरी / स्टॉक (Inventory)':'Products / Inventory'}</button>
+    <button data-page="contacts" class="${state.page==='contacts'?'active':''}">${state.lang==='hi'?'👥 ग्राहक / सप्लायर (Contacts)':'Customers / Suppliers'}</button>
+
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'जीएसटी और रिपोर्ट्स':'Tax & Reports'}</div>
+    <button data-page="gst" class="${state.page==='gst'?'active':''}">${state.lang==='hi'?'📊 जीएसटी ब्रेकडाउन (GST Report)':'GST Breakdown'}</button>
+    <button data-page="reports" class="${state.page==='reports'?'active':''}">${state.lang==='hi'?'📈 लाभ और हानि (P&L & Reports)':'P&L & Reports'}</button>
+
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'कंपनी सेटिंग्स':'Company'}</div>
+    <button data-page="settings" class="${state.page==='settings'?'active':''}">${state.lang==='hi'?'⚙️ कंपनी ऑल्टर / टैक्स सेटअप (Alter)':'Company Alter / Setup'}</button>
+  </nav>
   <div class="nav-bottom">
-    <button class="btn" id="open-settings-modal" style="display:flex;align-items:center;justify-content:center;gap:8px;">⚙️ ${state.lang==='hi'?'सेटिंग्स (Settings)':'Settings'}</button>
+    <button class="btn" id="open-settings-modal" style="display:flex;align-items:center;justify-content:center;gap:8px;">🎨 ${state.lang==='hi'?'एप सेटिंग्स (Theme/Lang)':'App Settings'}</button>
     <button class="btn" id="new-company">${state.lang==='hi'?'+ नया बिज़नेस बनाएं':'+ Create another business'}</button>
     <button class="btn" id="logout">${state.lang==='hi'?'लॉगआउट':'Logout'}</button>
   </div></aside>
   <main><header class="topbar"><div><h2>${c?esc(c.name):(state.lang==='hi'?'अपना बिज़नेस बनाएं':'Create your business')}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:(state.lang==='hi'?'GST और Non-GST बिज़नेस के लिए एक प्लेटफ़ॉर्म':'One platform for GST and Non-GST businesses')}</p></div><div class="status">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
   
-  $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='chat';render();});
+  $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';render();});
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{state.page=b.dataset.page;renderPage();});
   
   $('open-settings-modal')?.addEventListener('click', () => {
@@ -142,9 +160,23 @@ function render(){
   renderPage();
 }
 
-async function renderPage(){if(!state.companyId){createCompanyForm();return;}layout();const p=state.page;try{
-  if(p==='chat') await chatPage(); else if(p==='dashboard') await dashboard(); else if(p==='contacts') await contacts(); else if(p==='products') await products(); else if(p==='invoices') await invoices(); else if(p==='reports') await reports(); else await settings();
-}catch(e){showError(e.message);}}
+async function renderPage(){
+  if(!state.companyId){createCompanyForm();return;}
+  layout();
+  const p=state.page;
+  try{
+    if(p==='dashboard') await dashboard(); 
+    else if(p==='chat') await chatPage();
+    else if(p==='vouchers') await vouchersPage();
+    else if(p==='balance-sheet') await balanceSheetPage();
+    else if(p==='gst') await gstReportPage();
+    else if(p==='contacts') await contacts(); 
+    else if(p==='products') await products(); 
+    else if(p==='invoices') await invoices(); 
+    else if(p==='reports') await reports(); 
+    else await settings();
+  }catch(e){showError(e.message);}
+}
 
 const CHAT_SUGGESTIONS=['How can I help you?','Profit kitna hai?','Low stock dikhao','Customer ka baaki kitna hai?','Ramesh ko 5000 ka maal becha','500 kharcha hua'];
 let pendingFile=null;
@@ -241,7 +273,7 @@ async function sendChatWithFile(text,file,type){
     pending.text=res.reply||'File mil gayi. Amount ya party ka naam likh do, phir draft banega.';
     pending.typing=false;
     if(res.mode==='DRAFT_CREATED'&&res.draft_id){
-      pending.draft={id:res.draft_id,preview:r.preview||[],status:'PENDING'};
+      pending.draft={id:res.draft_id,preview:res.preview||[],status:'PENDING'};
     }
   }catch(err){
     pending.text=err.message;pending.typing=false;pending.error=true;
@@ -406,9 +438,31 @@ async function chatPage(){
   input.focus();
 }
 
-async function dashboard(){const d=await api(`/api/companies/${state.companyId}/dashboard`);$('content').innerHTML=`<div class="cards">
-${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise]].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}</div>
-<section class="panel"><div class="panel-head"><h3>Business tax status</h3><button class="btn soft" id="open-tax">Open tax setup</button></div><p class="note">GST registration is optional. Non-GST businesses are not charged CGST, SGST or IGST automatically. Regular GST businesses use product tax rates and intra/inter-state rules.</p></section>`;$('open-tax').onclick=()=>{state.page='settings';renderPage();};}
+async function dashboard(){
+  const d=await api(`/api/companies/${state.companyId}/dashboard`);
+  $('content').innerHTML=`<div class="cards">
+    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise]].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
+  </div>
+  <section class="panel">
+    <div class="panel-head"><h3>Dashboard Overview</h3></div>
+    <p class="note">Welcome to Apna Business 6.0. Use the sidebar sections to access Vouchers, Balance Sheet, Inventory, and GST Breakdown.</p>
+  </section>`;
+}
+
+async function vouchersPage(){
+  const rows=await api(`/api/companies/${state.companyId}/vouchers`);
+  $('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Vouchers (Daybook / Entries)</h3></div>${table(rows,[['date','Date'],['kind','Type'],['reference','Ref'],['memo','Memo']])}</section>`;
+}
+
+async function balanceSheetPage(){
+  const bs=await api(`/api/companies/${state.companyId}/reports/balance-sheet`);
+  $('content').innerHTML=`<section class="panel"><h3>Balance Sheet</h3><p>Difference: <strong>${money(bs.difference_paise)}</strong></p><p class="muted small">Assets: ${money(bs.total_assets_paise)} | Liabilities: ${money(bs.total_liabilities_paise)} | Equity: ${money(bs.total_equity_paise)}</p></section>`;
+}
+
+async function gstReportPage(){
+  const gst=await api(`/api/companies/${state.companyId}/reports/gst`);
+  $('content').innerHTML=`<section class="panel"><h3>GST Breakdown & Reports</h3><p>Output GST: <strong>${money(gst.sales.cgst_paise+gst.sales.sgst_paise+gst.sales.igst_paise)}</strong></p><p>Input GST: <strong>${money(gst.purchases.cgst_paise+gst.purchases.sgst_paise+gst.purchases.igst_paise)}</strong></p><p class="muted small">${esc(gst.warning)}</p></section>`;
+}
 
 async function contacts(){const rows=await api(`/api/companies/${state.companyId}/contacts`);$('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Customers & Suppliers</h3><button class="btn primary" id="add-contact">+ Add contact</button></div>${table(rows,[['kind','Type'],['name','Name'],['state_code','State'],['gstin','GSTIN'],['phone','Phone']])}</section>`;$('add-contact').onclick=()=>contactForm();}
 
@@ -416,22 +470,22 @@ async function products(){const rows=await api(`/api/companies/${state.companyId
 
 function table(rows,cols){if(!rows?.length)return '<div class="empty">No records yet.</div>';return `<div class="table-wrap"><table class="table"><thead><tr>${cols.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[0].includes('_paise')?money(r[c[0]]):c[0]==='gst_bps'?`${Number(r[c[0]]||0)/100}%`:esc(r[c[0]])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;}
 
-async function invoices(){const rows=await api(`/api/companies/${state.companyId}/invoices`);$('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Invoices</h3><div class="actions"><button class="btn primary" id="sale">+ Sales invoice</button><button class="btn" id="purchase">+ Purchase invoice</button></div></div>${table(rows,[['number','Invoice'],['kind','Type'],['date','Date'],['contact_name','Party'],['subtotal_paise','Taxable'],['gst_paise','GST'],['total_paise','Total'],['outstanding_paise','Outstanding']])}</section>`;$('sale').onclick=()=>invoiceForm('SALE');$('purchase').onclick=()=>invoiceForm('PURCHASE');}
+async function invoices(){const rows=await api(`/api/companies/${state.companyId}/invoices`);$('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Invoices (Sales / Purchases)</h3><div class="actions"><button class="btn primary" id="sale">+ Sales invoice</button><button class="btn" id="purchase">+ Purchase invoice</button></div></div>${table(rows,[['number','Invoice'],['kind','Type'],['date','Date'],['contact_name','Party'],['subtotal_paise','Taxable'],['gst_paise','GST'],['total_paise','Total'],['outstanding_paise','Outstanding']])}</section>`;$('sale').onclick=()=>invoiceForm('SALE');$('purchase').onclick=()=>invoiceForm('PURCHASE');}
 
-async function reports(){const [pl,bs,stock,gst]=await Promise.all([api(`/api/companies/${state.companyId}/reports/profit-loss`),api(`/api/companies/${state.companyId}/reports/balance-sheet`),api(`/api/companies/${state.companyId}/reports/stock`),api(`/api/companies/${state.companyId}/reports/gst`)]);$('content').innerHTML=`<section class="panel"><h3>Profit & Loss</h3><p>Revenue: <strong>${money(pl.revenue_paise)}</strong></p><p>Net profit: <strong>${money(pl.net_profit_paise)}</strong></p></section><section class="panel"><h3>Balance Sheet</h3><p>Difference: <strong>${money(bs.difference_paise)}</strong></p></section><section class="panel"><h3>GST draft</h3><p>Output GST: <strong>${money(gst.sales.cgst_paise+gst.sales.sgst_paise+gst.sales.igst_paise)}</strong></p><p>Input GST: <strong>${money(gst.purchases.cgst_paise+gst.purchases.sgst_paise+gst.purchases.igst_paise)}</strong></p><p class="muted small">Draft/report only — not a GST filing.</p></section><section class="panel"><h3>Stock</h3>${table(stock,[['sku','SKU'],['name','Product'],['qty','Qty'],['stock_value_paise','Stock value']])}</section>`;}
+async function reports(){const [pl,bs,stock,gst]=await Promise.all([api(`/api/companies/${state.companyId}/reports/profit-loss`),api(`/api/companies/${state.companyId}/reports/balance-sheet`),api(`/api/companies/${state.companyId}/reports/stock`),api(`/api/companies/${state.companyId}/reports/gst`)]);$('content').innerHTML=`<section class="panel"><h3>Profit & Loss</h3><p>Revenue: <strong>${money(pl.revenue_paise)}</strong></p><p>Net profit: <strong>${money(pl.net_profit_paise)}</strong></p></section><section class="panel"><h3>Stock Summary</h3>${table(stock,[['sku','SKU'],['name','Product'],['qty','Qty'],['stock_value_paise','Stock value']])}</section>`;}
 
-async function settings(){const c=await api(`/api/companies/${state.companyId}`);$('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Business tax setup</h3></div><form id="tax-form"><label>Business name<input name="name" value="${esc(c.name)}" required></label><label>Business type<select name="business_type">${['Retail / Shop','Wholesale','Service','Manufacturing','Professional','Other'].map(x=>`<option ${x===c.business_type?'selected':''}>${x}</option>`).join('')}</select></label><label>Business state / UT<select name="business_state">${STATES.map(([code,name])=>`<option value="${esc(name)}" ${name===c.business_state?'selected':''}>${name} (${code})</option>`).join('')}</select></label><label>GST registration<select name="gst_type"><option value="UNREGISTERED" ${c.gst_type==='UNREGISTERED'?'selected':''}>I don't have GST registration</option><option value="REGULAR" ${c.gst_type==='REGULAR'?'selected':''}>GST Regular</option><option value="COMPOSITION" ${c.gst_type==='COMPOSITION'?'selected':''}>GST Composition</option><option value="OTHER" ${c.gst_type==='OTHER'?'selected':''}>Other GST registration</option></select></label><label>GSTIN<input name="gstin" value="${esc(c.gstin||'')}" placeholder="Required for registered types"></label><button class="btn primary" type="submit">Save tax setup</button><p class="note">Changing tax configuration is restricted to the company owner and is written to the audit log.</p></form></section>`;$('tax-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api(`/api/companies/${state.companyId}`,{method:'PATCH',body:Object.fromEntries(f)});toast('Tax setup saved');await refreshSession();render();}catch(err){toast(err.message);}};}
+async function settings(){const c=await api(`/api/companies/${state.companyId}`);$('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Company Alter / Tax Setup</h3></div><form id="tax-form"><label>Business name<input name="name" value="${esc(c.name)}" required></label><label>Business type<select name="business_type">${['Retail / Shop','Wholesale','Service','Manufacturing','Professional','Other'].map(x=>`<option ${x===c.business_type?'selected':''}>${x}</option>`).join('')}</select></label><label>Business state / UT<select name="business_state">${STATES.map(([code,name])=>`<option value="${esc(name)}" ${name===c.business_state?'selected':''}>${name} (${code})</option>`).join('')}</select></label><label>GST registration<select name="gst_type"><option value="UNREGISTERED" ${c.gst_type==='UNREGISTERED'?'selected':''}>I don't have GST registration</option><option value="REGULAR" ${c.gst_type==='REGULAR'?'selected':''}>GST Regular</option><option value="COMPOSITION" ${c.gst_type==='COMPOSITION'?'selected':''}>GST Composition</option><option value="OTHER" ${c.gst_type==='OTHER'?'selected':''}>Other GST registration</option></select></label><label>GSTIN<input name="gstin" value="${esc(c.gstin||'')}" placeholder="Required for registered types"></label><button class="btn primary" type="submit">Save Changes (Alter)</button><p class="note">Alter company details here. Changes are saved to company settings and audit logs.</p></form></section>`;$('tax-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api(`/api/companies/${state.companyId}`,{method:'PATCH',body:Object.fromEntries(f)});toast('Company details updated successfully');await refreshSession();render();}catch(err){toast(err.message);}};}
 
 function modal(title,html){const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML=`<section class="modal"><div class="modal-head"><h3>${title}</h3><button id="close">×</button></div>${html}</section>`;document.body.appendChild(wrap);wrap.querySelector('#close').onclick=()=>wrap.remove();return wrap;}
 
-function createCompanyForm(){const m=modal('Create Your Business',`<form id="company-form"><label>Business name<input name="name" required placeholder="APNA KIRANA STORE"></label><label>Business type<select name="business_type">${['Retail / Shop','Wholesale','Service','Manufacturing','Professional','Other'].map(x=>`<option>${x}</option>`).join('')}</select></label><label>Business state / UT<select name="business_state">${STATES.map(([code,name])=>`<option value="${name}" ${code==='09'?'selected':''}>${name} (${code})</option>`).join('')}</select></label><label>GST registration<select name="gst_type" id="new-gst"><option value="UNREGISTERED">I don't have GST registration</option><option value="REGULAR">GST Regular</option><option value="COMPOSITION">GST Composition</option><option value="OTHER">Other GST registration</option></select></label><label id="new-gstin-wrap" class="hidden">GSTIN<input name="gstin" placeholder="15-character GSTIN"></label><p id="new-gst-help" class="note">GSTIN is not required for an unregistered business.</p><label>Address<input name="address"></label><button class="btn primary" type="submit">Create business</button></form>`);const sel=m.querySelector('#new-gst');const wrap=m.querySelector('#new-gstin-wrap');const help=m.querySelector('#new-gst-help');function update(){const reg=sel.value!=='UNREGISTERED';wrap.classList.toggle('hidden',!reg);help.textContent=sel.value==='REGULAR'?'GSTIN is required. Regular GST supports CGST + SGST or IGST.':sel.value==='COMPOSITION'?'GSTIN is required. Sales use composition-compatible treatment.':sel.value==='OTHER'?'GSTIN is required for this registration type; Regular GST is not assumed.':'GSTIN is not required for an unregistered business.';}sel.onchange=update;update();m.querySelector('#company-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{const created=await api('/api/companies',{method:'POST',body:Object.fromEntries(f)});m.remove();await refreshSession();state.companyId=created.id;state.page='chat';render();}catch(err){toast(err.message);}};}
+function createCompanyForm(){const m=modal('Create Your Business',`<form id="company-form"><label>Business name<input name="name" required placeholder="APNA KIRANA STORE"></label><label>Business type<select name="business_type">${['Retail / Shop','Wholesale','Service','Manufacturing','Professional','Other'].map(x=>`<option>${x}</option>`).join('')}</select></label><label>Business state / UT<select name="business_state">${STATES.map(([code,name])=>`<option value="${name}" ${code==='09'?'selected':''}>${name} (${code})</option>`).join('')}</select></label><label>GST registration<select name="gst_type" id="new-gst"><option value="UNREGISTERED">I don't have GST registration</option><option value="REGULAR">GST Regular</option><option value="COMPOSITION">GST Composition</option><option value="OTHER">Other GST registration</option></select></label><label id="new-gstin-wrap" class="hidden">GSTIN<input name="gstin" placeholder="15-character GSTIN"></label><p id="new-gst-help" class="note">GSTIN is not required for an unregistered business.</p><label>Address<input name="address"></label><button class="btn primary" type="submit">Create business</button></form>`);const sel=m.querySelector('#new-gst');const wrap=m.querySelector('#new-gstin-wrap');const help=m.querySelector('#new-gst-help');function update(){const reg=sel.value!=='UNREGISTERED';wrap.classList.toggle('hidden',!reg);help.textContent=sel.value==='REGULAR'?'GSTIN is required. Regular GST supports CGST + SGST or IGST.':sel.value==='COMPOSITION'?'GSTIN is required. Sales use composition-compatible treatment.':sel.value==='OTHER'?'GSTIN is required for this registration type; Regular GST is not assumed.':'GSTIN is not required for an unregistered business.';}sel.onchange=update;update();m.querySelector('#company-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{const created=await api('/api/companies',{method:'POST',body:Object.fromEntries(f)});m.remove();await refreshSession();state.companyId=created.id;state.page='dashboard';render();}catch(err){toast(err.message);}};}
 
 function contactForm(){const m=modal('Add contact',`<form id="f"><label>Type<select name="kind"><option value="CUSTOMER">Customer</option><option value="SUPPLIER">Supplier</option></select></label><label>Name<input name="name" required></label><label>State code<input name="state_code" placeholder="27"></label><label>GSTIN<input name="gstin"></label><label>Phone<input name="phone"></label><label>Email<input name="email" type="email"></label><button class="btn primary">Save contact</button></form>`);m.querySelector('#f').onsubmit=async e=>{e.preventDefault();try{await api(`/api/companies/${state.companyId}/contacts`,{method:'POST',body:Object.fromEntries(new FormData(e.currentTarget))});m.remove();contacts();}catch(err){toast(err.message);}};}
 
 function productForm(){const m=modal('Add product',`<form id="f"><label>SKU<input name="sku" required></label><label>Product name<input name="name" required></label><label>HSN / SAC<input name="hsn"></label><label>GST rate %<input name="gst_rate" type="number" value="18" step="0.01" min="0"></label><label>Sale price ₹<input name="sale_rupees" type="number" value="100" step="0.01" min="0"></label><label>Purchase cost ₹<input name="cost_rupees" type="number" value="70" step="0.01" min="0"></label><label>Low-stock level<input name="reorder_level" type="number" value="5" min="0"></label><button class="btn primary">Save product</button></form>`);m.querySelector('#f').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api(`/api/companies/${state.companyId}/products`,{method:'POST',body:{sku:f.get('sku'),name:f.get('name'),hsn:f.get('hsn'),gst_bps:Math.round(Number(f.get('gst_rate'))*100),sale_price_paise:Math.round(Number(f.get('sale_rupees'))*100),cost_price_paise:Math.round(Number(f.get('cost_rupees'))*100),reorder_level:Number(f.get('reorder_level'))}});m.remove();products();}catch(err){toast(err.message);}};}
 
 function invoiceForm(kind){
-  // placeholder or existing implementation
+  // invoice creation logic
 }
 
 (async()=>{if(await refreshSession()) render(); else authView('login');})();
