@@ -171,6 +171,90 @@ export function createServer(
   );
   add('POST', '/api/auth/reset-password', 'public', ({ body }) => resetPassword(db, body));
 
+  // Google OAuth Login Routes
+  add('GET', '/api/auth/google', 'public', () => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const callbackUrl = process.env.GOOGLE_CALLBACK_URL || 'https://apna-bussiness-wor3.onrender.com/api/auth/google/callback';
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(callbackUrl)}&response_type=code&scope=openid%20email%20profile`;
+    return { __redirect: googleAuthUrl };
+  });
+
+  add('GET', '/api/auth/google/callback', 'public', async ({ query }) => {
+    const code = query.get('code');
+    if (!code) {
+      fail('Google authorization code missing');
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const callbackUrl = process.env.GOOGLE_CALLBACK_URL || 'https://apna-bussiness-wor3.onrender.com/api/auth/google/callback';
+
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: callbackUrl,
+        grant_type: 'authorization_code'
+      })
+    });
+
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) {
+      fail('Failed to exchange Google code for token');
+    }
+
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    const profile = await userRes.json();
+
+    if (!profile.email) {
+      fail('Google profile did not return an email');
+    }
+
+    const email = profile.email.toLowerCase();
+    const name = profile.name || email.split('@')[0];
+
+    let user = one(db, 'SELECT * FROM users WHERE email=?', email);
+    if (!user) {
+      const userId = uid();
+      run(
+        db,
+        'INSERT INTO users VALUES (?, ?, ?, ?, ?)',
+        userId,
+        name,
+        email,
+        'GOOGLE_OAUTH_USER',
+        now()
+      );
+      user = one(db, 'SELECT * FROM users WHERE id=?', userId);
+    }
+
+    const sessionToken = uid() + uid();
+    const csrfToken = uid();
+    const expiresAt = now() + 30 * 24 * 60 * 60;
+
+    run(
+      db,
+      'INSERT INTO sessions VALUES (?, ?, ?, ?)',
+      sessionToken,
+      user.id,
+      expiresAt,
+      csrfToken
+    );
+
+    const secure = process.env.NODE_ENV === 'production';
+    const setCookieHeader = cookie(sessionToken, secure);
+
+    return {
+      __redirect: '/',
+      __cookie: setCookieHeader
+    };
+  });
+
   add('GET', '/api/auth/me', 'auth', ({ session }) => ({
     user: session.user,
     csrf: session.csrf
@@ -514,12 +598,10 @@ export function createServer(
     }
   });
 
-  // Old keyword assistant (kept so nothing else breaks)
   add('POST', '/api/companies/:companyId/assistant', 'read', ({ params, body }) =>
     localAssistant(db, params.companyId, body.message)
   );
 
-  // NEW: the chat box in the app calls this. AI answer + confirm-first drafts.
   add('POST', '/api/companies/:companyId/chat', 'read', ({ params, body, session }) =>
     aiChat(db, params.companyId, session.user.id, body)
   );
@@ -649,7 +731,6 @@ export function createServer(
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
 
-    // blob: added to img-src so a selected photo preview shows in chat
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
@@ -755,6 +836,15 @@ export function createServer(
         }
 
         throw handlerError;
+      }
+
+      // Handle OAuth Redirects
+      if (result?.__redirect !== undefined) {
+        res.writeHead(302, {
+          'Location': result.__redirect,
+          'Set-Cookie': result.__cookie || ''
+        });
+        return res.end();
       }
 
       if (pathName === '/api/auth/login') {
