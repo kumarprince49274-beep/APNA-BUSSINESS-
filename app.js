@@ -15,6 +15,72 @@ const state = {
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 
+// Pure Bilingual Dictionary (No Mixed Text)
+const dict = {
+  hi: {
+    brandSub: 'अकाउंटिंग और ईआरपी',
+    mainMenu: 'मुख्य डैशबोर्ड',
+    dashboard: 'डैशबोर्ड',
+    aiChat: 'एआई अकाउंटेंट',
+    vouchersBilling: 'वाउचर और बिलिंग',
+    vouchersList: 'वाउचर सूची (Payment/Receipt)',
+    salesPurchases: 'बिक्री / खरीद (Invoices)',
+    accountsSheet: 'खाता और बैलेंस शीट',
+    balanceSheet: 'बैलेंस शीट',
+    profitLoss: 'लाभ और हानि (P&L)',
+    inventoryStock: 'इन्वेंटरी और स्टॉक',
+    productsInv: 'स्टॉक / इन्वेंटरी',
+    contactsList: 'ग्राहक / सप्लायर',
+    gstTax: 'जीएसटी और टैक्स',
+    gstBreakdown: 'जीएसटी ब्रेकडाउन',
+    companyMgmt: 'कंपनी मैनेजमेंट',
+    companyAlter: 'कंपनी ऑल्टर / एडिट',
+    appSettings: 'एप सेटिंग्स (भाषा/थीम)',
+    createCompanyBtn: '+ नई कंपनी बनाएं',
+    alterCompanyBtn: '⚙️ कंपनी ऑल्टर करें',
+    logout: 'लॉगआउट',
+    sales: 'कुल बिक्री (Sales)',
+    purchases: 'कुल खरीद (Purchases)',
+    profit: 'शुद्ध लाभ (Profit)',
+    cash: 'नकद (Cash)',
+    bank: 'बैंक (Bank)',
+    inventoryVal: 'स्टॉक मूल्य',
+    welcomeMsg: 'अपने बिजनेस का पूरा लेखा-जोखा और वित्तीय स्थिति यहाँ देखें।'
+  },
+  en: {
+    brandSub: 'Accounting & ERP',
+    mainMenu: 'Main Dashboard',
+    dashboard: 'Dashboard',
+    aiChat: 'AI Accountant',
+    vouchersBilling: 'Vouchers & Billing',
+    vouchersList: 'Vouchers List',
+    salesPurchases: 'Sales / Purchases',
+    accountsSheet: 'Accounts & Sheet',
+    balanceSheet: 'Balance Sheet',
+    profitLoss: 'Profit & Loss',
+    inventoryStock: 'Inventory & Stock',
+    productsInv: 'Products / Inventory',
+    contactsList: 'Customers / Suppliers',
+    gstTax: 'GST & Tax',
+    gstBreakdown: 'GST Breakdown',
+    companyMgmt: 'Company Management',
+    companyAlter: 'Company Alter / Edit',
+    appSettings: 'App Settings (Theme/Lang)',
+    createCompanyBtn: '+ Create Company',
+    alterCompanyBtn: '⚙️ Alter Company',
+    logout: 'Logout',
+    sales: 'Sales',
+    purchases: 'Purchases',
+    profit: 'Profit',
+    cash: 'Cash',
+    bank: 'Bank',
+    inventoryVal: 'Inventory',
+    welcomeMsg: 'View your complete business financial overview here.'
+  }
+};
+
+const t = (key) => dict[state.lang]?.[key] || dict['hi'][key] || key;
+
 const PULSE_ICON = (size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
 
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -82,7 +148,7 @@ function authView(mode='login'){
 function companySelect(){return `<select id="company-select">${state.companies.map(c=>`<option value="${esc(c.id)}" ${c.id===state.companyId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;}
 
 function openSettingsModal(){
-  const m = modal(state.lang==='hi' ? 'ऐप सेटिंग्स (App Settings)' : 'App Settings', `
+  const m = modal(state.lang==='hi' ? 'एप सेटिंग्स (App Settings)' : 'App Settings', `
     <div style="display:flex;flex-direction:column;gap:16px;margin-top:10px;">
       <label>${state.lang==='hi' ? 'भाषा चुनें (Language Selection)' : 'Select Language'}
         <select id="settings-lang-select" style="margin-top:6px;">
@@ -110,53 +176,60 @@ function openSettingsModal(){
     } catch {}
     document.body.classList.toggle('light', state.theme === 'light');
     m.remove();
-    toast(state.lang==='hi' ? 'सेटिंग्स सफलतापूर्वक सहेज ली गई हैं!' : 'Settings saved successfully!');
+    toast(state.lang==='hi' ? 'सेटिंग्स सहेज ली गई हैं!' : 'Settings saved successfully!');
     render();
   };
 }
 
 function layout(){
   const c=state.companies.find(x=>x.id===state.companyId);
-  $('app').innerHTML=`<div class="workspace"><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>Accounting & ERP</small></div></div>
+  $('app').innerHTML=`<div class="workspace"><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>${t('brandSub')}</small></div></div>
+  
+  <!-- TOP COMPANY CREATE & ALTER BUTTONS -->
+  <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+    <button class="btn primary full" id="top-create-company" style="font-size:13px;padding:8px;">${t('createCompanyBtn')}</button>
+    <button class="btn full" id="top-alter-company" style="font-size:13px;padding:8px;background:rgba(255,255,255,0.08);">${t('alterCompanyBtn')}</button>
+  </div>
+
   ${state.companies.length?companySelect():'<p class="muted small">No business yet</p>'}
-  <nav style="overflow-y:auto;max-height:calc(100vh - 250px);display:flex;flex-direction:column;gap:4px;">
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:6px;letter-spacing:.05em;">${state.lang==='hi'?'मुख्य डैशबोर्ड':'Main Dashboard'}</div>
-    <button data-page="dashboard" class="${state.page==='dashboard'?'active':''}">${state.lang==='hi'?'📊 मुख्य डैशबोर्ड (Dashboard)':'Dashboard'}</button>
-    <button data-page="chat" class="${state.page==='chat'?'active':''}">${state.lang==='hi'?'🤖 AI चैट (AI Accountant)':'AI Chat'}</button>
+
+  <nav style="overflow-y:auto;max-height:calc(100vh - 310px);display:flex;flex-direction:column;gap:4px;">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:6px;letter-spacing:.05em;">${t('mainMenu')}</div>
+    <button data-page="dashboard" class="${state.page==='dashboard'?'active':''}">${t('dashboard')}</button>
+    <button data-page="chat" class="${state.page==='chat'?'active':''}">${t('aiChat')}</button>
     
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'वाउचर और बिलिंग':'Vouchers & Billing'}</div>
-    <button data-page="vouchers" class="${state.page==='vouchers'?'active':''}">${state.lang==='hi'?'🧾 वाउचर (Vouchers List)':'Vouchers'}</button>
-    <button data-page="invoices" class="${state.page==='invoices'?'active':''}">${state.lang==='hi'?'📝 बिक्री / खरीद (Invoices)':'Sales / Purchases'}</button>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('vouchersBilling')}</div>
+    <button data-page="vouchers" class="${state.page==='vouchers'?'active':''}">${t('vouchersList')}</button>
+    <button data-page="invoices" class="${state.page==='invoices'?'active':''}">${t('salesPurchases')}</button>
 
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'खाता और बैलेंस शीट':'Accounts & Sheet'}</div>
-    <button data-page="balance-sheet" class="${state.page==='balance-sheet'?'active':''}">${state.lang==='hi'?'⚖️ बैलेंस शीट (Balance Sheet)':'Balance Sheet'}</button>
-    <button data-page="reports" class="${state.page==='reports'?'active':''}">${state.lang==='hi'?'📈 लाभ और हानि (P&L Statement)':'Profit & Loss'}</button>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('accountsSheet')}</div>
+    <button data-page="balance-sheet" class="${state.page==='balance-sheet'?'active':''}">${t('balanceSheet')}</button>
+    <button data-page="reports" class="${state.page==='reports'?'active':''}">${t('profitLoss')}</button>
 
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'इन्वेंटरी और स्टॉक':'Inventory & Stock'}</div>
-    <button data-page="products" class="${state.page==='products'?'active':''}">${state.lang==='hi'?'📦 स्टॉक / इन्वेंटरी (Inventory)':'Products / Inventory'}</button>
-    <button data-page="contacts" class="${state.page==='contacts'?'active':''}">${state.lang==='hi'?'👥 ग्राहक / सप्लायर (Contacts)':'Contacts'}</button>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('inventoryStock')}</div>
+    <button data-page="products" class="${state.page==='products'?'active':''}">${t('productsInv')}</button>
+    <button data-page="contacts" class="${state.page==='contacts'?'active':''}">${t('contactsList')}</button>
 
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'जीएसटी और टैक्स':'GST & Tax'}</div>
-    <button data-page="gst" class="${state.page==='gst'?'active':''}">${state.lang==='hi'?'📊 जीएसटी ब्रेकडाउन (GST Breakdown)':'GST Breakdown'}</button>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('gstTax')}</div>
+    <button data-page="gst" class="${state.page==='gst'?'active':''}">${t('gstBreakdown')}</button>
 
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${state.lang==='hi'?'कंपनी मैनेजमेंट':'Company'}</div>
-    <button data-page="settings" class="${state.page==='settings'?'active':''}">${state.lang==='hi'?'⚙️ कंपनी ऑल्टर / एडिट (Alter)':'Company Alter / Edit'}</button>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('companyMgmt')}</div>
+    <button data-page="settings" class="${state.page==='settings'?'active':''}">${t('companyAlter')}</button>
   </nav>
+
   <div class="nav-bottom">
-    <button class="btn" id="open-settings-modal" style="display:flex;align-items:center;justify-content:center;gap:8px;">🎨 ${state.lang==='hi'?'एप सेटिंग्स (Theme/Lang)':'App Settings'}</button>
-    <button class="btn" id="new-company">${state.lang==='hi'?'+ नया बिज़नेस बनाएं':'+ Create another business'}</button>
-    <button class="btn" id="logout">${state.lang==='hi'?'लॉगआउट':'Logout'}</button>
+    <button class="btn" id="open-settings-modal" style="display:flex;align-items:center;justify-content:center;gap:8px;">🎨 ${t('appSettings')}</button>
+    <button class="btn" id="logout">${t('logout')}</button>
   </div></aside>
-  <main><header class="topbar"><div><h2>${c?esc(c.name):(state.lang==='hi'?'अपना बिज़नेस बनाएं':'Create your business')}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:(state.lang==='hi'?'GST और Non-GST बिज़नेस के लिए एक प्लेटफ़ॉर्म':'One platform for GST and Non-GST businesses')}</p></div><div class="status">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
+  <main><header class="topbar"><div><h2>${c?esc(c.name):'Create your business'}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:'One platform for GST and Non-GST businesses'}</p></div><div class="status">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
   
   $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';render();});
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{state.page=b.dataset.page;renderPage();});
   
-  $('open-settings-modal')?.addEventListener('click', () => {
-    openSettingsModal();
-  });
+  $('top-create-company')?.addEventListener('click', createCompanyForm);
+  $('top-alter-company')?.addEventListener('click', () => { state.page = 'settings'; renderPage(); });
+  $('open-settings-modal')?.addEventListener('click', openSettingsModal);
 
-  $('new-company')?.addEventListener('click',createCompanyForm);
   $('logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST',body:{}});}finally{state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};authView('login');}};
 }
 
@@ -449,32 +522,49 @@ async function dashboard(){
   const d=await api(`/api/companies/${state.companyId}/dashboard`);
   $('content').innerHTML=`
     <div style="margin-bottom:20px;">
-      <h2>📊 मुख्य डैशबोर्ड (Main Dashboard)</h2>
-      <p class="muted">अपने बिजनेस का पूरा लेखा-जोखा और वित्तीय स्थिति यहाँ देखें।</p>
+      <h2>📊 ${t('dashboard')}</h2>
+      <p class="muted">${t('welcomeMsg')}</p>
     </div>
     <div class="cards">
-      ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise]].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
+      <div class="card" onclick="state.page='invoices';renderPage();" style="cursor:pointer;" title="Click to view sales">
+        <div class="k-label">${t('sales')}</div><div class="k-value">${money(d.sales_paise)}</div>
+      </div>
+      <div class="card" onclick="state.page='invoices';renderPage();" style="cursor:pointer;" title="Click to view purchases">
+        <div class="k-label">${t('purchases')}</div><div class="k-value">${money(d.purchases_paise)}</div>
+      </div>
+      <div class="card" onclick="state.page='reports';renderPage();" style="cursor:pointer;" title="Click to view P&L">
+        <div class="k-label">${t('profit')}</div><div class="k-value">${money(d.net_profit_paise)}</div>
+      </div>
+      <div class="card">
+        <div class="k-label">${t('cash')}</div><div class="k-value">${money(d.cash_paise)}</div>
+      </div>
+      <div class="card">
+        <div class="k-label">${t('bank')}</div><div class="k-value">${money(d.bank_paise)}</div>
+      </div>
+      <div class="card" onclick="state.page='products';renderPage();" style="cursor:pointer;" title="Click to view inventory">
+        <div class="k-label">${t('inventoryVal')}</div><div class="k-value">${money(d.stock_value_paise)}</div>
+      </div>
     </div>
     
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:20px;">
-      <section class="panel" style="margin-bottom:0;">
-        <div class="panel-head"><h3>🧾 वाउचर (Vouchers)</h3><button class="btn tiny" onclick="state.page='vouchers';renderPage();">View All</button></div>
-        <p class="muted small">सभी वित्तीय प्रविष्टियाँ और वाउचर (Payment, Receipt, Sales, Purchase) यहाँ रिकॉर्ड होते हैं।</p>
+      <section class="panel" style="margin-bottom:0;cursor:pointer;" onclick="state.page='vouchers';renderPage();">
+        <div class="panel-head"><h3>🧾 ${state.lang==='hi'?'वाउचर सूची':'Vouchers List'}</h3><button class="btn tiny">View All</button></div>
+        <p class="muted small">${state.lang==='hi'?'Payment, Receipt, Contra, Journal, Sales & Purchase entries.':'Payment, Receipt, Contra, Journal, Sales & Purchase entries.'}</p>
       </section>
 
-      <section class="panel" style="margin-bottom:0;">
-        <div class="panel-head"><h3>⚖️ बैलेंस शीट (Balance Sheet)</h3><button class="btn tiny" onclick="state.page='balance-sheet';renderPage();">View Sheet</button></div>
-        <p class="muted small">आपकी संपत्ति, देनदारियाँ (Liabilities) और कैपिटल का संपूर्ण संतुलन।</p>
+      <section class="panel" style="margin-bottom:0;cursor:pointer;" onclick="state.page='balance-sheet';renderPage();">
+        <div class="panel-head"><h3>⚖️ ${state.lang==='hi'?'बैलेंस शीट':'Balance Sheet'}</h3><button class="btn tiny">View Sheet</button></div>
+        <p class="muted small">${state.lang==='hi'?'संपत्ति, देनदारियाँ और कैपिटल का संतुलन।':'Assets, Liabilities and Capital balances.'}</p>
       </section>
 
-      <section class="panel" style="margin-bottom:0;">
-        <div class="panel-head"><h3>📦 इन्वेंटरी और स्टॉक (Inventory)</h3><button class="btn tiny" onclick="state.page='products';renderPage();">View Stock</button></div>
-        <p class="muted small">फिक्स्ड प्राइस और मात्रा के साथ उत्पादों का स्टॉक और लो-स्टॉक अलर्ट।</p>
+      <section class="panel" style="margin-bottom:0;cursor:pointer;" onclick="state.page='products';renderPage();">
+        <div class="panel-head"><h3>📦 ${state.lang==='hi'?'इन्वेंटरी और स्टॉक':'Inventory & Stock'}</h3><button class="btn tiny">View Stock</button></div>
+        <p class="muted small">${state.lang==='hi'?'फिक्स्ड प्राइस और स्टॉक मात्रा।':'Fixed price items, stock quantity and low stock tracking.'}</p>
       </section>
 
-      <section class="panel" style="margin-bottom:0;">
-        <div class="panel-head"><h3>📊 जीएसटी ब्रेकडाउन (GST Report)</h3><button class="btn tiny" onclick="state.page='gst';renderPage();">View GST</button></div>
-        <p class="muted small">किस वस्तु पर कितना सीजीएसटी, एसजीएसटी या आईजीएसटी लग रहा है उसका पूरा विवरण।</p>
+      <section class="panel" style="margin-bottom:0;cursor:pointer;" onclick="state.page='gst';renderPage();">
+        <div class="panel-head"><h3>📊 ${state.lang==='hi'?'जीएसटी ब्रेकडाउन':'GST Breakdown'}</h3><button class="btn tiny">View GST</button></div>
+        <p class="muted small">${state.lang==='hi'?'CGST, SGST और IGST टैक्स ब्रेकडाउन।':'CGST, SGST & IGST tax breakdown details.'}</p>
       </section>
     </div>`;
 }
@@ -484,8 +574,8 @@ async function vouchersPage(){
   $('content').innerHTML=`
     <section class="panel">
       <div class="panel-head">
-        <h3>🧾 वाउचर (Vouchers / Daybook)</h3>
-        <p class="small muted">गलत एंट्री या मिस्टेक सुधारने के लिए वाउचर को रिवर्स या ऑल्टर करें।</p>
+        <h3>🧾 ${state.lang==='hi'?'वाउचर (Payment, Receipt, Contra, Journal, Sales, Purchase)':'Vouchers (Payment, Receipt, Contra, Journal, Sales, Purchase)'}</h3>
+        <p class="small muted">${state.lang==='hi'?'यहाँ आपके सभी वाउचर और एंट्रीज दिखाई देंगी।':'Record or review all financial transactions here.'}</p>
       </div>
       ${table(rows,[['date','Date'],['kind','Type'],['reference','Ref'],['memo','Memo']])}
     </section>`;
