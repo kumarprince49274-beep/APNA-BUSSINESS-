@@ -18,8 +18,8 @@ function checkPassword(user, password) {
 }
 
 export function changePassword(db, userId, { current_password, new_password }, currentTokenHash) {
-  if (typeof new_password !== 'string' || new_password.length < 8 || new_password.length > 256) {
-    fail('New password must be 8–256 characters');
+  if (typeof new_password !== 'string' || new_password.length < 6 || new_password.length > 256) {
+    fail('New password must be 6–256 characters');
   }
 
   const user = one(db, 'SELECT * FROM users WHERE id=?', userId);
@@ -59,8 +59,8 @@ export function register(db, { name, email, password }) {
     fail('Invalid email');
   }
 
-  if (typeof password !== 'string' || password.length < 8 || password.length > 256) {
-    fail('Password must be 8-256 characters');
+  if (typeof password !== 'string' || password.length < 6 || password.length > 256) {
+    fail('Password must be 6-256 characters');
   }
 
   if (one(db, 'SELECT id FROM users WHERE email=?', email)) {
