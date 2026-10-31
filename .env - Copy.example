@@ -1,0 +1,24 @@
+# Copy to .env only if desired. The starter does not auto-load .env;
+# use Windows PowerShell environment variables, or edit config with care.
+# HOST=127.0.0.1
+# PORT=3000
+# DB_PATH=./data/apna-business.sqlite
+# NODE_ENV=development
+# TRUST_PROXY=false
+
+# Password recovery emails are OPTIONAL and require a verified sending domain.
+# RESEND_API_KEY=
+# RESET_EMAIL_FROM=APNA BUSINESS <no-reply@your-verified-domain.example>
+# APP_BASE_URL=https://your-secure-app.example
+
+# OPTIONAL TEXT AI: You must set these as SERVER environment variables.
+# Never store a real key in GitHub, screenshots, or frontend JavaScript.
+# OPENAI_API_KEY=
+# OPENAI_MODEL=gpt-4.1-mini
+# TEXT AI additionally requires per-user privacy opt-in from My Privacy.
+
+# OPTIONAL REAL Razorpay 30-day NON-RECURRING checkout - do not configure for demos.
+# RAZORPAY_KEY_ID=
+# RAZORPAY_KEY_SECRET=
+# STARTER_MONTHLY_PAISE=
+# BUSINESS_PRO_MONTHLY_PAISE=

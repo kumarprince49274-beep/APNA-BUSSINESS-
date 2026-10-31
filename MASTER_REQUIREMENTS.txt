@@ -1,0 +1,2177 @@
+# APNA BUSINESS 6.0 — ULTIMATE ALL-IN-ONE MASTER DEVELOPMENT PROMPT
+
+## AI ACCOUNTING + GST + INVENTORY + EXCEL + BUSINESS MANAGEMENT + SAAS SUBSCRIPTIONS + REVENUE SYSTEM
+
+### YOUR ROLE
+
+Act as an expert full-stack software engineer, Indian accounting specialist, AI systems architect, SaaS product developer, database engineer, financial mathematics specialist, cybersecurity engineer, and business software designer.
+
+Your mission is to build and continuously improve a professional AI-powered business accounting platform.
+
+**Application Name:** My Business AI Accountant
+
+**Brand Name:** Apna Business
+
+**Product Version:** 6.0
+
+**Primary Market:** India
+
+**Target Customers:** Small businesses, shopkeepers, wholesalers, retailers, service providers, accountants, CAs, and growing enterprises.
+
+**Existing Live App:**
+https://my-business-ai-accountant--princebankstory.replit.app
+
+**Original Replit Project:**
+https://replit.com/@princebankstory/My-Business-AI-Accountant
+
+## THE PRODUCT VISION
+
+Build an application that combines:
+
+1. Major professional accounting workflows comparable to Tally Prime.
+2. Easy billing and GST calculations.
+3. Inventory and stock management.
+4. Excel-like spreadsheets and financial formulas.
+5. AI Chat, Voice, Photo, Audio, Document, and Video understanding.
+6. AI assistance across every important screen.
+7. Company-specific knowledge and approved continuous improvement.
+8. Automated business reports.
+9. Subscription billing and SaaS revenue management.
+10. Strong financial security and error prevention.
+
+The application must be extremely easy for beginners while remaining powerful for professional accountants.
+
+**CORE PRINCIPLE:**
+
+Tally-like accounting power + ChatGPT-like assistance + WhatsApp-like simplicity + Excel-like calculations + SaaS business monetization.
+
+Do not copy the branding, proprietary designs, or source code of other products. Build an original application providing comparable business workflows.
+
+---
+
+# PART 1 — PRESERVE EXISTING APPLICATION
+
+Before developing anything:
+
+1. Inspect the existing source code when authorized access is available.
+2. Understand the frontend architecture.
+3. Understand backend APIs.
+4. Inspect the database schema.
+5. Identify existing authentication.
+6. Identify completed accounting features.
+7. Identify unfinished features.
+8. Identify bugs and calculation risks.
+9. Identify connected external services.
+10. Identify existing deployment configuration.
+
+Do not delete the existing application.
+
+Do not overwrite real business records.
+
+Do not unnecessarily rebuild working features.
+
+Before major changes, create a safe backup.
+
+If the original Replit source is unavailable, build a new application using this specification.
+
+Treat the published website only as a visual and functional reference. Do not claim that private backend code can be recovered from a public URL.
+
+---
+
+# PART 2 — ONE SIMPLE SMART INTERFACE
+
+The application must use one unified interface.
+
+Users must never be required to choose between AI Mode and Professional Accounting Mode.
+
+AI and traditional accounting should work together automatically.
+
+## MAIN NAVIGATION
+
+- Dashboard
+- AI Accountant
+- Create Bill
+- Sales
+- Purchases
+- Customers
+- Suppliers
+- Inventory
+- GST
+- Payments
+- Banking
+- Ledgers
+- Vouchers
+- Accounting Masters
+- Financial Reports
+- Smart Spreadsheet
+- Documents
+- AI Knowledge
+- Notifications
+- Companies
+- Subscription
+- Account Settings
+
+Keep frequently used functions visible.
+
+Keep advanced accounting features in clearly organized menus.
+
+Provide universal search and a global AI assistant.
+
+## USER EXPERIENCE
+
+Support:
+
+- Simple Forms
+- Smart Default Values
+- One-Click Quick Actions
+- Automatic Draft Saving
+- Keyboard Shortcuts
+- Fast Search
+- Recent Transactions
+- Guided Help
+- Hindi
+- English
+- Hinglish AI Chat
+- Mobile Responsive Design
+- Desktop Responsive Design
+- Dark Mode
+- Light Mode
+- Clear Error Messages
+- Easy Navigation
+
+Every important function must connect to working backend logic.
+
+Do not create decorative buttons that perform no real action.
+
+---
+
+# PART 3 — SMART DASHBOARD
+
+Build a customizable financial dashboard.
+
+Display:
+
+- Today's Sales
+- Monthly Sales
+- Total Revenue
+- Total Purchases
+- Gross Profit
+- Net Profit
+- Cash in Hand
+- Bank Balance
+- Customer Outstanding
+- Supplier Outstanding
+- Current Inventory
+- Inventory Value
+- GST Payable
+- Overdue Payments
+- Recent Transactions
+- Sales Growth
+- Expense Breakdown
+- Working Capital
+- Financial Ratios
+
+## VISUAL REPORTS
+
+Include:
+
+- Sales Trend Charts
+- Purchase Trend Charts
+- Profit Trend Charts
+- Cash Inflow and Outflow
+- Expense Categories
+- Revenue by Product
+- Revenue by Customer
+- Inventory Movement
+- Receivable Ageing
+- Payable Ageing
+
+## DASHBOARD CUSTOMIZATION
+
+Allow:
+
+- Add Widget
+- Remove Widget
+- Resize Widget
+- Configure Widget
+- Save Dashboard
+- Change Reporting Period
+- Switch Company
+- Drill Down into Reports
+
+All dashboard values must be calculated from verified accounting data.
+
+Never display fabricated numbers as real business balances.
+
+---
+
+# PART 4 — LOGIN AND ACCOUNT MANAGEMENT
+
+Implement secure user registration and authentication.
+
+Required features:
+
+- Email Registration
+- Email Verification
+- Password Login
+- Google Login when configured
+- Forgot Password
+- Password Reset
+- Logout
+- Profile Settings
+- Session Management
+- Optional Two-Factor Authentication
+
+After login, display:
+
+- User Name
+- Registered Email
+- Profile Picture
+- Active Company
+- Assigned Role
+- Subscription Plan
+- Account Settings
+
+Never display the user's original password.
+
+Use secure password hashing and protected authentication sessions.
+
+## STAFF ROLES
+
+- Business Owner
+- Accountant
+- Manager
+- Sales Employee
+- Inventory Employee
+- Data Entry Employee
+- Read-Only User
+
+Apply permissions on both frontend screens and backend APIs.
+
+---
+
+# PART 5 — MULTI-COMPANY ACCOUNTING
+
+Allow one user to manage multiple companies.
+
+## COMPANY FUNCTIONS
+
+- Create Company
+- Alter Company
+- Select Company
+- Change Company
+- Close Company
+- Company Profile
+- Business Address
+- Company Logo
+- Contact Details
+- Registered Email
+- PAN
+- GSTIN
+- Financial Year
+- Books Beginning Date
+- Business Type
+- Currency Settings
+- Accounting Policies
+- Inventory Settings
+- Backup
+- Restore
+
+Each company must have independent:
+
+- Accounts
+- Ledgers
+- Customers
+- Suppliers
+- Invoices
+- Stock
+- Banking
+- GST Reports
+- Business Documents
+- AI Knowledge
+- Financial Statements
+
+Never allow unauthorized access to another company's information.
+
+---
+
+# PART 6 — ACCOUNTING MASTERS
+
+Create all major Accounting Masters.
+
+## GROUPS
+
+- Capital Accounts
+- Current Assets
+- Current Liabilities
+- Fixed Assets
+- Loans
+- Investments
+- Cash in Hand
+- Bank Accounts
+- Sundry Debtors
+- Sundry Creditors
+- Sales Accounts
+- Purchase Accounts
+- Direct Income
+- Indirect Income
+- Direct Expenses
+- Indirect Expenses
+- Duties and Taxes
+- Provisions
+- Reserves and Surplus
+
+## LEDGERS
+
+Allow:
+
+- Create Ledger
+- Alter Ledger
+- Ledger List
+- Opening Balance
+- Ledger Groups
+- Customer Ledger
+- Supplier Ledger
+- Cash Ledger
+- Bank Ledger
+- Sales Ledger
+- Purchase Ledger
+- Expense Ledger
+- GST Ledger
+
+## ADDITIONAL MASTERS
+
+- Chart of Accounts
+- Currency
+- Cost Centers
+- Voucher Types
+- Budgets
+- Opening Balances
+
+## SMART LEDGER CREATION
+
+When the owner enters a transaction involving a new customer or supplier, suggest an appropriate ledger.
+
+Ask for confirmation before creation.
+
+Prevent duplicate ledger records.
+
+---
+
+# PART 7 — COMPLETE VOUCHER SYSTEM
+
+Build working accounting vouchers.
+
+- F4 — Contra
+- F5 — Payment
+- F6 — Receipt
+- F7 — Journal
+- F8 — Sales
+- F9 — Purchase
+- F10 — Other Vouchers
+- Debit Note
+- Credit Note
+- Sales Return
+- Purchase Return
+- Inventory Adjustment
+- Stock Transfer
+
+Each voucher must contain:
+
+- Voucher ID
+- Voucher Number
+- Date
+- Voucher Type
+- Company ID
+- Relevant Ledgers
+- Debit Amount
+- Credit Amount
+- Narration
+- Party Details
+- Invoice Reference
+- Supporting Documents
+- Created By
+- Audit History
+
+Support searching, filtering, printing, previewing, correction, and reversal.
+
+Never silently delete a finalized accounting transaction.
+
+---
+
+# PART 8 — DOUBLE-ENTRY ACCOUNTING ENGINE
+
+Build one reliable financial posting engine.
+
+## BASIC ACCOUNTING RULES
+
+Total Debits = Total Credits.
+
+Assets = Liabilities + Equity.
+
+Support:
+
+- Journal Entries
+- General Ledger
+- Trial Balance
+- Cash Book
+- Bank Book
+- Accounts Receivable
+- Accounts Payable
+- Opening Balances
+- Closing Entries
+- Financial Period Locking
+- Accounting Corrections
+- Entry Reversal
+- Audit History
+
+Use precise decimal arithmetic for all official money calculations.
+
+Use database transactions so related financial records are saved together.
+
+If any essential posting step fails, roll back the entire operation.
+
+Prevent duplicate posting using unique transaction identifiers and safe retry handling.
+
+AI must never independently determine final accounting balances through guessed arithmetic.
+
+All official accounting values must come from trusted calculation functions.
+
+---
+
+# PART 9 — EASY SALES BILLING
+
+Create professional invoices.
+
+## INVOICE FIELDS
+
+- Company Name
+- Company Address
+- Company GSTIN
+- Customer Name
+- Customer Address
+- Customer GSTIN where applicable
+- Invoice Number
+- Invoice Date
+- Place of Supply
+- Product Name
+- HSN / SAC
+- Quantity
+- Unit Price
+- Discount
+- Taxable Value
+- CGST
+- SGST
+- IGST
+- Applicable Cess
+- Total Invoice Amount
+- Payment Method
+- Amount Paid
+- Outstanding Amount
+- Payment Due Date
+
+## EASY BILLING PROCESS
+
+Step 1: Select Customer.
+
+Step 2: Select Products.
+
+Step 3: Enter Quantity.
+
+Step 4: Enter Rate.
+
+Step 5: Calculate applicable GST.
+
+Step 6: Select Payment Method.
+
+Step 7: Preview Invoice.
+
+Step 8: Confirm and Save.
+
+Step 9: Print or Download PDF.
+
+After confirmation, update all related accounting and inventory records.
+
+Support:
+
+- Cash Sales
+- Credit Sales
+- Partial Payments
+- Returns
+- Refunds
+- Credit Notes
+- Invoice Templates
+- Invoice Search
+- Invoice Export
+
+---
+
+# PART 10 — PURCHASE MANAGEMENT
+
+Build a complete purchase system.
+
+Support:
+
+- Purchase Invoices
+- Purchase Orders
+- Supplier Management
+- Cash Purchases
+- Credit Purchases
+- Purchase Returns
+- Supplier Payments
+- Outstanding Purchases
+- Purchase Register
+- Purchase GST
+- Stock Receipts
+
+When a purchase is confirmed:
+
+- Record the purchase.
+- Update inventory where applicable.
+- Calculate tax treatment.
+- Update supplier payable or cash/bank.
+- Create balanced journal entries.
+- Update relevant reports.
+
+Never record the same purchase twice.
+
+---
+
+# PART 11 — COMPLETE GST ENGINE
+
+Build an Indian GST accounting system.
+
+Support:
+
+- GSTIN
+- HSN / SAC
+- CGST
+- SGST
+- IGST
+- Applicable Cess
+- GST-Inclusive Prices
+- GST-Exclusive Prices
+- Place of Supply
+- Intra-State Transactions
+- Inter-State Transactions
+- Applicable Exemptions
+- Input Tax Credit Tracking
+- Output Tax
+- GST Liability
+- GST Adjustments
+- Sales GST Register
+- Purchase GST Register
+- GSTR-1 Preparation Reports
+- GSTR-3B Preparation Reports
+
+## GST EXAMPLE
+
+For an eligible intra-state sale at 18% GST:
+
+Taxable Value = ₹10,000
+
+CGST at 9% = ₹900
+
+SGST at 9% = ₹900
+
+Invoice Total = ₹11,800
+
+For an eligible inter-state sale at 18% GST:
+
+IGST at 18% = ₹1,800
+
+Invoice Total = ₹11,800
+
+Do not assume every product has the same GST rate.
+
+Implement configurable, dated tax rules.
+
+Tax treatment must consider registration status, transaction type, product classification, place of supply, and applicable legal requirements.
+
+If a tax case is uncertain, request accountant review.
+
+Do not claim GST returns are filed without an authorized filing integration.
+
+---
+
+# PART 12 — INVENTORY AND STOCK MANAGEMENT
+
+Build a complete inventory system.
+
+## INVENTORY MASTERS
+
+- Stock Groups
+- Stock Categories
+- Stock Items
+- Units of Measurement
+- Warehouses
+- Godowns
+- Product Price Lists
+- Opening Stock
+
+## INVENTORY OPERATIONS
+
+- Stock In
+- Stock Out
+- Purchase Stock
+- Sales Stock
+- Sales Returns
+- Purchase Returns
+- Warehouse Transfers
+- Damaged Stock
+- Physical Stock Verification
+- Stock Adjustments
+- Reorder Alerts
+
+## INVENTORY REPORTS
+
+- Stock Summary
+- Stock Item Report
+- Stock Group Report
+- Warehouse Report
+- Stock Movement
+- Stock Ageing
+- Stock Valuation
+- Low Stock Report
+- Product Profit Report
+- Inventory Turnover
+
+## FIFO SYSTEM
+
+Maintain inventory cost layers.
+
+For each sale, consume eligible inventory cost layers according to the configured FIFO policy.
+
+Example:
+
+Purchase 20 mobile phones at ₹12,999 each.
+
+Purchase Value = ₹2,59,980 before separately applicable taxes.
+
+Sell 5 mobile phones.
+
+The system must:
+
+- Reduce available stock to 15 units.
+- Calculate cost of goods sold using FIFO.
+- Update revenue and tax accounts.
+- Update inventory valuation.
+- Update gross profit.
+- Update the balance sheet.
+
+Never double-count inventory costs.
+
+---
+
+# PART 13 — COMPLETE FINANCIAL REPORTS
+
+Create all major financial reports.
+
+## ACCOUNTING REPORTS
+
+1. Balance Sheet
+2. Profit and Loss
+3. Trading Account
+4. Trial Balance
+5. Day Book
+6. General Ledger
+7. Cash Book
+8. Bank Book
+9. Sales Register
+10. Purchase Register
+11. Receipt Register
+12. Payment Register
+13. Journal Register
+14. Contra Register
+15. Debit Note Register
+16. Credit Note Register
+
+## OUTSTANDING REPORTS
+
+17. Bills Receivable
+18. Bills Payable
+19. Customer Outstanding
+20. Supplier Outstanding
+21. Receivables Ageing
+22. Payables Ageing
+23. Overdue Payments
+
+## INVENTORY REPORTS
+
+24. Stock Summary
+25. Stock Valuation
+26. Stock Movement
+27. Stock Ageing
+28. Warehouse Summary
+29. Stock Item Analysis
+
+## FINANCIAL ANALYSIS
+
+30. Cash Flow
+31. Funds Flow
+32. Working Capital
+33. Ratio Analysis
+34. Gross Profit Analysis
+35. Net Profit Analysis
+36. Expense Analysis
+
+## TAX AND BANKING REPORTS
+
+37. GST Sales Register
+38. GST Purchase Register
+39. GST Liability Report
+40. Bank Reconciliation
+41. Cheque Register
+42. Voucher Statistics
+
+## REPORT FUNCTIONS
+
+Every report must support:
+
+- Daily View
+- Monthly View
+- Quarterly View
+- Yearly View
+- Custom Date Range
+- Search
+- Sorting
+- Summary View
+- Detailed View
+- Drill-Down
+- PDF Export
+- Excel Export
+- CSV Export
+- Print
+
+Every financial total must reconcile with the accounting ledger.
+
+Users should be able to click a report amount and review its underlying vouchers.
+
+---
+
+# PART 14 — BALANCE SHEET AND PROFIT & LOSS
+
+## BALANCE SHEET
+
+Assets:
+
+- Cash
+- Bank
+- Inventory
+- Receivables
+- Deposits
+- Fixed Assets
+- Other Assets
+
+Liabilities:
+
+- Supplier Payables
+- Loans
+- Tax Payables
+- Outstanding Expenses
+- Other Liabilities
+
+Equity:
+
+- Owner Capital
+- Drawings
+- Retained Earnings
+- Current Earnings
+
+Support traditional and modern layouts.
+
+## PROFIT AND LOSS
+
+Include:
+
+- Sales
+- Sales Returns
+- Opening Stock
+- Purchases
+- Purchase Returns
+- Closing Stock
+- Cost of Goods Sold
+- Direct Expenses
+- Gross Profit
+- Indirect Expenses
+- Other Income
+- Operating Profit
+- Net Profit
+
+Prevent double-counting under the configured inventory accounting method.
+
+---
+
+# PART 15 — COMPLETE EXCEL-LIKE SPREADSHEET
+
+Create a powerful spreadsheet application inside Apna Business.
+
+## FEATURES
+
+- Workbooks
+- Multiple Sheets
+- Rows and Columns
+- Cell References
+- Formatting
+- Formulas
+- Tables
+- Filters
+- Sorting
+- Data Validation
+- Protected Cells
+- Formula History
+- Automatic Recalculation
+- Charts and Graphs
+- Excel Import
+- Excel Export
+- CSV Import
+- CSV Export
+
+## MATHEMATICAL FORMULAS
+
+SUM, SUMIF, SUMIFS, SUMPRODUCT, MIN, MAX, AVERAGE, MEDIAN, COUNT, COUNTA, COUNTIF, COUNTIFS, ABS, ROUND, ROUNDUP, ROUNDDOWN, MOD, POWER, SQRT, CEILING, FLOOR.
+
+## LOGICAL FORMULAS
+
+IF, IFS, IFERROR, IFNA, AND, OR, NOT, SWITCH.
+
+## LOOKUP FORMULAS
+
+XLOOKUP, VLOOKUP, HLOOKUP, INDEX, MATCH, XMATCH, FILTER, SORT, UNIQUE.
+
+## TEXT FORMULAS
+
+LEFT, RIGHT, MID, LEN, TRIM, CONCAT, CONCATENATE, TEXT, FIND, SEARCH, SUBSTITUTE, UPPER, LOWER.
+
+## DATE FORMULAS
+
+TODAY, NOW, DATE, YEAR, MONTH, DAY, EDATE, EOMONTH, DATEDIF, NETWORKDAYS, WORKDAY.
+
+## FINANCIAL FORMULAS
+
+PMT, PV, FV, NPV, IRR, XIRR, RATE.
+
+## STATISTICAL FORMULAS
+
+STDEV, VAR, MEDIAN, MODE, LARGE, SMALL, RANK.
+
+Detect invalid references, circular references, unsupported functions, calculation errors, and division by zero.
+
+Use a tested and safe formula engine.
+
+Do not claim complete Microsoft Excel compatibility without verification.
+
+Spreadsheet calculations must not directly modify official financial accounts.
+
+Any change to an accounting record must pass through authorized accounting workflows.
+
+---
+
+# PART 16 — COMPLETE BUSINESS MATHEMATICS
+
+Implement tested calculations for:
+
+- Gross Profit
+- Gross Profit Margin
+- Net Profit
+- Net Profit Margin
+- Markup
+- Discount
+- Taxable Value
+- GST
+- Cost of Goods Sold
+- FIFO Valuation
+- Inventory Turnover
+- Working Capital
+- Current Ratio
+- Quick Ratio
+- Debt-to-Equity
+- Return on Investment
+- Receivables Turnover
+- Payables Turnover
+- Break-even Point
+- Contribution Margin
+- Depreciation
+- Simple Interest
+- Compound Interest
+- EMI
+- Cash Flow
+- Budget Variance
+- Sales Growth
+- Expense Growth
+- Revenue Forecasting
+
+Use precise calculation rules and appropriate rounding.
+
+Explain source values and formulas when asked.
+
+Handle missing data and division by zero safely.
+
+---
+
+# PART 17 — AI EVERYWHERE
+
+Create a universal, context-aware AI accountant.
+
+The AI should understand the current:
+
+- Company
+- Screen
+- Product
+- Customer
+- Supplier
+- Invoice
+- Voucher
+- Financial Report
+- Date Range
+- Spreadsheet
+
+Examples:
+
+On Stock Summary:
+
+"Which products need restocking?"
+
+On Balance Sheet:
+
+"Explain my liabilities."
+
+On GST:
+
+"How was this tax calculated?"
+
+On Profit and Loss:
+
+"Why did my expenses increase?"
+
+On Billing:
+
+"Create an invoice for this customer."
+
+On Spreadsheet:
+
+"Explain this formula."
+
+AI must use authorized records and trusted calculation services.
+
+Never invent business balances.
+
+---
+
+# PART 18 — AI CHAT, PHOTO, AUDIO, VIDEO AND DOCUMENTS
+
+Support:
+
+- Text Chat
+- Photo Upload
+- Invoice Scanning
+- PDFs
+- Word Documents
+- Excel Files
+- CSV Files
+- Audio Files
+- Voice Recording
+- Supported Video Uploads
+
+## BILL PHOTO WORKFLOW
+
+Photo Upload → OCR → Extract Fields → Verify Totals → Detect Duplicates → Preview → Confirm → Accounting Posting.
+
+## VOICE WORKFLOW
+
+Voice → Transcription → Understand Transaction → Ask Missing Questions → Preview → Confirm → Save.
+
+## VIDEO WORKFLOW
+
+Video Upload → Extract Supported Audio and Frames → Transcribe → Summarize → Answer Questions.
+
+Do not automatically convert every uploaded video into an accounting entry.
+
+Process large documents through background jobs.
+
+Use supported file types, secure storage, upload limits, and progress indicators.
+
+---
+
+# PART 19 — PRIVATE AI KNOWLEDGE SYSTEM
+
+Build an independent private knowledge base for every company.
+
+Users may upload:
+
+- Product Catalogs
+- Price Lists
+- Supplier Information
+- Business Policies
+- Accounting Instructions
+- Company Manuals
+- Training Documents
+- Approved Examples
+- Financial Reference Documents
+- Supported Audio and Video Transcripts
+
+Implement Retrieval-Augmented Generation (RAG).
+
+The AI should search approved knowledge and provide relevant answers.
+
+Display source references when practical.
+
+Allow document updates, deletion, permissions, and version history.
+
+Do not automatically retrain the underlying AI model using uploaded data.
+
+Do not share one company's private knowledge with another company.
+
+---
+
+# PART 20 — CONTINUOUS AI IMPROVEMENT
+
+The AI should become more useful through verified business knowledge and approved corrections.
+
+When a user corrects an AI suggestion:
+
+1. Record the original recommendation.
+2. Save the correction.
+3. Check authorization.
+4. Suggest a reusable company-specific rule.
+5. Ask for approval.
+6. Version the approved rule.
+7. Apply it in relevant future situations.
+8. Check for conflicts.
+9. Allow rollback or deletion.
+
+Do not treat every correction as universally correct.
+
+Do not silently change old financial records.
+
+Do not submit private business information for external model training without explicit authorization.
+
+---
+
+# PART 21 — TEN-LAYER ACCOUNTING ERROR PREVENTION
+
+Build a strong accounting safety system.
+
+Layer 1: Input Validation.
+
+Layer 2: Duplicate Detection.
+
+Layer 3: Calculation Verification.
+
+Layer 4: GST Validation.
+
+Layer 5: Inventory Validation.
+
+Layer 6: Double-Entry Balancing.
+
+Layer 7: User Confirmation.
+
+Layer 8: Atomic Database Posting.
+
+Layer 9: Report Reconciliation.
+
+Layer 10: Audit Logging and Monitoring.
+
+Detect:
+
+- Duplicate Invoices
+- Duplicate Payments
+- Incorrect GST
+- Incorrect Totals
+- Invalid Product Quantities
+- Negative Stock
+- Unbalanced Journal Entries
+- Missing Required Information
+- Unauthorized Changes
+- Invalid Company References
+- Inconsistent Ledgers
+- Incorrect Financial Report Totals
+
+If a critical check fails, block posting.
+
+Explain the error in simple language.
+
+Suggest a correction.
+
+Never silently change critical financial amounts.
+
+Never promise that software mistakes are impossible.
+
+---
+
+# PART 22 — SAFE ERROR CORRECTION
+
+When an accounting error is discovered:
+
+1. Identify the affected transaction.
+2. Retrieve its original values.
+3. Explain the issue.
+4. Prepare a correction or reversal.
+5. Show the financial impact.
+6. Require authorized approval.
+7. Preserve audit history.
+8. Apply the approved correction.
+9. Update financial reports.
+10. Re-run relevant tests.
+
+For repeatable software errors, add a regression test.
+
+Do not erase finalized accounting history.
+
+---
+
+# PART 23 — BANKING SYSTEM
+
+Build:
+
+- Cash Accounts
+- Bank Accounts
+- Bank Transfers
+- Contra Entries
+- Bank Statement Import
+- CSV/Excel Bank Imports
+- Bank Transaction Matching
+- Bank Reconciliation
+- Cheque Register
+- Deposit Slips
+- Payment Advice
+- Bank Charges
+- Interest Entries
+- Unmatched Transaction Review
+
+Do not initiate real bank transfers without authorized payment infrastructure.
+
+---
+
+# PART 24 — SMART SEARCH AND NOTIFICATIONS
+
+## UNIVERSAL SEARCH
+
+Search authorized:
+
+- Customers
+- Suppliers
+- Products
+- Invoices
+- Vouchers
+- Ledgers
+- Payments
+- Reports
+- Documents
+
+## NOTIFICATIONS
+
+- Payment Due
+- Supplier Payment Due
+- Low Stock
+- Overdue Invoices
+- Duplicate Bill Warning
+- Missing Transaction Information
+- Failed Document Processing
+- Accounting Reconciliation Problems
+
+Support configurable notifications without exposing private business data.
+
+---
+
+# PART 25 — SAAS BUSINESS MODEL
+
+Build a subscription-based business model for the Apna Business software company.
+
+The software company must be able to earn revenue from:
+
+1. Monthly Subscriptions
+2. Annual Subscriptions
+3. AI Usage Credits
+4. Additional Companies
+5. Additional Staff Accounts
+6. Premium Spreadsheet Features
+7. Premium Analytics
+8. Extra Cloud Storage
+9. Accountant and CA Plans
+10. Enterprise Plans
+11. Business Onboarding
+12. Staff Training
+13. Authorized Integrations
+14. White-Label Licensing
+15. Premium Automation
+16. Optional Professional Service Referrals
+
+Keep customer financial data private.
+
+Do not sell private financial records.
+
+Disclose charges clearly.
+
+---
+
+# PART 26 — SUBSCRIPTION PLANS
+
+Create configurable subscription plans.
+
+## FREE
+
+Basic business accounting with clear usage limits.
+
+## STARTER
+
+GST Billing, Inventory, Ledgers, and Core Financial Reports.
+
+## BUSINESS PRO
+
+Advanced AI, Spreadsheets, Additional Companies, More Storage, and Advanced Reports.
+
+## ACCOUNTANT
+
+Multi-client accounting, team management, and professional reports.
+
+## ENTERPRISE
+
+Custom licensing, additional controls, branches, integrations, and support.
+
+Subscription prices must be configurable in the admin panel.
+
+Do not hardcode permanent prices.
+
+Support:
+
+- Monthly Billing
+- Annual Billing
+- Free Trials
+- Upgrades
+- Downgrades
+- Renewals
+- Cancellation
+- Plan Expiration
+- Grace Periods
+- Discounts
+- Coupons
+- Refunds
+- Subscription Invoices
+- Feature Limits
+- Usage Credits
+- Custom Enterprise Pricing
+
+Do not destroy customer business data when a subscription expires.
+
+Provide clearly disclosed read-only and data export options.
+
+---
+
+# PART 27 — SUBSCRIPTION PAYMENT SYSTEM
+
+Integrate an authorized payment provider.
+
+Where supported, allow:
+
+- UPI
+- Debit and Credit Cards
+- Net Banking
+- Supported Recurring Payments
+- Payment Links
+
+Implement:
+
+- Secure Checkout
+- Payment Verification
+- Successful Payment Records
+- Failed Payment Records
+- Payment History
+- Refund History
+- Renewal Tracking
+- Subscription Invoices
+- Payment Webhook Verification
+- Duplicate Payment Prevention
+- Subscription Reconciliation
+
+Never store raw payment card credentials.
+
+Never activate paid subscriptions based only on an unverified frontend payment message.
+
+Use signed and verified payment events.
+
+Prevent duplicate payment records and duplicate subscription charges.
+
+Use the provider's sandbox before enabling live payments.
+
+Comply with applicable authorization and recurring-payment rules.
+
+---
+
+# PART 28 — CUSTOMER SUBSCRIPTION PAGE
+
+Create a clear subscription page showing:
+
+- Current Plan
+- Plan Price
+- Billing Frequency
+- Included Features
+- AI Credits Remaining
+- Usage Limits
+- Storage Usage
+- Next Billing Date
+- Renewal Status
+- Payment History
+- Download Invoices
+- Upgrade
+- Downgrade
+- Cancel Subscription
+- Support
+
+Keep cancellation simple.
+
+Do not use hidden fees or misleading billing flows.
+
+Preserve customer financial records according to the disclosed data retention policy.
+
+---
+
+# PART 29 — PLATFORM OWNER ADMIN PANEL
+
+Create a secure internal administration system for the Apna Business software company.
+
+## ADMIN DASHBOARD
+
+Show:
+
+- Registered Users
+- Active Users
+- Free Users
+- Trial Users
+- Paid Users
+- Active Subscriptions
+- Expired Subscriptions
+- Cancelled Subscriptions
+- Revenue by Subscription Plan
+- AI Credits Revenue
+- Add-On Revenue
+- Refunds
+- Failed Payments
+- AI Processing Costs
+- Hosting Costs
+- Database Costs
+- Storage Costs
+- Operational Expenses
+- Profitability
+- System Alerts
+
+## ADMIN FUNCTIONS
+
+- Manage Subscription Plans
+- Update Prices
+- Configure Feature Limits
+- Manage Coupons
+- Manage Trials
+- View Payment Status
+- Review Refunds
+- Monitor AI Usage
+- Configure Cost Limits
+- View Revenue Reports
+- Review Platform Health
+- Manage Announcements
+
+The platform administration system must remain separate from individual customers' accounting dashboards.
+
+Platform staff must not receive unrestricted access to private customer financial data.
+
+Implement permission-controlled, audited support access.
+
+---
+
+# PART 30 — COMPLETE SAAS REVENUE DASHBOARD
+
+Create a private revenue dashboard for the software company.
+
+Display:
+
+- Total Subscription Revenue
+- Monthly Recurring Revenue (MRR)
+- Annual Recurring Revenue (ARR)
+- New Paid Customers
+- Active Subscriptions
+- Revenue by Plan
+- AI Credits Revenue
+- Add-On Revenue
+- Setup and Training Revenue
+- Enterprise Revenue
+- Refunds
+- Discounts
+- Payment Fees
+- AI API Costs
+- Hosting Costs
+- Support Costs
+- Gross Profit
+- Operating Expenses
+- Net Profit
+- Customer Acquisition Cost
+- Customer Lifetime Value
+- Average Revenue per User
+- Churn Rate
+- Renewal Rate
+- Revenue Growth
+- Outstanding Subscription Payments
+
+Clearly distinguish:
+
+- Cash Collected
+- Recognized Revenue
+- Recurring Revenue
+- One-Time Revenue
+- Refunds
+- Tax Collected
+- Accounting Profit
+
+Do not treat all customer payments as immediate profit.
+
+---
+
+# PART 31 — SAAS FINANCIAL FORMULAS
+
+Implement tested financial formulas.
+
+## MONTHLY RECURRING REVENUE
+
+MRR = Sum of eligible active recurring subscriptions normalized to a monthly amount.
+
+Exclude applicable taxes and one-time charges under the selected MRR policy.
+
+## ANNUAL RECURRING REVENUE
+
+ARR = MRR × 12.
+
+## AVERAGE REVENUE PER USER
+
+ARPU = Revenue for the period / Average eligible users for the same period, using a clearly defined policy.
+
+## CUSTOMER CHURN
+
+Customer Churn Rate = Eligible customers lost during the period / Eligible customers at the beginning of the period × 100.
+
+## GROSS MARGIN
+
+Gross Margin = (Revenue - Cost of Revenue) / Revenue × 100.
+
+## NET PROFIT MARGIN
+
+Net Profit Margin = Net Profit / Revenue × 100.
+
+## CUSTOMER ACQUISITION COST
+
+CAC = Eligible Sales and Marketing Acquisition Costs / New Customers Acquired, using a consistent period and attribution policy.
+
+## CUSTOMER LIFETIME VALUE
+
+Calculate customer lifetime value using a documented model that considers customer revenue, gross margin, retention, and customer lifespan.
+
+Do not present uncertain estimates as verified facts.
+
+## BREAK-EVEN CUSTOMER COUNT
+
+Break-even Customers = Fixed Costs / Contribution per Paying Customer, when contribution is positive and assumptions are valid.
+
+## ADDITIONAL METRICS
+
+- Revenue Churn
+- Revenue Growth
+- Renewal Rate
+- Customer Payback Period
+- Cost per AI Request
+- Cost per Document
+- Cost per Video
+- Cost per Active Customer
+- Contribution Margin
+- Customer Retention
+- Annual Revenue Growth
+
+Handle missing data and zero denominators appropriately.
+
+Use documented definitions for every financial metric.
+
+---
+
+# PART 32 — AUTOMATIC SUBSCRIPTION ACCOUNTING
+
+Subscription billing must connect to a reliable accounting ledger for the platform owner.
+
+For a verified successful subscription payment:
+
+1. Save the provider payment reference.
+2. Verify payment status.
+3. Record the subscription event.
+4. Apply the correct billing period.
+5. Activate authorized plan access.
+6. Generate the appropriate invoice.
+7. Apply applicable tax treatment.
+8. Post the correct accounting entry.
+9. Update subscription reports.
+10. Update customer billing history.
+
+For annual prepaid subscriptions, support deferred revenue accounting where required by the chosen accounting policy.
+
+For refunds:
+
+- Record the refund.
+- Update the subscription.
+- Post an appropriate accounting correction.
+- Adjust relevant reports.
+
+Use event idempotency to prevent duplicate postings.
+
+Keep platform owner accounting separate from customer company accounting.
+
+---
+
+# PART 33 — CUSTOMER BUSINESS REVENUE SYSTEM
+
+The application must also manage revenue earned by the businesses using Apna Business.
+
+Track:
+
+- Sales Revenue
+- Service Revenue
+- Other Operating Income
+- Non-Operating Income
+- Recurring Customer Revenue
+- Invoices
+- Receivables
+- Revenue by Product
+- Revenue by Customer
+- Revenue by Branch
+- Revenue by Date
+- Revenue Growth
+- Returns
+- Refunds
+- Cash Collections
+- Revenue Forecasts
+
+Allow recurring invoices for suitable customer businesses such as coaching centers, agencies, maintenance companies, and subscription businesses.
+
+All transactions must flow through the customer's authorized accounting system.
+
+Never combine the platform owner's revenue with a customer's business revenue.
+
+---
+
+# PART 34 — AI COST CONTROL
+
+Track operating expenses caused by AI services.
+
+Include:
+
+- AI Chat Usage
+- OCR Usage
+- Document Processing
+- Audio Transcription
+- Video Processing
+- Cloud Storage
+- Database Usage
+- Background Jobs
+- External API Costs
+- Hosting Costs
+
+Implement:
+
+- AI Credit Limits
+- Budget Alerts
+- Rate Limits
+- Plan-Based Quotas
+- Cost Monitoring
+- Cost per Request
+- Usage Notifications
+- Abuse Prevention
+- Optional Extra Credits
+
+Display user usage transparently.
+
+Do not create unexpectedly large charges without authorization.
+
+Provide graceful handling when a paid AI API is unavailable.
+
+---
+
+# PART 35 — CUSTOMER GROWTH AND REFERRALS
+
+Create optional business growth tools.
+
+Features:
+
+- Referral Links
+- Referral Tracking
+- Approved Referral Rewards
+- Partner Accounts
+- Affiliate Performance
+- Signup Analytics
+- Marketing Attribution
+- Conversion Reports
+- Fraud Prevention
+
+Reward only genuine eligible referrals.
+
+Obtain consent before sharing user information with external business partners.
+
+Disclose paid referrals.
+
+Do not use misleading marketing statistics.
+
+---
+
+# PART 36 — TARGET CUSTOMERS AND MARKET VALIDATION
+
+Design the product for these customer segments:
+
+- Mobile Shops
+- Kirana Stores
+- General Retailers
+- Wholesalers
+- Small Manufacturers
+- Service Businesses
+- Agencies
+- Coaching Centers
+- Accountants
+- Chartered Accountants
+- Multi-Branch Businesses
+
+The application must solve real daily business problems.
+
+Prioritize:
+
+- Fast Billing
+- Bill Photo Entry
+- GST Calculation
+- Inventory Updates
+- Customer Outstanding
+- Supplier Payables
+- Accurate Financial Reports
+
+## EARLY MARKET VALIDATION
+
+Before large-scale expansion:
+
+1. Interview business owners.
+2. Identify their most time-consuming accounting tasks.
+3. Test the application with real workflows.
+4. Measure accounting accuracy.
+5. Measure time saved.
+6. Measure repeated usage.
+7. Collect feedback.
+8. Test willingness to pay.
+9. Improve important features.
+10. Expand only after reliable results.
+
+Never assume every registered business is a paying customer.
+
+Validate subscription pricing against actual operating costs and customer feedback.
+
+---
+
+# PART 37 — HIGH-PERFORMANCE APPLICATION
+
+The application must remain smooth and responsive.
+
+Implement:
+
+- Autosaved Drafts
+- Safe Retry Handling
+- Fast Search
+- Indexed Database Queries
+- Background Processing
+- Upload Progress
+- Pagination
+- Optimized Report Queries
+- Safe Caching
+- Cache Invalidation
+- Mobile Optimization
+- Loading Indicators
+- Connection Recovery
+- Error Monitoring
+- Database Backups
+- Recovery Procedures
+- Concurrent Transaction Protection
+
+Prevent outdated cached balances from being displayed as current.
+
+Use measured performance targets rather than unsupported speed promises.
+
+---
+
+# PART 38 — COMPLETE SECURITY SYSTEM
+
+Implement:
+
+- Secure Authentication
+- Role-Based Access Control
+- Company Data Isolation
+- Protected APIs
+- Encrypted Connections
+- Secure Document Storage
+- Safe File Uploads
+- Input Validation
+- Session Protection
+- Rate Limiting
+- Audit Logs
+- Period Locking
+- Backup and Restore
+- Secrets Management
+- Secure Payment Verification
+- Authorized Data Export
+- Data Deletion Controls
+
+Protect against:
+
+- Unauthorized Company Access
+- Duplicate Financial Posting
+- Malicious File Uploads
+- Spreadsheet Formula Injection
+- Prompt Injection in Uploaded Documents
+- Unauthorized Payments
+- Insecure Admin Access
+
+Treat uploaded files as untrusted data, not as instructions that can override accounting safeguards.
+
+Never expose passwords, API keys, or private financial information.
+
+---
+
+# PART 39 — REAL-WORLD ACCOUNTING TESTS
+
+Create a dedicated demonstration company.
+
+Never overwrite production customer information with demo data.
+
+## TEST 1 — CAPITAL
+
+Owner invests ₹10,00,000.
+
+Verify balanced journal entries and balance sheet.
+
+## TEST 2 — PURCHASE
+
+Purchase 20 mobile phones at ₹12,999 each.
+
+Total before separately applicable taxes: ₹2,59,980.
+
+Verify:
+
+- Purchase Voucher
+- Supplier Payable
+- Inventory Quantity
+- Inventory Value
+- GST Treatment
+- Journal Balance
+
+## TEST 3 — SALE
+
+Sell 5 mobile phones.
+
+Verify:
+
+- Invoice
+- Revenue
+- GST
+- Customer Balance
+- FIFO Cost
+- Stock Reduction
+- Gross Profit
+- Balance Sheet
+
+## TEST 4 — CUSTOMER PAYMENT
+
+Receive a partial payment.
+
+Verify customer receivables decrease.
+
+Do not record the receipt as new sales revenue.
+
+## TEST 5 — SUPPLIER PAYMENT
+
+Pay a supplier.
+
+Verify supplier payables decrease.
+
+Do not record a second purchase.
+
+## TEST 6 — RETURNS
+
+Test sales returns and purchase returns.
+
+Verify stock, GST, and ledgers.
+
+## TEST 7 — FINANCIAL REPORTS
+
+Reconcile:
+
+- Trial Balance
+- Balance Sheet
+- Profit and Loss
+- Stock Summary
+- GST Summary
+- Cash Flow
+- Outstanding Reports
+
+## TEST 8 — AI BILL SCANNING
+
+Upload a sample invoice.
+
+Verify OCR, duplicate detection, editable preview, confirmation, and posting.
+
+## TEST 9 — SPREADSHEET
+
+Test Excel-like formulas against verified reference results.
+
+## TEST 10 — MULTI-COMPANY SECURITY
+
+Verify users cannot access another company's records without permission.
+
+## TEST 11 — DUPLICATE TRANSACTION
+
+Submit the same intended transaction twice.
+
+Verify it is posted only once.
+
+## TEST 12 — DATABASE FAILURE
+
+Simulate a failure during posting.
+
+Verify all partial changes are rolled back.
+
+---
+
+# PART 40 — SAAS BILLING AND REVENUE TESTS
+
+Create automated tests for:
+
+- Free Registration
+- Paid Subscription Purchase
+- Monthly Renewal
+- Annual Renewal
+- Upgrade
+- Downgrade
+- Cancellation
+- Expiration
+- Refund
+- Payment Failure
+- Duplicate Payment Event
+- Subscription Access
+- AI Credit Usage
+- Extra Company Billing
+- Extra Staff Seat Billing
+- Revenue Dashboard
+- MRR Calculation
+- ARR Calculation
+- Churn Calculation
+- GST on Platform Invoices
+- Deferred Revenue
+- Company Data Separation
+- Admin Access Restrictions
+- AI Cost Tracking
+- Payment Reconciliation
+- Subscription Data Preservation
+- Payment Webhook Verification
+
+Test with a payment provider's sandbox before going live.
+
+Block release if critical payment, accounting, or security tests fail.
+
+---
+
+# PART 41 — COMPLETE DEVELOPMENT ROADMAP
+
+Build in stages.
+
+## STAGE 1 — PROJECT AUDIT
+
+Inspect existing code, features, database, and security.
+
+## STAGE 2 — SECURE FOUNDATION
+
+Build authentication, company management, user roles, and data isolation.
+
+## STAGE 3 — ACCOUNTING ENGINE
+
+Build groups, ledgers, journals, vouchers, and trial balance.
+
+## STAGE 4 — SALES, PURCHASES AND GST
+
+Implement billing, supplier purchases, applicable GST, and receivables/payables.
+
+## STAGE 5 — INVENTORY
+
+Implement products, stock movements, warehouses, FIFO, and inventory valuation.
+
+## STAGE 6 — FINANCIAL REPORTS
+
+Implement balance sheet, profit and loss, cash flow, ratio analysis, and drill-down.
+
+## STAGE 7 — EASY DASHBOARD
+
+Build quick actions, financial widgets, search, and simplified forms.
+
+## STAGE 8 — SMART SPREADSHEET
+
+Implement tested formulas, spreadsheet operations, charts, and import/export.
+
+## STAGE 9 — AI ACCOUNTANT
+
+Implement AI Chat, context-aware assistance, and approved accounting previews.
+
+## STAGE 10 — MULTIMODAL AI
+
+Implement photo processing, document reading, audio, voice, and supported video.
+
+## STAGE 11 — AI KNOWLEDGE
+
+Implement company knowledge, approved rules, correction memory, and versioning.
+
+## STAGE 12 — SUBSCRIPTION FOUNDATION
+
+Build subscription plans, usage limits, customer billing pages, and access rules.
+
+## STAGE 13 — SECURE PAYMENTS
+
+Implement payment verification, subscription accounting, and refunds.
+
+## STAGE 14 — SAAS REVENUE DASHBOARD
+
+Build administrator financial reporting, AI cost monitoring, and subscription analysis.
+
+## STAGE 15 — ADVANCED MONETIZATION
+
+Build accountant plans, enterprise features, premium automation, and integrations.
+
+## STAGE 16 — COMPLETE TESTING
+
+Run accounting, spreadsheet, security, payment, and performance tests.
+
+## STAGE 17 — PRODUCTION DEPLOYMENT
+
+Prepare backups, monitoring, production configuration, and secure launch.
+
+Prioritize safe core features over building every advanced feature simultaneously.
+
+---
+
+# PART 42 — DEVELOPMENT SAFETY REQUIREMENTS
+
+Before modifying any important module:
+
+1. Inspect existing code.
+2. Identify dependencies.
+3. Review financial impact.
+4. Create an implementation plan.
+5. Back up affected data where needed.
+6. Implement the change.
+7. Test new functionality.
+8. Run regression tests.
+9. Verify accounting reconciliation.
+10. Check company isolation.
+11. Record the changes.
+12. Request authorization for production deployment.
+
+Do not automatically publish major changes.
+
+Do not claim a feature is complete just because a screen exists.
+
+Do not hide errors.
+
+Do not bypass accounting checks to make demonstrations appear successful.
+
+---
+
+# PART 43 — DEVELOPMENT PROGRESS TRACKER
+
+Track every feature using these statuses:
+
+- NOT STARTED
+- IN PROGRESS
+- IMPLEMENTED
+- TESTED
+- BLOCKED
+- RELEASED
+
+For each module, report:
+
+- Frontend Status
+- Backend Status
+- Database Status
+- Test Status
+- Known Issues
+- External API Requirements
+- Estimated Operating Cost
+- Next Development Step
+
+Use real test results.
+
+Do not mark unverified features as complete.
+
+---
+
+# PART 44 — NON-NEGOTIABLE PRODUCT RULES
+
+1. Never invent accounting balances.
+2. Never create duplicate financial entries unintentionally.
+3. Never post AI accounting actions without appropriate confirmation.
+4. Never leave journal entries unbalanced.
+5. Never silently change finalized transactions.
+6. Never mix different companies' private data.
+7. Never fake spreadsheet compatibility.
+8. Never claim uploaded data automatically retrains an AI model.
+9. Never claim a software system is completely error-free.
+10. Never claim a tax filing is complete without verification.
+11. Never expose passwords or payment secrets.
+12. Never create fake payment success records.
+13. Never use demo data as real accounting figures.
+14. Never destroy customer records after subscription expiration without following the disclosed retention and deletion rules.
+15. Never combine customer business revenue with platform SaaS revenue.
+16. Never count subscription payments as profit without accounting for costs and applicable revenue recognition.
+17. Never deploy major financial changes without approval.
+18. Always preserve accounting audit history.
+19. Always test calculations and posting consistency.
+20. Always prioritize reliability and security.
+21. Always make everyday business workflows simple.
+22. Always show which paid features require external services.
+23. Always verify important subscription and payment events.
+24. Always use documented definitions for SaaS financial metrics.
+25. Always protect customer business privacy.
+
+---
+
+# PART 45 — FINAL PRODUCT DELIVERY
+
+The complete application must support:
+
+- Secure User Login
+- Multi-Company Management
+- Role-Based Access
+- Accounting Masters
+- Ledgers
+- Double-Entry Accounting
+- Voucher Management
+- GST Billing
+- Sales and Purchases
+- Customer and Supplier Management
+- Inventory
+- FIFO Stock Valuation
+- Balance Sheet
+- Profit and Loss
+- Trial Balance
+- Cash Flow
+- Funds Flow
+- Ratio Analysis
+- Banking
+- Financial Dashboard
+- Smart Spreadsheet
+- Excel-Like Formulas
+- Business Mathematics
+- AI Everywhere
+- AI Chat
+- Bill Photo Scanning
+- Document Understanding
+- Voice and Audio Support
+- Supported Video Processing
+- Private AI Knowledge
+- Approved Continuous Improvement
+- Error Prevention
+- Safe Error Correction
+- Audit Logs
+- Secure Backups
+- Monthly and Annual Subscriptions
+- AI Credit Billing
+- Subscription Payments
+- Revenue Management
+- SaaS Owner Dashboard
+- MRR and ARR Reporting
+- Customer Churn Analysis
+- Cost Monitoring
+- Accountant Plans
+- Enterprise Plans
+- Optional Premium Automation
+- Referral Management
+- PDF, Excel and CSV Export
+- Smooth Mobile and Desktop Experience
+
+All features must connect to real functionality when marked complete.
+
+---
+
+# FINAL PRODUCT VISION
+
+**APNA BUSINESS 6.0 — YOUR COMPLETE AI BUSINESS OPERATING SYSTEM**
+
+One platform.
+
+One easy accounting interface.
+
+One consistent financial posting system.
+
+Multiple independent companies.
+
+Professional accounting capabilities.
+
+Excel-like formulas and financial mathematics.
+
+GST billing and inventory management.
+
+AI Chat, Voice, Photo, Audio, Video, and Documents.
+
+Private business knowledge and approved continuous improvement.
+
+Multi-layer error prevention.
+
+Accurate financial reporting.
+
+Secure user subscriptions.
+
+Multiple SaaS revenue streams.
+
+Real-time business and platform dashboards.
+
+Reliable data protection.
+
+Easy for beginners.
+
+Powerful for accountants.
+
+Scalable for businesses.
+
+## FINAL EXECUTION INSTRUCTION
+
+First inspect the existing Apna Business project if source access is available.
+
+Create a development audit showing:
+
+1. Existing Features
+2. Missing Features
+3. Broken Features
+4. Existing Database
+5. Accounting Architecture
+6. AI Integration Status
+7. Spreadsheet Requirements
+8. Subscription Architecture
+9. Payment Integration Plan
+10. SaaS Revenue Model
+11. Security Requirements
+12. Financial Risk Assessment
+13. Development Priorities
+14. Testing Plan
+15. Operating Cost Estimates
+
+Then begin implementing the safest highest-priority unfinished module.
+
+Build the application in logical stages.
+
+After every stage:
+
+- Demonstrate the working feature.
+- Run automated tests.
+- Verify accounting consistency.
+- Explain known limitations.
+- Update the progress tracker.
+- Continue to the next approved stage.
+
+Do not merely generate a UI prototype or theoretical design.
+
+Build real working functionality.
+
+Do not claim the entire platform is production-ready until its critical accounting, payment, security, and reporting systems have been implemented and verified.
+
+**START BY AUDITING THE EXISTING APPLICATION, THEN BUILD APNA BUSINESS 6.0 STEP BY STEP.**

@@ -1,0 +1,18 @@
+
+{
+  "name": "apna-business-local",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Apna Business - local full-stack accounting and ERP quotations, project tracking and accounting test foundation",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "node --experimental-sqlite --watch server.js",
+    "start": "node --experimental-sqlite server.js",
+    "test": "node --experimental-sqlite --test test/*.test.js",
+    "backup": "node --experimental-sqlite scripts/backup.mjs",
+    "restore": "node --experimental-sqlite scripts/restore.mjs"
+  }
+}
