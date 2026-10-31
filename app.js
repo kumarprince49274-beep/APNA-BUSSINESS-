@@ -13,41 +13,42 @@ const state = {
   chatBusy: false, 
   aiMode: 'chat', 
   aiSection: 'home', 
-  sidebarExpanded: true, 
-  lang: (() => { try { return localStorage.getItem('apna_lang') || 'en'; } catch { return 'en'; } })(), 
+  sidebarExpanded: false, // Default collapsed like Gemini/ChatGPT
+  lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 
+// Complete Bilingual Dictionary (Hindi & English)
 const dict = {
   hi: {
     brandSub: 'अकाउंटिंग और ईआरपी',
-    mainMenu: 'Main Dashboard',
-    dashboard: 'Dashboard',
-    aiChat: 'AI Accountant',
-    vouchersBilling: 'Vouchers & Billing',
-    vouchersList: 'Vouchers List',
-    salesPurchases: 'Sales / Purchases',
-    accountsSheet: 'Accounts & Sheet',
-    balanceSheet: 'Balance Sheet',
-    profitLoss: 'Profit & Loss',
-    inventoryStock: 'Inventory & Stock',
-    productsInv: 'Products / Inventory',
-    contactsList: 'Customers / Suppliers',
-    gstTax: 'GST & Tax',
-    gstBreakdown: 'GST Breakdown',
-    companyMgmt: 'Company Management',
-    companyAlter: 'Company Alter / Edit',
-    appSettings: 'App Settings (Theme/Lang)',
-    createCompanyBtn: '+ Create Company',
+    mainMenu: 'मुख्य डैशबोर्ड',
+    dashboard: 'डैशबोर्ड',
+    aiChat: 'एआई अकाउंटेंट',
+    vouchersBilling: 'वाउचर और बिलिंग',
+    vouchersList: 'वाउचर सूची',
+    salesPurchases: 'बिक्री / खरीद (Invoices)',
+    accountsSheet: 'खाता और बैलेंस शीट',
+    balanceSheet: 'बैलेंस शीट',
+    profitLoss: 'लाभ और हानि (P&L)',
+    inventoryStock: 'इन्वेंटरी और स्टॉक',
+    productsInv: 'स्टॉक / इन्वेंटरी',
+    contactsList: 'ग्राहक / सप्लायर',
+    gstTax: 'जीएसटी और टैक्स',
+    gstBreakdown: 'जीएसटी ब्रेकडाउन',
+    companyMgmt: 'कंपनी मैनेजमेंट',
+    companyAlter: 'कंपनी ऑल्टर / एडिट',
+    appSettings: 'एप सेटिंग्स (भाषा/थीम)',
+    createCompanyBtn: '+ नई कंपनी बनाएं',
     alterCompanyBtn: 'Alter Company',
-    logout: 'Logout',
-    sales: 'Sales',
-    purchases: 'Purchases',
-    profit: 'Profit',
-    cash: 'Cash',
-    bank: 'Bank',
-    inventoryVal: 'Inventory',
-    welcomeMsg: 'View your complete business financial overview here.'
+    logout: 'लॉगआउट',
+    sales: 'कुल बिक्री (Sales)',
+    purchases: 'कुल खरीद (Purchases)',
+    profit: 'शुद्ध लाभ (Profit)',
+    cash: 'नकद (Cash)',
+    bank: 'बैंक (Bank)',
+    inventoryVal: 'स्टॉक मूल्य',
+    welcomeMsg: 'अपने बिजनेस का पूरा लेखा-जोखा और वित्तीय स्थिति यहाँ देखें।'
   },
   en: {
     brandSub: 'Accounting & ERP',
@@ -81,7 +82,7 @@ const dict = {
   }
 };
 
-const t = (key) => dict[state.lang]?.[key] || dict['en'][key] || key;
+const t = (key) => dict[state.lang]?.[key] || dict['hi'][key] || key;
 
 const PULSE_ICON = (size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
 
@@ -96,35 +97,28 @@ async function api(path,options={}){
   if(state.csrf && opts.method && opts.method!=='GET') opts.headers['X-CSRF-Token']=state.csrf;
   const r=await fetch(path,opts);
   let data=null; try{data=await r.json();}catch{}
-  if(!r.ok) throw Object.assign(new Error(data?.error||`Request failed (${r.status})`), { status: r.status });
+  if(!r.ok) throw new Error(data?.error||`Request failed (${r.status})`);
   return data;
 }
 
 async function refreshSession(){
   try{
     const me=await api('/api/auth/me');
-    if (!me || !me.user) return false;
     state.user=me.user; state.csrf=me.csrf;
     state.companies=await api('/api/companies');
     if(!state.companyId || !state.companies.some(c=>c.id===state.companyId)) state.companyId=state.companies[0]?.id||null;
     return true;
-  }catch(err){ 
-    if (err.status === 401) {
-      state.user = null;
-      state.csrf = null;
-    }
-    return false; 
-  }
+  }catch{ return false; }
 }
 
 function authView(mode='login'){
   $('app').innerHTML=`<main class="auth-shell"><section class="auth-card" translate="no">
     <div class="logo">${PULSE_ICON(26)}</div><h1 translate="no">APNA BUSINESS</h1>
-    <div class="seg"><button class="${mode==='login'?'active':''}" id="login-tab">Login</button><button class="${mode==='register'?'active':''}" id="register-tab">Create account</button></div>
-    <form id="auth-form"><div id="name-wrap" class="${mode==='register'?'':'hidden'}"><label>Name<input name="name" placeholder="Your name"></label></div>
-    <label>Email<input name="email" type="email" required placeholder="you@example.com"></label>
-    <label>Password<input name="password" type="password" required minlength="6" placeholder="At least 6 characters"></label>
-    <button class="btn primary full" type="submit">${mode==='login'?'Login':'Create account'}</button>
+    <div class="seg"><button class="${mode==='login'?'active':''}" id="login-tab">${state.lang==='hi'?'लॉगिन':'Login'}</button><button class="${mode==='register'?'active':''}" id="register-tab">${state.lang==='hi'?'अकाउंट बनाएं':'Create account'}</button></div>
+    <form id="auth-form"><div id="name-wrap" class="${mode==='register'?'':'hidden'}"><label>${state.lang==='hi'?'नाम':'Name'}<input name="name" placeholder="${state.lang==='hi'?'आपका नाम':'Your name'}"></label></div>
+    <label>${state.lang==='hi'?'ईमेल':'Email'}<input name="email" type="email" required placeholder="you@example.com"></label>
+    <label>${state.lang==='hi'?'पासवर्ड':'Password'}<input name="password" type="password" required minlength="6" placeholder="${state.lang==='hi'?'कम से कम 6 अक्षर':'At least 6 characters'}"></label>
+    <button class="btn primary full" type="submit">${mode==='login'?(state.lang==='hi'?'लॉगिन':'Login'):(state.lang==='hi'?'अकाउंट बनाएं':'Create account')}</button>
     
     <div style="display:flex;align-items:center;justify-content:center;margin:18px auto;width:100%;color:var(--muted);font-size:13px;">
       <div style="flex:1;border-top:1px solid var(--border);margin-right:12px;"></div> 
@@ -134,7 +128,7 @@ function authView(mode='login'){
 
     <button type="button" class="btn full" id="google-login-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#000;border:1px solid #ccc;font-weight:600;">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.16 21.03 7.23 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.18C.43 8.13 0 9.87 0 12s.43 3.87 1.18 5.39l4.09-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.23 0 3.16 2.97 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
-      Continue with Google
+      ${state.lang==='hi'?'गूगल से जारी रखें':'Continue with Google'}
     </button>
 
     <div id="auth-error" class="error"></div></form>
@@ -144,23 +138,20 @@ function authView(mode='login'){
   $('register-tab').onclick=()=>authView('register');
   
   $('google-login-btn').onclick=() => {
-    toast('Google Sign-In requires OAuth client setup.');
+    toast(state.lang==='hi'?'Google Sign-In ke liye Google API credentials required hain.':'Google Sign-In requires OAuth client setup.');
   };
 
   $('auth-form').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.currentTarget);try{
     if(mode==='register') await api('/api/auth/register',{method:'POST',body:{name:fd.get('name'),email:fd.get('email'),password:fd.get('password')}});
-    const res = await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
-    state.user=res.user; state.csrf=res.csrf;
-    state.companies=await api('/api/companies');
-    state.companyId=state.companies[0]?.id||null;
-    render();
+    await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}}).then(x=>{state.user=x.user;state.csrf=x.csrf;});
+    state.companies=await api('/api/companies');state.companyId=state.companies[0]?.id||null;render();
   }catch(err){$('auth-error').textContent=err.message;}};
 }
 
 function companySelect(){return `<select id="company-select">${state.companies.map(c=>`<option value="${esc(c.id)}" ${c.id===state.companyId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;}
 
 function openSettingsModal(){
-  const m = modal('App Settings', `
+  const m = modal(state.lang==='hi' ? 'एप सेटिंग्स (App Settings)' : 'App Settings', `
     <div style="display:flex;flex-direction:column;gap:16px;margin-top:10px; max-height: 70vh; overflow-y: auto; padding-right:4px;">
       <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase;">Subscription & Limits</div>
       <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Usage limits opened')">
@@ -171,11 +162,15 @@ function openSettingsModal(){
         <div><strong>Manage subscription</strong><div style="font-size:12px; color:var(--muted);">View billing & plan details</div></div>
         <span>›</span>
       </div>
+      <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Upgrade to Google AI Ultra opened')">
+        <div><strong>Upgrade to Google AI Ultra</strong><div style="font-size:12px; color:var(--muted);">Unlock advanced capabilities</div></div>
+        <span>⭐</span>
+      </div>
 
       <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:6px;">Preferences</div>
       
       <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>Theme</span>
+        <span>Theme / थीम</span>
         <select id="settings-theme-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
           <option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option>
           <option value="light" ${state.theme==='light'?'selected':''}>Light</option>
@@ -183,10 +178,10 @@ function openSettingsModal(){
       </label>
 
       <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>Language</span>
+        <span>Language / भाषा</span>
         <select id="settings-lang-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
-          <option value="en" ${state.lang==='en'?'selected':''}>English</option>
           <option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option>
+          <option value="en" ${state.lang==='en'?'selected':''}>English</option>
         </select>
       </label>
 
@@ -205,7 +200,7 @@ function openSettingsModal(){
     } catch {}
     document.body.classList.toggle('light', state.theme === 'light');
     m.remove();
-    toast('Settings saved successfully!');
+    toast(state.lang==='hi' ? 'सेटिंग्स सफलतापूर्वक सहेज ली गई हैं!' : 'Settings saved successfully!');
     render();
   };
 }
@@ -214,8 +209,8 @@ function openGeminiStyleAccountPopup(targetEl) {
   const existing = document.getElementById('gemini-account-popup');
   if (existing) { existing.remove(); return; }
 
-  const userName = state.user?.name || 'User';
-  const userEmail = state.user?.email || '';
+  const userName = state.user?.name || 'Prince Kumar';
+  const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
   const userInitial = userName[0].toUpperCase();
 
   const popup = document.createElement('div');
@@ -293,8 +288,8 @@ function layout(){
     return;
   }
 
-  const userName = state.user?.name || 'User';
-  const userEmail = state.user?.email || '';
+  const userName = state.user?.name || 'Prince Kumar';
+  const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
   const userInitial = userName[0].toUpperCase();
 
   $('app').innerHTML=`<div class="workspace"><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>${t('brandSub')}</small></div></div>
@@ -348,7 +343,7 @@ function layout(){
   $('top-alter-company')?.addEventListener('click', () => { state.page = 'settings'; renderPage(); });
   $('sidebar-user-profile')?.addEventListener('click', (e) => { openGeminiStyleAccountPopup(e.currentTarget); });
 
-  $('logout')?.addEventListener('click', async()=>{try{await api('/api/auth/logout',{method:'POST',body:{}});}finally{state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};authView('login');}};
+  $('logout')?.addEventListener('click', async()=>{try{await api('/api/auth/logout',{method:'POST',body:{}});}finally{state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};authView('login');}});
 }
 
 function render(){
@@ -393,16 +388,16 @@ function draftCard(m,i){
   const lines=(d.preview||[]).map(x=>`<div class="d-line">${esc(x)}</div>`).join('');
   let foot='';
   if(d.status==='PENDING') foot=`<div class="d-actions"><button class="btn primary" data-i="${i}" data-act="approve">Confirm</button><button class="btn" data-i="${i}" data-act="reject">Reject</button></div>`;
-  else if(d.status==='POSTED') foot='<div class="d-done">✓ Entry posted successfully</div>';
-  else foot='<div class="d-done">✕ Draft rejected</div>';
-  return `<div class="draft-card"><div class="d-title">Draft entry · not posted yet</div>${lines}${foot}</div>`;
+  else if(d.status==='POSTED') foot='<div class="d-done">✓ Entry ledger mein post ho gayi</div>';
+  else foot='<div class="d-done">✕ Draft reject kiya, kuch post nahi hua</div>';
+  return `<div class="draft-card"><div class="d-title">Draft entry · abhi post nahi hui</div>${lines}${foot}</div>`;
 }
 
 function renderChatLog(){
   const log=$('chat-log');if(!log)return;
   const msgs=chatLog();
   if(!msgs.length){
-    log.innerHTML=`<div class="chat-hello" style="text-align:center; padding:10px;"><div class="chat-avatar">${PULSE_ICON(26)}</div><h3 style="font-size: 38px; font-weight: 600; margin-top: 12px; letter-spacing: -0.5px;">How can I help you?</h3><p style="font-size: 16px; color: var(--muted); margin-top: 4px;">Ask about your business in simple language.</p></div>`;
+    log.innerHTML=`<div class="chat-hello" style="text-align:center; padding:10px;"><div class="chat-avatar">${PULSE_ICON(26)}</div><h3 style="font-size: 38px; font-weight: 600; margin-top: 12px; letter-spacing: -0.5px;">How can I help you?</h3><p style="font-size: 16px; color: var(--muted); margin-top: 4px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p></div>`;
   }else{
     log.innerHTML=msgs.map((m,i)=>m.role==='user'
       ?`<div class="msg user" style="margin:8px 0; text-align:right;"><div class="bubble" style="display:inline-block; background:var(--primary); padding:8px 12px; border-radius:12px;">${m.fileUrl?fileBubble(m):''}${esc(m.text)}</div></div>`
@@ -423,12 +418,12 @@ async function sendChat(raw){
   if(!textValue||state.chatBusy)return;
   const cid=state.companyId,msgs=chatLog();
   msgs.push({role:'user',text:textValue});
-  const pending={role:'bot',text:'Thinking…',typing:true};
+  const pending={role:'bot',text:'Soch raha hoon…',typing:true};
   msgs.push(pending);state.chatBusy=true;renderChatLog();
   try{
     const history=chatHistory(msgs);
     const r=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:textValue,history}});
-    pending.text=r.reply||'Could not understand, please write again.';pending.typing=false;
+    pending.text=r.reply||'Samajh nahi aaya, dobara likhiye.';pending.typing=false;
     if(r.mode==='DRAFT_CREATED'&&r.draft_id) pending.draft={id:r.draft_id,preview:r.preview||[],status:'PENDING'};
   }catch(err){pending.text=err.message;pending.typing=false;pending.error=true;}
   finally{state.chatBusy=false;if(state.page==='chat'&&state.companyId===cid)renderChatLog();}
@@ -438,7 +433,7 @@ function fileToBase64(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
     reader.onload=()=>resolve(String(reader.result).split(',')[1]);
-    reader.onerror=()=>reject(new Error('File cannot be read'));
+    reader.onerror=()=>reject(new Error('File padhi nahi ja saki'));
     reader.readAsDataURL(file);
   });
 }
@@ -453,8 +448,8 @@ async function uploadFile(file,type){
 
 async function sendChatWithFile(text,file,type){
   const cid=state.companyId,msgs=chatLog();
-  msgs.push({role:'user',text:text||'Sent file',fileUrl:file?URL.createObjectURL(file):null,fileName:file?.name,fileType:type});
-  const pending={role:'bot',text:'Checking file…',typing:true};
+  msgs.push({role:'user',text:text||'File bheji',fileUrl:file?URL.createObjectURL(file):null,fileName:file?.name,fileType:type});
+  const pending={role:'bot',text:'File check kar raha hoon…',typing:true};
   msgs.push(pending);state.chatBusy=true;renderChatLog();
   try{
     let fileUrl=null;
@@ -465,8 +460,8 @@ async function sendChatWithFile(text,file,type){
       documentId=up.id;
     }
     const history=chatHistory(msgs);
-    const res=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:text||'Attached file',file_url:fileUrl,file_type:type,document_id:documentId,history}});
-    pending.text=res.reply||'File received.';
+    const res=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:text||'File attach ki hai',file_url:fileUrl,file_type:type,document_id:documentId,history}});
+    pending.text=res.reply||'File mil gayi. Amount ya party ka naam likh do, phir draft banega.';
     pending.typing=false;
     if(res.mode==='DRAFT_CREATED'&&res.draft_id){
       pending.draft={id:res.draft_id,preview:res.preview||[],status:'PENDING'};
@@ -485,7 +480,7 @@ async function decideDraft(msg,act){
   try{
     await api(`/api/companies/${cid}/drafts/${msg.draft.id}/${act}`,{method:'POST',body:{}});
     msg.draft.status=act==='approve'?'POSTED':'REJECTED';
-    toast(act==='approve'?'Entry posted successfully':'Draft rejected');
+    toast(act==='approve'?'Entry post ho gayi':'Draft reject kiya');
   }catch(err){toast(err.message);}
   finally{state.chatBusy=false;if(state.page==='chat'&&state.companyId===cid)renderChatLog();}
 }
@@ -493,7 +488,7 @@ async function decideDraft(msg,act){
 function startVoice(input){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){
-    toast('Voice recognition not supported in this browser.');
+    toast('Mic is browser mein support nahi karta. Chrome try karo.');
     return;
   }
   if(listening){
@@ -501,13 +496,13 @@ function startVoice(input){
     return;
   }
   recognition=new SpeechRecognition();
-  recognition.lang = state.lang==='hi' ? 'hi-IN' : 'en-IN';
+  recognition.lang = state.lang==='en' ? 'en-IN' : 'hi-IN';
   recognition.interimResults=true;
   recognition.continuous=false;
   recognition.onstart=()=>{
     listening=true;
     $('chat-mic')?.classList.add('listening');
-    toast('Listening…');
+    toast('Boliye…');
   };
   recognition.onresult=e=>{
     let text='';
@@ -519,18 +514,15 @@ function startVoice(input){
   recognition.onerror=e=>{
     listening=false;
     $('chat-mic')?.classList.remove('listening');
-    toast('Mic error: '+e.error);
+    if(e.error==='not-allowed') toast('Mic permission Allow karo');
+    else if(e.error==='no-speech') toast('Awaaz sunai nahi di');
+    else toast('Mic error: '+e.error);
   };
   recognition.onend=()=>{
     listening=false;
     $('chat-mic')?.classList.remove('listening');
   };
   recognition.start();
-}
-
-function chatPage() {
-  const c = state.companies.find(x => x.id === state.companyId);
-  renderChatGPTStyleLayout(c);
 }
 
 function renderChatGPTStyleLayout(c) {
@@ -556,13 +548,13 @@ function renderChatGPTStyleLayout(c) {
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
           <div class="chat-avatar" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
           <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
-          <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">Ask about your business in simple language.</p>
+          <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           
           <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:24px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
             <input type="file" id="chat-photo" accept="image/*" class="hidden">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" class="hidden">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="Ask ChatGPT..." style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'Yahan likhiye, jaise: Ramesh ko 5000 ka maal becha':'Type here, e.g. Sold goods worth 5000 to Ramesh'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
@@ -588,26 +580,25 @@ function renderChatGPTStyleLayout(c) {
     mainAreaContent = `<div style="padding:40px; max-width:800px; margin:0 auto; width:100%;"><h2>⚙️ Customize AI Assistant</h2><p class="muted">Tailor your AI accountant prompt rules and behavior.</p></div>`;
   }
 
-  const userName = state.user?.name || 'User';
-  const userEmail = state.user?.email || '';
+  const userName = state.user?.name || 'Prince Kumar';
   const userInitial = userName[0].toUpperCase();
 
   const sidebarWidth = isExpanded ? '260px' : '68px';
 
   $('app').innerHTML = `
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden;">
-      <!-- ChatGPT Style Collapsible Vertical Sidebar -->
+      <!-- Gemini/ChatGPT Style Collapsible Vertical Sidebar -->
       <div id="chatgpt-sidebar" style="width:${sidebarWidth}; min-width:${sidebarWidth}; border-right:1px solid var(--border); padding:16px 10px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.3); overflow-y:auto; transition: width 0.2s ease;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
           <button id="toggle-sidebar-btn" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px; padding:6px; border-radius:8px;" title="Open / Close sidebar">☰</button>
-          ${isExpanded ? `<span style="font-weight:600; font-size:14px;">ChatGPT</span>` : ''}
+          ${isExpanded ? `<span style="font-weight:600; font-size:14px;">Apna Business</span>` : ''}
           <button id="open-settings-cog" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:16px; padding:6px;" title="Settings">⚙️</button>
         </div>
         
         <div style="display:flex; flex-direction:column; gap:6px; width:100%;">
-          <button class="btn" id="ai-nav-home" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='home'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="New chat">💬 ${isExpanded?'<span>New chat</span>':''}</button>
-          <button class="btn" id="ai-nav-schedules" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='schedules'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Scheduled">📅 ${isExpanded?'<span>Scheduled</span>':''}</button>
-          <button class="btn" id="ai-nav-connectors" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='connectors'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Plugins">🔗 ${isExpanded?'<span>Plugins</span>':''}</button>
+          <button class="btn" id="ai-nav-home" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='home'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Home / Chat">💬 ${isExpanded?'<span>Chat</span>':''}</button>
+          <button class="btn" id="ai-nav-schedules" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='schedules'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Schedules">📅 ${isExpanded?'<span>Schedules</span>':''}</button>
+          <button class="btn" id="ai-nav-connectors" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='connectors'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Connectors">🔗 ${isExpanded?'<span>Connectors</span>':''}</button>
           <button class="btn" id="ai-nav-images" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='images'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Images">🖼️ ${isExpanded?'<span>Images</span>':''}</button>
           <button class="btn" id="ai-nav-customize" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiSection==='customize'?'rgba(255,255,255,0.15)':'none'}; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Customize">⚙️ ${isExpanded?'<span>Customize</span>':''}</button>
         </div>
@@ -615,11 +606,12 @@ function renderChatGPTStyleLayout(c) {
         <div style="border-top:1px solid var(--border); margin:6px 0;"></div>
 
         <div style="display:flex; flex-direction:column; gap:4px;">
-          <button class="btn" id="ai-mode-chat-btn" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiMode==='chat'?'rgba(255,255,255,0.1)':'none'}; border:none; padding:8px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Dashboard">📊 ${isExpanded?'<span>Dashboard</span>':''}</button>
+          <button class="btn" id="ai-mode-chat-btn" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiMode==='chat'?'rgba(255,255,255,0.1)':'none'}; border:none; padding:8px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Chat Mode">🗨️ ${isExpanded?'<span>Chat Mode</span>':''}</button>
+          <button class="btn" id="ai-mode-task-btn" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:${state.aiMode==='task'?'rgba(255,255,255,0.1)':'none'}; border:none; padding:8px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Task Mode">📋 ${isExpanded?'<span>Task Mode</span>':''}</button>
         </div>
 
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; width:100%; border-top:1px solid var(--border); padding-top:12px;">
-          <button class="btn" id="back-to-dashboard-btn" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:none; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Explore">🧭 ${isExpanded?'<span>Explore</span>':''}</button>
+          <button class="btn" id="back-to-dashboard-btn" style="justify-content:${isExpanded?'flex-start':'center'}; gap:10px; text-align:left; background:none; border:none; padding:10px 12px; border-radius:8px; color:var(--text); cursor:pointer;" title="Dashboard">📊 ${isExpanded?'<span>Dashboard</span>':''}</button>
           <div id="ai-sidebar-user-profile" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.03);">
             <div style="background:var(--primary); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px;">${userInitial}</div>
             ${isExpanded ? `
@@ -634,12 +626,8 @@ function renderChatGPTStyleLayout(c) {
       <!-- Main AI Workspace -->
       <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow-y:auto; background:var(--bg); height:100vh;">
         <header class="topbar" style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <h2 style="font-size:16px; margin:0;">${c?esc(c.name):'Create your business'}</h2>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div class="status" style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
-          </div>
+          <div><h2 style="font-size:16px; margin:0;">${c?esc(c.name):'Create your business'}</h2></div>
+          <div class="status" style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
         </header>
         <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
           ${mainAreaContent}
@@ -664,10 +652,8 @@ function renderChatGPTStyleLayout(c) {
   $('ai-nav-images').onclick = () => { state.aiSection = 'images'; renderChatGPTStyleLayout(c); };
   $('ai-nav-customize').onclick = () => { state.aiSection = 'customize'; renderChatGPTStyleLayout(c); };
 
-  $('ai-mode-chat-btn').onclick = () => {
-    state.page = 'dashboard';
-    render();
-  };
+  $('ai-mode-chat-btn').onclick = () => { state.aiMode = 'chat'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
+  $('ai-mode-task-btn').onclick = () => { state.aiMode = 'task'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
 
   $('ai-sidebar-user-profile').onclick = (e) => { openGeminiStyleAccountPopup(e.currentTarget); };
 
@@ -771,7 +757,7 @@ function renderChatGPTStyleLayout(c) {
 async function dashboard(){
   const d=await api(`/api/companies/${state.companyId}/dashboard`);
   $('content').innerHTML=`<div class="cards">
-    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise']].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
+    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise]].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
   </div>
   <section class="panel">
     <div class="panel-head"><h3>Dashboard Overview</h3></div>
@@ -818,11 +804,4 @@ function invoiceForm(kind){
   // invoice creation/landings
 }
 
-(async()=>{
-  const loggedIn = await refreshSession();
-  if (loggedIn) {
-    render();
-  } else {
-    authView('login');
-  }
-})();
+(async()=>{if(await refreshSession()) render(); else authView('login');})();
