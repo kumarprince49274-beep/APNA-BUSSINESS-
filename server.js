@@ -514,12 +514,10 @@ export function createServer(
     }
   });
 
-  // Old keyword assistant (kept so nothing else breaks)
   add('POST', '/api/companies/:companyId/assistant', 'read', ({ params, body }) =>
     localAssistant(db, params.companyId, body.message)
   );
 
-  // NEW: the chat box in the app calls this. AI answer + confirm-first drafts.
   add('POST', '/api/companies/:companyId/chat', 'read', ({ params, body, session }) =>
     aiChat(db, params.companyId, session.user.id, body)
   );
@@ -649,7 +647,6 @@ export function createServer(
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
 
-    // blob: added to img-src so a selected photo preview shows in chat
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
