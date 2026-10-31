@@ -214,8 +214,8 @@ function openGeminiStyleAccountPopup(targetEl) {
   const existing = document.getElementById('gemini-account-popup');
   if (existing) { existing.remove(); return; }
 
-  const userName = state.user?.name || 'Prince Kumar';
-  const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
+  const userName = state.user?.name || 'User';
+  const userEmail = state.user?.email || '';
   const userInitial = userName[0].toUpperCase();
 
   const popup = document.createElement('div');
@@ -293,8 +293,8 @@ function layout(){
     return;
   }
 
-  const userName = state.user?.name || 'Prince Kumar';
-  const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
+  const userName = state.user?.name || 'User';
+  const userEmail = state.user?.email || '';
   const userInitial = userName[0].toUpperCase();
 
   $('app').innerHTML=`<div class="workspace"><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>${t('brandSub')}</small></div></div>
@@ -588,8 +588,8 @@ function renderChatGPTStyleLayout(c) {
     mainAreaContent = `<div style="padding:40px; max-width:800px; margin:0 auto; width:100%;"><h2>⚙️ Customize AI Assistant</h2><p class="muted">Tailor your AI accountant prompt rules and behavior.</p></div>`;
   }
 
-  const userName = state.user?.name || 'Prince Kumar';
-  const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
+  const userName = state.user?.name || 'User';
+  const userEmail = state.user?.email || '';
   const userInitial = userName[0].toUpperCase();
 
   const sidebarWidth = isExpanded ? '260px' : '68px';
