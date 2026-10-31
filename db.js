@@ -135,8 +135,6 @@ function migrate(db) {
       FOREIGN KEY(created_by) REFERENCES users(id)
     );
 
-    -- NEW: ledger.js / reports.js are written against "vouchers" (column order matters:
-    -- ledger.js inserts positionally into this table)
     CREATE TABLE IF NOT EXISTS vouchers (
       id TEXT PRIMARY KEY,
       company_id TEXT NOT NULL,
@@ -218,7 +216,6 @@ function migrate(db) {
       FOREIGN KEY(invoice_id) REFERENCES invoices(id) ON DELETE SET NULL
     );
 
-    -- NEW: reports.js reads these two tables (outstanding, GST, dashboard)
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
       company_id TEXT NOT NULL,
@@ -278,7 +275,6 @@ function migrate(db) {
       FOREIGN KEY(uploaded_by) REFERENCES users(id)
     );
 
-    -- NEW: documents.js is written against this table (photo / bill / file uploads)
     CREATE TABLE IF NOT EXISTS private_documents (
       id TEXT PRIMARY KEY,
       company_id TEXT NOT NULL,
@@ -309,7 +305,6 @@ function migrate(db) {
       FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE SET NULL
     );
 
-    -- NEW: drafts.js is written against this table (entries wait here until Confirm)
     CREATE TABLE IF NOT EXISTS posting_drafts (
       id TEXT PRIMARY KEY,
       company_id TEXT NOT NULL,
@@ -396,29 +391,21 @@ function migrate(db) {
     CREATE INDEX IF NOT EXISTS idx_bank_lines_company ON bank_statement_lines(company_id);
     CREATE INDEX IF NOT EXISTS idx_workbooks_company ON workbooks(company_id);
   `);
-
 }
 
-// Old schema had journal_lines(journal_id). The code uses journal_lines(voucher_id).
-// Rebuilt ONLY when it is empty, so no accounting data can be lost.
 function fixOldJournalLines(db) {
   const cols = db.prepare('PRAGMA table_info(journal_lines)').all();
   if (!cols.length) return;
   if (cols.some((c) => c.name === 'voucher_id')) return;
 
   const count = db.prepare('SELECT COUNT(*) n FROM journal_lines').get().n;
-  if (count > 0) {
-    console.error('journal_lines has old format and contains data; not touching it.');
-    return;
-  }
+  if (count > 0) return;
 
   db.exec('PRAGMA foreign_keys = OFF;');
   db.exec('DROP TABLE IF EXISTS journal_lines');
   db.exec('PRAGMA foreign_keys = ON;');
 }
 
-// Purane galat schema (jo code se match nahi karta) wali tables hata deta hai.
-// Sirf wahi tables girti hain jinme koi company ban hi nahi payi thi; users/sessions safe rehte hain.
 function resetMismatchedTables(db) {
   const exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='companies'").get();
   if (!exists) return;
@@ -427,7 +414,7 @@ function resetMismatchedTables(db) {
   if (cols.some((c) => c.name === 'state_code')) return;
 
   const count = db.prepare('SELECT COUNT(*) n FROM companies').get().n;
-  if (count > 0) return; // data hai to kuch mat girao
+  if (count > 0) return;
 
   db.exec('PRAGMA foreign_keys = OFF;');
   for (const t of ['company_settings', 'subscriptions', 'audit_logs', 'audit_log', 'companies']) {
@@ -438,43 +425,27 @@ function resetMismatchedTables(db) {
 
 export function one(database, sql, ...params) {
   const connection = database || db;
-
-  if (!connection) {
-    throw new Error('Database is not initialized');
-  }
-
+  if (!connection) throw new Error('Database is not initialized');
   return connection.prepare(sql).get(...params);
 }
 
 export function all(database, sql, ...params) {
   const connection = database || db;
-
-  if (!connection) {
-    throw new Error('Database is not initialized');
-  }
-
+  if (!connection) throw new Error('Database is not initialized');
   return connection.prepare(sql).all(...params);
 }
 
 export function run(database, sql, ...params) {
   const connection = database || db;
-
-  if (!connection) {
-    throw new Error('Database is not initialized');
-  }
-
+  if (!connection) throw new Error('Database is not initialized');
   return connection.prepare(sql).run(...params);
 }
 
 export function transaction(database, callback) {
   const connection = database || db;
-
-  if (!connection) {
-    throw new Error('Database is not initialized');
-  }
+  if (!connection) throw new Error('Database is not initialized');
 
   connection.exec('BEGIN');
-
   try {
     const result = callback();
     connection.exec('COMMIT');
