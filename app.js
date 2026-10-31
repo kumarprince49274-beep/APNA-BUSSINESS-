@@ -13,41 +13,41 @@ const state = {
   chatBusy: false, 
   aiMode: 'chat', 
   aiSection: 'home', 
-  sidebarExpanded: false, 
-  lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
+  sidebarExpanded: true, 
+  lang: (() => { try { return localStorage.getItem('apna_lang') || 'en'; } catch { return 'en'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 
 const dict = {
   hi: {
     brandSub: 'अकाउंटिंग और ईआरपी',
-    mainMenu: 'मुख्य डैशबोर्ड',
-    dashboard: 'डैशबोर्ड',
-    aiChat: 'एआई अकाउंटेंट',
-    vouchersBilling: 'वाउचर और बिलिंग',
-    vouchersList: 'वाउचर सूची',
-    salesPurchases: 'बिक्री / खरीद (Invoices)',
-    accountsSheet: 'खाता और बैलेंस शीट',
-    balanceSheet: 'बैलेंस शीट',
-    profitLoss: 'लाभ और हानि (P&L)',
-    inventoryStock: 'इन्वेंट्री और स्टॉक',
-    productsInv: 'स्टॉक / इन्वेंट्री',
-    contactsList: 'ग्राहक / आपूर्तिकर्ता',
-    gstTax: 'जीएसटी और टैक्स',
-    gstBreakdown: 'जीएसटी ब्रेकडाउन',
-    companyMgmt: 'कंपनी मैनेजमेंट',
-    companyAlter: 'कंपनी ऑल्टर / एडिट',
-    appSettings: 'एप सेटिंग्स (भाषा/थीम)',
-    createCompanyBtn: '+ नई कंपनी बनाएं',
+    mainMenu: 'Main Dashboard',
+    dashboard: 'Dashboard',
+    aiChat: 'AI Accountant',
+    vouchersBilling: 'Vouchers & Billing',
+    vouchersList: 'Vouchers List',
+    salesPurchases: 'Sales / Purchases',
+    accountsSheet: 'Accounts & Sheet',
+    balanceSheet: 'Balance Sheet',
+    profitLoss: 'Profit & Loss',
+    inventoryStock: 'Inventory & Stock',
+    productsInv: 'Products / Inventory',
+    contactsList: 'Customers / Suppliers',
+    gstTax: 'GST & Tax',
+    gstBreakdown: 'GST Breakdown',
+    companyMgmt: 'Company Management',
+    companyAlter: 'Company Alter / Edit',
+    appSettings: 'App Settings (Theme/Lang)',
+    createCompanyBtn: '+ Create Company',
     alterCompanyBtn: 'Alter Company',
-    logout: 'लॉगआउट',
-    sales: 'कुल बिक्री (Sales)',
-    purchases: 'कुल खरीद (Purchases)',
-    profit: 'शुद्ध लाभ (Profit)',
-    cash: 'नकद (Cash)',
-    bank: 'बैंक (Bank)',
-    inventoryVal: 'स्टॉक मूल्य',
-    welcomeMsg: 'अपने बिजनेस का पूरा लेखा-जोखा और वित्तीय स्थिति यहाँ देखें।'
+    logout: 'Logout',
+    sales: 'Sales',
+    purchases: 'Purchases',
+    profit: 'Profit',
+    cash: 'Cash',
+    bank: 'Bank',
+    inventoryVal: 'Inventory',
+    welcomeMsg: 'View your complete business financial overview here.'
   },
   en: {
     brandSub: 'Accounting & ERP',
@@ -81,7 +81,7 @@ const dict = {
   }
 };
 
-const t = (key) => dict[state.lang]?.[key] || dict['hi'][key] || key;
+const t = (key) => dict[state.lang]?.[key] || dict['en'][key] || key;
 
 const PULSE_ICON = (size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
 
@@ -120,11 +120,11 @@ async function refreshSession(){
 function authView(mode='login'){
   $('app').innerHTML=`<main class="auth-shell"><section class="auth-card" translate="no">
     <div class="logo">${PULSE_ICON(26)}</div><h1 translate="no">APNA BUSINESS</h1>
-    <div class="seg"><button class="${mode==='login'?'active':''}" id="login-tab">${state.lang==='hi'?'लॉगिन':'Login'}</button><button class="${mode==='register'?'active':''}" id="register-tab">${state.lang==='hi'?'अकाउंट बनाएं':'Create account'}</button></div>
-    <form id="auth-form"><div id="name-wrap" class="${mode==='register'?'':'hidden'}"><label>${state.lang==='hi'?'नाम':'Name'}<input name="name" placeholder="${state.lang==='hi'?'आपका नाम':'Your name'}"></label></div>
-    <label>${state.lang==='hi'?'ईमेल':'Email'}<input name="email" type="email" required placeholder="you@example.com"></label>
-    <label>${state.lang==='hi'?'पासवर्ड':'Password'}<input name="password" type="password" required minlength="6" placeholder="${state.lang==='hi'?'कम से कम 6 अक्षर':'At least 6 characters'}"></label>
-    <button class="btn primary full" type="submit">${mode==='login'?(state.lang==='hi'?'लॉगिन':'Login'):(state.lang==='hi'?'अकाउंट बनाएं':'Create account')}</button>
+    <div class="seg"><button class="${mode==='login'?'active':''}" id="login-tab">Login</button><button class="${mode==='register'?'active':''}" id="register-tab">Create account</button></div>
+    <form id="auth-form"><div id="name-wrap" class="${mode==='register'?'':'hidden'}"><label>Name<input name="name" placeholder="Your name"></label></div>
+    <label>Email<input name="email" type="email" required placeholder="you@example.com"></label>
+    <label>Password<input name="password" type="password" required minlength="6" placeholder="At least 6 characters"></label>
+    <button class="btn primary full" type="submit">${mode==='login'?'Login':'Create account'}</button>
     
     <div style="display:flex;align-items:center;justify-content:center;margin:18px auto;width:100%;color:var(--muted);font-size:13px;">
       <div style="flex:1;border-top:1px solid var(--border);margin-right:12px;"></div> 
@@ -134,7 +134,7 @@ function authView(mode='login'){
 
     <button type="button" class="btn full" id="google-login-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#000;border:1px solid #ccc;font-weight:600;">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.16 21.03 7.23 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.18C.43 8.13 0 9.87 0 12s.43 3.87 1.18 5.39l4.09-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.23 0 3.16 2.97 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
-      ${state.lang==='hi'?'गूगल से जारी रखें':'Continue with Google'}
+      Continue with Google
     </button>
 
     <div id="auth-error" class="error"></div></form>
@@ -144,7 +144,7 @@ function authView(mode='login'){
   $('register-tab').onclick=()=>authView('register');
   
   $('google-login-btn').onclick=() => {
-    toast(state.lang==='hi'?'Google Sign-In ke liye Google API credentials required hain.':'Google Sign-In requires OAuth client setup.');
+    toast('Google Sign-In requires OAuth client setup.');
   };
 
   $('auth-form').onsubmit=async e=>{
@@ -170,7 +170,7 @@ function authView(mode='login'){
 function companySelect(){return `<select id="company-select">${state.companies.map(c=>`<option value="${esc(c.id)}" ${c.id===state.companyId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;}
 
 function openSettingsModal(){
-  const m = modal(state.lang==='hi' ? 'एप सेटिंग्स (App Settings)' : 'App Settings', `
+  const m = modal('App Settings', `
     <div style="display:flex;flex-direction:column;gap:16px;margin-top:10px; max-height: 70vh; overflow-y: auto; padding-right:4px;">
       <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase;">Subscription & Limits</div>
       <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Usage limits opened')">
@@ -181,15 +181,11 @@ function openSettingsModal(){
         <div><strong>Manage subscription</strong><div style="font-size:12px; color:var(--muted);">View billing & plan details</div></div>
         <span>›</span>
       </div>
-      <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Upgrade to Google AI Ultra opened')">
-        <div><strong>Upgrade to Google AI Ultra</strong><div style="font-size:12px; color:var(--muted);">Unlock advanced capabilities</div></div>
-        <span>⭐</span>
-      </div>
 
       <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:6px;">Preferences</div>
       
       <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>Theme / थीम</span>
+        <span>Theme</span>
         <select id="settings-theme-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
           <option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option>
           <option value="light" ${state.theme==='light'?'selected':''}>Light</option>
@@ -197,10 +193,10 @@ function openSettingsModal(){
       </label>
 
       <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>Language / भाषा</span>
+        <span>Language</span>
         <select id="settings-lang-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
-          <option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option>
           <option value="en" ${state.lang==='en'?'selected':''}>English</option>
+          <option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option>
         </select>
       </label>
 
@@ -219,7 +215,7 @@ function openSettingsModal(){
     } catch {}
     document.body.classList.toggle('light', state.theme === 'light');
     m.remove();
-    toast(state.lang==='hi' ? 'सेटिंग्स सफलतापूर्वक सहेज ली गई हैं!' : 'Settings saved successfully!');
+    toast('Settings saved successfully!');
     render();
   };
 }
@@ -407,16 +403,16 @@ function draftCard(m,i){
   const lines=(d.preview||[]).map(x=>`<div class="d-line">${esc(x)}</div>`).join('');
   let foot='';
   if(d.status==='PENDING') foot=`<div class="d-actions"><button class="btn primary" data-i="${i}" data-act="approve">Confirm</button><button class="btn" data-i="${i}" data-act="reject">Reject</button></div>`;
-  else if(d.status==='POSTED') foot='<div class="d-done">✓ Entry ledger mein post ho gayi</div>';
-  else foot='<div class="d-done">✕ Draft reject kiya, kuch post nahi hua</div>';
-  return `<div class="draft-card"><div class="d-title">Draft entry · abhi post nahi hui</div>${lines}${foot}</div>`;
+  else if(d.status==='POSTED') foot='<div class="d-done">✓ Entry posted successfully</div>';
+  else foot='<div class="d-done">✕ Draft rejected</div>';
+  return `<div class="draft-card"><div class="d-title">Draft entry · not posted yet</div>${lines}${foot}</div>`;
 }
 
 function renderChatLog(){
   const log=$('chat-log');if(!log)return;
   const msgs=chatLog();
   if(!msgs.length){
-    log.innerHTML=`<div class="chat-hello" style="text-align:center; padding:10px;"><div class="chat-avatar">${PULSE_ICON(26)}</div><h3 style="font-size: 38px; font-weight: 600; margin-top: 12px; letter-spacing: -0.5px;">How can I help you?</h3><p style="font-size: 16px; color: var(--muted); margin-top: 4px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p></div>`;
+    log.innerHTML=`<div class="chat-hello" style="text-align:center; padding:10px;"><div class="chat-avatar">${PULSE_ICON(26)}</div><h3 style="font-size: 38px; font-weight: 600; margin-top: 12px; letter-spacing: -0.5px;">How can I help you?</h3><p style="font-size: 16px; color: var(--muted); margin-top: 4px;">Ask about your business in simple language.</p></div>`;
   }else{
     log.innerHTML=msgs.map((m,i)=>m.role==='user'
       ?`<div class="msg user" style="margin:8px 0; text-align:right;"><div class="bubble" style="display:inline-block; background:var(--primary); padding:8px 12px; border-radius:12px;">${m.fileUrl?fileBubble(m):''}${esc(m.text)}</div></div>`
@@ -437,12 +433,12 @@ async function sendChat(raw){
   if(!textValue||state.chatBusy)return;
   const cid=state.companyId,msgs=chatLog();
   msgs.push({role:'user',text:textValue});
-  const pending={role:'bot',text:'Soch raha hoon…',typing:true};
+  const pending={role:'bot',text:'Thinking…',typing:true};
   msgs.push(pending);state.chatBusy=true;renderChatLog();
   try{
     const history=chatHistory(msgs);
     const r=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:textValue,history}});
-    pending.text=r.reply||'Samajh nahi aaya, dobara likhiye.';pending.typing=false;
+    pending.text=r.reply||'Could not understand, please write again.';pending.typing=false;
     if(r.mode==='DRAFT_CREATED'&&r.draft_id) pending.draft={id:r.draft_id,preview:r.preview||[],status:'PENDING'};
   }catch(err){pending.text=err.message;pending.typing=false;pending.error=true;}
   finally{state.chatBusy=false;if(state.page==='chat'&&state.companyId===cid)renderChatLog();}
@@ -452,7 +448,7 @@ function fileToBase64(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
     reader.onload=()=>resolve(String(reader.result).split(',')[1]);
-    reader.onerror=()=>reject(new Error('File padhi nahi ja saki'));
+    reader.onerror=()=>reject(new Error('File cannot be read'));
     reader.readAsDataURL(file);
   });
 }
@@ -467,8 +463,8 @@ async function uploadFile(file,type){
 
 async function sendChatWithFile(text,file,type){
   const cid=state.companyId,msgs=chatLog();
-  msgs.push({role:'user',text:text||'File bheji',fileUrl:file?URL.createObjectURL(file):null,fileName:file?.name,fileType:type});
-  const pending={role:'bot',text:'File check kar raha hoon…',typing:true};
+  msgs.push({role:'user',text:text||'Sent file',fileUrl:file?URL.createObjectURL(file):null,fileName:file?.name,fileType:type});
+  const pending={role:'bot',text:'Checking file…',typing:true};
   msgs.push(pending);state.chatBusy=true;renderChatLog();
   try{
     let fileUrl=null;
@@ -479,8 +475,8 @@ async function sendChatWithFile(text,file,type){
       documentId=up.id;
     }
     const history=chatHistory(msgs);
-    const res=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:text||'File attach ki hai',file_url:fileUrl,file_type:type,document_id:documentId,history}});
-    pending.text=res.reply||'File mil gayi. Amount ya party ka naam likh do, phir draft banega.';
+    const res=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:text||'Attached file',file_url:fileUrl,file_type:type,document_id:documentId,history}});
+    pending.text=res.reply||'File received.';
     pending.typing=false;
     if(res.mode==='DRAFT_CREATED'&&res.draft_id){
       pending.draft={id:res.draft_id,preview:res.preview||[],status:'PENDING'};
@@ -499,7 +495,7 @@ async function decideDraft(msg,act){
   try{
     await api(`/api/companies/${cid}/drafts/${msg.draft.id}/${act}`,{method:'POST',body:{}});
     msg.draft.status=act==='approve'?'POSTED':'REJECTED';
-    toast(act==='approve'?'Entry post ho gayi':'Draft reject kiya');
+    toast(act==='approve'?'Entry posted successfully':'Draft rejected');
   }catch(err){toast(err.message);}
   finally{state.chatBusy=false;if(state.page==='chat'&&state.companyId===cid)renderChatLog();}
 }
@@ -507,7 +503,7 @@ async function decideDraft(msg,act){
 function startVoice(input){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){
-    toast('Mic is browser mein support nahi karta. Chrome try karo.');
+    toast('Voice recognition not supported in this browser.');
     return;
   }
   if(listening){
@@ -515,13 +511,13 @@ function startVoice(input){
     return;
   }
   recognition=new SpeechRecognition();
-  recognition.lang = state.lang==='en' ? 'en-IN' : 'hi-IN';
+  recognition.lang = state.lang==='hi' ? 'hi-IN' : 'en-IN';
   recognition.interimResults=true;
   recognition.continuous=false;
   recognition.onstart=()=>{
     listening=true;
     $('chat-mic')?.classList.add('listening');
-    toast('Boliye…');
+    toast('Listening…');
   };
   recognition.onresult=e=>{
     let text='';
@@ -533,9 +529,7 @@ function startVoice(input){
   recognition.onerror=e=>{
     listening=false;
     $('chat-mic')?.classList.remove('listening');
-    if(e.error==='not-allowed') toast('Mic permission Allow karo');
-    else if(e.error==='no-speech') toast('Awaaz sunai nahi di');
-    else toast('Mic error: '+e.error);
+    toast('Mic error: '+e.error);
   };
   recognition.onend=()=>{
     listening=false;
@@ -572,13 +566,13 @@ function renderChatGPTStyleLayout(c) {
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
           <div class="chat-avatar" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
           <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
-          <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
+          <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">Ask about your business in simple language.</p>
           
           <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:24px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
             <input type="file" id="chat-photo" accept="image/*" class="hidden">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" class="hidden">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'Yahan likhiye, jaise: Ramesh ko 5000 ka maal becha':'Type here, e.g. Sold goods worth 5000 to Ramesh'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="Ask ChatGPT..." style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
