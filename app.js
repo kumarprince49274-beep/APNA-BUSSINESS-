@@ -13,12 +13,11 @@ const state = {
   chatBusy: false, 
   aiMode: 'chat', 
   aiSection: 'home', 
-  sidebarExpanded: false, // Default collapsed like Gemini/ChatGPT
+  sidebarExpanded: false, 
   lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 
-// Complete Bilingual Dictionary (Hindi & English)
 const dict = {
   hi: {
     brandSub: 'अकाउंटिंग और ईआरपी',
@@ -31,9 +30,9 @@ const dict = {
     accountsSheet: 'खाता और बैलेंस शीट',
     balanceSheet: 'बैलेंस शीट',
     profitLoss: 'लाभ और हानि (P&L)',
-    inventoryStock: 'इन्वेंटरी और स्टॉक',
-    productsInv: 'स्टॉक / इन्वेंटरी',
-    contactsList: 'ग्राहक / सप्लायर',
+    inventoryStock: 'इन्वेंट्री और स्टॉक',
+    productsInv: 'स्टॉक / इन्वेंट्री',
+    contactsList: 'ग्राहक / आपूर्तिकर्ता',
     gstTax: 'जीएसटी और टैक्स',
     gstBreakdown: 'जीएसटी ब्रेकडाउन',
     companyMgmt: 'कंपनी मैनेजमेंट',
@@ -97,18 +96,25 @@ async function api(path,options={}){
   if(state.csrf && opts.method && opts.method!=='GET') opts.headers['X-CSRF-Token']=state.csrf;
   const r=await fetch(path,opts);
   let data=null; try{data=await r.json();}catch{}
-  if(!r.ok) throw new Error(data?.error||`Request failed (${r.status})`);
+  if(!r.ok) throw Object.assign(new Error(data?.error||`Request failed (${r.status})`), { status: r.status });
   return data;
 }
 
 async function refreshSession(){
   try{
     const me=await api('/api/auth/me');
+    if (!me || !me.user) return false;
     state.user=me.user; state.csrf=me.csrf;
     state.companies=await api('/api/companies');
     if(!state.companyId || !state.companies.some(c=>c.id===state.companyId)) state.companyId=state.companies[0]?.id||null;
     return true;
-  }catch{ return false; }
+  }catch(err){ 
+    if (err.status === 401) {
+      state.user = null;
+      state.csrf = null;
+    }
+    return false; 
+  }
 }
 
 function authView(mode='login'){
@@ -141,11 +147,24 @@ function authView(mode='login'){
     toast(state.lang==='hi'?'Google Sign-In ke liye Google API credentials required hain.':'Google Sign-In requires OAuth client setup.');
   };
 
-  $('auth-form').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.currentTarget);try{
-    if(mode==='register') await api('/api/auth/register',{method:'POST',body:{name:fd.get('name'),email:fd.get('email'),password:fd.get('password')}});
-    await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}}).then(x=>{state.user=x.user;state.csrf=x.csrf;});
-    state.companies=await api('/api/companies');state.companyId=state.companies[0]?.id||null;render();
-  }catch(err){$('auth-error').textContent=err.message;}};
+  $('auth-form').onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(e.currentTarget);
+    try{
+      if(mode==='register') {
+        await api('/api/auth/register',{method:'POST',body:{name:fd.get('name'),email:fd.get('email'),password:fd.get('password')}});
+      }
+      const res = await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}});
+      state.user = res.user; 
+      state.csrf = res.csrf;
+      state.companies = await api('/api/companies');
+      state.companyId = state.companies[0]?.id || null;
+      render();
+    }catch(err){
+      const errEl = $('auth-error');
+      if(errEl) errEl.textContent = err.message;
+    }
+  };
 }
 
 function companySelect(){return `<select id="company-select">${state.companies.map(c=>`<option value="${esc(c.id)}" ${c.id===state.companyId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;}
@@ -343,7 +362,7 @@ function layout(){
   $('top-alter-company')?.addEventListener('click', () => { state.page = 'settings'; renderPage(); });
   $('sidebar-user-profile')?.addEventListener('click', (e) => { openGeminiStyleAccountPopup(e.currentTarget); });
 
-  $('logout')?.addEventListener('click', async()=>{try{await api('/api/auth/logout',{method:'POST',body:{}});}finally{state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};authView('login');}});
+  $('logout')?.addEventListener('click', async()=>{try{await api('/api/auth/logout',{method:'POST',body:{}});}finally{state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};authView('login');}};
 }
 
 function render(){
@@ -523,6 +542,11 @@ function startVoice(input){
     $('chat-mic')?.classList.remove('listening');
   };
   recognition.start();
+}
+
+function chatPage() {
+  const c = state.companies.find(x => x.id === state.companyId);
+  renderChatGPTStyleLayout(c);
 }
 
 function renderChatGPTStyleLayout(c) {
@@ -757,7 +781,7 @@ function renderChatGPTStyleLayout(c) {
 async function dashboard(){
   const d=await api(`/api/companies/${state.companyId}/dashboard`);
   $('content').innerHTML=`<div class="cards">
-    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise]].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
+    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise']].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
   </div>
   <section class="panel">
     <div class="panel-head"><h3>Dashboard Overview</h3></div>
@@ -804,4 +828,11 @@ function invoiceForm(kind){
   // invoice creation/landings
 }
 
-(async()=>{if(await refreshSession()) render(); else authView('login');})();
+(async()=>{
+  const loggedIn = await refreshSession();
+  if (loggedIn) {
+    render();
+  } else {
+    authView('login');
+  }
+})();
