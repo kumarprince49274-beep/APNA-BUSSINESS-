@@ -586,9 +586,9 @@ function renderChatGPTStyleLayout(c) {
   const userInitial = userName[0].toUpperCase();
 
   $('app').innerHTML = `
-    <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden;">
+    <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0;">
       <!-- ChatGPT Style Left Sidebar -->
-      <div id="chatgpt-sidebar" style="width:68px; min-width:68px; border-right:1px solid var(--border); padding:16px 8px; display:flex; flex-direction:column; gap:16px; background:rgba(0,0,0,0.3); align-items:center; overflow-y:auto;">
+      <div id="chatgpt-sidebar" style="width:68px; min-width:68px; border-right:1px solid var(--border); padding:16px 8px; display:flex; flex-direction:column; gap:16px; background:rgba(0,0,0,0.3); align-items:center; height:100vh; box-sizing:border-box;">
         <button id="toggle-sidebar-expand" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px; padding:8px; border-radius:8px;" title="Toggle Sidebar">🏠</button>
         
         <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">
@@ -599,7 +599,7 @@ function renderChatGPTStyleLayout(c) {
           <button class="side-icon-btn" id="ai-nav-customize-icon" style="background:${state.aiSection==='customize'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; width:100%; display:flex; justify-content:center; font-size:18px;" title="Customize">⚙️</button>
         </div>
 
-        <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; border-top:1px solid var(--border); padding-top:12px;">
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; border-top:1px solid var(--border); padding-top:12px; margin-bottom:16px;">
           <button id="back-to-dashboard-btn" style="background:none; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; font-size:18px;" title="Back to Dashboard">📊</button>
           <div id="ai-sidebar-user-profile" style="background:var(--primary); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px; cursor:pointer;" title="${esc(userName)}">${userInitial}</div>
         </div>
