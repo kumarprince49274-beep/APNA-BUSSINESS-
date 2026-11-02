@@ -589,26 +589,25 @@ function renderChatGPTStyleLayout(c) {
   $('app').innerHTML = `
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
       <!-- Expanded ChatGPT Style Left Sidebar -->
-      <div id="chatgpt-sidebar" style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.3); height:100vh; box-sizing:border-box; overflow-y:auto;">
+      <div style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.3); height:100vh; box-sizing:border-box; overflow-y:auto;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;">🏠</div>
+            <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff;">🏠</div>
             <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
           </div>
-          <button id="toggle-sidebar-collapse" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:16px;" title="Collapse">◀</button>
         </div>
 
-        <button class="btn primary full" id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer;">
+        <button class="btn primary full" id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:var(--text); color:var(--bg); border:none;">
           <span>+ New chat</span>
         </button>
 
         <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
           <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Workspace</div>
-          <button class="side-nav-btn ${state.aiSection==='home'?'active':''}" id="ai-nav-home" style="background:${state.aiSection==='home'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">💬 Projects / Home</button>
-          <button class="side-nav-btn ${state.aiSection==='schedules'?'active':''}" id="ai-nav-schedules" style="background:${state.aiSection==='schedules'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">📅 Schedules</button>
-          <button class="side-nav-btn ${state.aiSection==='connectors'?'active':''}" id="ai-nav-connectors" style="background:${state.aiSection==='connectors'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🔗 Connectors</button>
-          <button class="side-nav-btn ${state.aiSection==='images'?'active':''}" id="ai-nav-images" style="background:${state.aiSection==='images'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🖼️ Images & Files</button>
-          <button class="side-nav-btn ${state.aiSection==='customize'?'active':''}" id="ai-nav-customize" style="background:${state.aiSection==='customize'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">⚙️ Customize</button>
+          <button id="ai-nav-home" style="background:${state.aiSection==='home'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">💬 Projects / Home</button>
+          <button id="ai-nav-schedules" style="background:${state.aiSection==='schedules'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">📅 Schedules</button>
+          <button id="ai-nav-connectors" style="background:${state.aiSection==='connectors'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🔗 Connectors</button>
+          <button id="ai-nav-images" style="background:${state.aiSection==='images'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🖼️ Images & Files</button>
+          <button id="ai-nav-customize" style="background:${state.aiSection==='customize'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">⚙️ Customize</button>
         </div>
 
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
@@ -626,20 +625,15 @@ function renderChatGPTStyleLayout(c) {
 
       <!-- Main AI Workspace -->
       <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow-y:auto; background:var(--bg); height:100vh;">
-        <header class="topbar" style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-          <div><h2 style="font-size:16px; margin:0;">${c?esc(c.name):'Create your business'}</h2></div>
-          <div class="status" style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
+        <header style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+          <div><h2 style="font-size:16px; margin:0; color:var(--text);">${c?esc(c.name):'Create your business'}</h2></div>
+          <div style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
         </header>
         <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
           ${mainAreaContent}
         </div>
       </div>
     </div>`;
-
-  $('toggle-sidebar-collapse').onclick = () => {
-    state.page = 'dashboard';
-    render();
-  };
 
   $('back-to-dashboard-btn').onclick = () => {
     state.page = 'dashboard';
