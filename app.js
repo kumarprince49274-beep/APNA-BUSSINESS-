@@ -17,7 +17,7 @@ const state = {
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 
-// Pure Bilingual Dictionary
+// Pure Bilingual Dictionary (English & Hindi)
 const dict = {
   hi: {
     brandSub: 'अकाउंटिंग और ईआरपी',
@@ -556,7 +556,7 @@ function renderChatGPTStyleLayout(c) {
             <input type="file" id="chat-photo" accept="image/*" class="hidden">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" class="hidden">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'Yahan likhiye, jaise: Ramesh ko 5000 ka maal becha':'Type here, e.g. Sold goods worth 5000 to Ramesh'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'Ask':'Ask'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
