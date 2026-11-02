@@ -553,8 +553,8 @@ function renderChatGPTStyleLayout(c) {
           <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           
           <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:24px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
-            <input type="file" id="chat-photo" accept="image/*" class="hidden">
-            <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" class="hidden">
+            <input type="file" id="chat-photo" accept="image/*" style="display:none;">
+            <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
             <textarea id="chat-input" rows="1" maxlength="1500" placeholder="Ask" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
@@ -583,25 +583,44 @@ function renderChatGPTStyleLayout(c) {
   }
 
   const userName = state.user?.name || 'Prince Kumar';
+  const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
   const userInitial = userName[0].toUpperCase();
 
   $('app').innerHTML = `
-    <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0;">
-      <!-- ChatGPT Style Left Sidebar -->
-      <div id="chatgpt-sidebar" style="width:68px; min-width:68px; border-right:1px solid var(--border); padding:16px 8px; display:flex; flex-direction:column; gap:16px; background:rgba(0,0,0,0.3); align-items:center; height:100vh; box-sizing:border-box;">
-        <button id="toggle-sidebar-expand" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px; padding:8px; border-radius:8px;" title="Toggle Sidebar">🏠</button>
-        
-        <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">
-          <button class="side-icon-btn" id="ai-nav-home-icon" style="background:${state.aiSection==='home'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; width:100%; display:flex; justify-content:center; font-size:18px;" title="Home">💬</button>
-          <button class="side-icon-btn" id="ai-nav-schedules-icon" style="background:${state.aiSection==='schedules'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; width:100%; display:flex; justify-content:center; font-size:18px;" title="Schedules">📅</button>
-          <button class="side-icon-btn" id="ai-nav-connectors-icon" style="background:${state.aiSection==='connectors'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; width:100%; display:flex; justify-content:center; font-size:18px;" title="Connectors">🔗</button>
-          <button class="side-icon-btn" id="ai-nav-images-icon" style="background:${state.aiSection==='images'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; width:100%; display:flex; justify-content:center; font-size:18px;" title="Images">🖼️</button>
-          <button class="side-icon-btn" id="ai-nav-customize-icon" style="background:${state.aiSection==='customize'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; width:100%; display:flex; justify-content:center; font-size:18px;" title="Customize">⚙️</button>
+    <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
+      <!-- Expanded ChatGPT Style Left Sidebar -->
+      <div id="chatgpt-sidebar" style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.3); height:100vh; box-sizing:border-box; overflow-y:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;">🏠</div>
+            <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
+          </div>
+          <button id="toggle-sidebar-collapse" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:16px;" title="Collapse">◀</button>
         </div>
 
-        <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; border-top:1px solid var(--border); padding-top:12px; margin-bottom:16px;">
-          <button id="back-to-dashboard-btn" style="background:none; border:none; color:var(--text); cursor:pointer; padding:10px; border-radius:8px; font-size:18px;" title="Back to Dashboard">📊</button>
-          <div id="ai-sidebar-user-profile" style="background:var(--primary); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px; cursor:pointer;" title="${esc(userName)}">${userInitial}</div>
+        <button class="btn primary full" id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer;">
+          <span>+ New chat</span>
+        </button>
+
+        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
+          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Workspace</div>
+          <button class="side-nav-btn ${state.aiSection==='home'?'active':''}" id="ai-nav-home" style="background:${state.aiSection==='home'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">💬 Projects / Home</button>
+          <button class="side-nav-btn ${state.aiSection==='schedules'?'active':''}" id="ai-nav-schedules" style="background:${state.aiSection==='schedules'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">📅 Schedules</button>
+          <button class="side-nav-btn ${state.aiSection==='connectors'?'active':''}" id="ai-nav-connectors" style="background:${state.aiSection==='connectors'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🔗 Connectors</button>
+          <button class="side-nav-btn ${state.aiSection==='images'?'active':''}" id="ai-nav-images" style="background:${state.aiSection==='images'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🖼️ Images & Files</button>
+          <button class="side-nav-btn ${state.aiSection==='customize'?'active':''}" id="ai-nav-customize" style="background:${state.aiSection==='customize'?'rgba(255,255,255,0.1)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">⚙️ Customize</button>
+        </div>
+
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
+          <button id="back-to-dashboard-btn" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:8px; text-align:left;">📊 Dashboard & ERP</button>
+          
+          <div id="ai-sidebar-user-profile" style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
+            <div style="background:var(--primary); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px;">${userInitial}</div>
+            <div style="overflow:hidden; flex:1;">
+              <div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(userName)}</div>
+              <div style="font-size:11px; color:#4dabf7; font-weight:500;">Pro</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -617,7 +636,7 @@ function renderChatGPTStyleLayout(c) {
       </div>
     </div>`;
 
-  $('toggle-sidebar-expand').onclick = () => {
+  $('toggle-sidebar-collapse').onclick = () => {
     state.page = 'dashboard';
     render();
   };
@@ -627,11 +646,16 @@ function renderChatGPTStyleLayout(c) {
     render();
   };
 
-  $('ai-nav-home-icon').onclick = () => { state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
-  $('ai-nav-schedules-icon').onclick = () => { state.aiSection = 'schedules'; renderChatGPTStyleLayout(c); };
-  $('ai-nav-connectors-icon').onclick = () => { state.aiSection = 'connectors'; renderChatGPTStyleLayout(c); };
-  $('ai-nav-images-icon').onclick = () => { state.aiSection = 'images'; renderChatGPTStyleLayout(c); };
-  $('ai-nav-customize-icon').onclick = () => { state.aiSection = 'customize'; renderChatGPTStyleLayout(c); };
+  $('new-chat-btn').onclick = () => {
+    state.aiSection = 'home';
+    renderChatGPTStyleLayout(c);
+  };
+
+  $('ai-nav-home').onclick = () => { state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
+  $('ai-nav-schedules').onclick = () => { state.aiSection = 'schedules'; renderChatGPTStyleLayout(c); };
+  $('ai-nav-connectors').onclick = () => { state.aiSection = 'connectors'; renderChatGPTStyleLayout(c); };
+  $('ai-nav-images').onclick = () => { state.aiSection = 'images'; renderChatGPTStyleLayout(c); };
+  $('ai-nav-customize').onclick = () => { state.aiSection = 'customize'; renderChatGPTStyleLayout(c); };
 
   $('ai-sidebar-user-profile').onclick = (e) => { openGeminiStyleAccountPopup(e.currentTarget); };
 
