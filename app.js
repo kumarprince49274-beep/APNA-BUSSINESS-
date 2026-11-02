@@ -17,7 +17,7 @@ const state = {
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 
-// Pure Bilingual Dictionary (English & Hindi)
+// Pure Bilingual Dictionary (English & Hindi)[cite: 5]
 const dict = {
   hi: {
     brandSub: 'अकाउंटिंग और ईआरपी',
@@ -103,9 +103,17 @@ async function api(path,options={}){
 async function refreshSession(){
   try{
     const me=await api('/api/auth/me');
-    state.user=me.user; state.csrf=me.csrf;
-    state.companies=await api('/api/companies');
-    if(!state.companyId || !state.companies.some(c=>c.id===state.companyId)) state.companyId=state.companies[0]?.id||null;
+    if(!me || !me.user) return false;
+    state.user=me.user; 
+    state.csrf=me.csrf || '';
+    try {
+      state.companies=await api('/api/companies');
+    } catch {
+      state.companies = [];
+    }
+    if(!state.companyId || !state.companies.some(c=>c.id===state.companyId)) {
+      state.companyId=state.companies[0]?.id||null;
+    }
     return true;
   }catch{ return false; }
 }
@@ -140,40 +148,42 @@ function authView(mode='login'){
     toast(state.lang==='hi'?'Google Sign-In ke liye Google API credentials required hain.':'Google Sign-In requires OAuth client setup.');
   };
 
-  $('auth-form').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.currentTarget);try{
-    if(mode==='register') await api('/api/auth/register',{method:'POST',body:{name:fd.get('name'),email:fd.get('email'),password:fd.get('password')}});
-    await api('/api/auth/login',{method:'POST',body:{email:fd.get('email'),password:fd.get('password')}}).then(x=>{state.user=x.user;state.csrf=x.csrf;});
-    state.companies=await api('/api/companies');state.companyId=state.companies[0]?.id||null;render();
-  }catch(err){$('auth-error').textContent=err.message;}};
+  $('auth-form').onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(e.currentTarget);
+    try{
+      const email = fd.get('email');
+      const password = fd.get('password');
+      if(mode==='register') {
+        await api('/api/auth/register',{method:'POST',body:{name:fd.get('name'),email,password}});
+      }
+      const loginRes = await api('/api/auth/login',{method:'POST',body:{email,password}});
+      state.user = loginRes.user;
+      state.csrf = loginRes.csrf;
+      
+      try {
+        state.companies = await api('/api/companies');
+        state.companyId = state.companies[0]?.id || null;
+      } catch {
+        state.companies = [];
+        state.companyId = null;
+      }
+      render();
+    }catch(err){
+      $('auth-error').textContent=err.message;
+    }
+  };
 }
 
 function companySelect(){return `<select id="company-select">${state.companies.map(c=>`<option value="${esc(c.id)}" ${c.id===state.companyId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;}
 
 function openSettingsModal(){
-  const m = modal('Gemini & Account Settings', `
-    <div style="display:flex;flex-direction:column;gap:14px;margin-top:10px; max-height: 70vh; overflow-y: auto; padding-right:4px;">
-      <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase;">Subscription & Limits</div>
-      <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Usage limits opened')">
-        <div><strong>Usage limits</strong><div style="font-size:12px; color:var(--muted);">Check your current usage & API limits</div></div>
-        <span>›</span>
-      </div>
-      <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Manage subscription opened')">
-        <div><strong>Manage subscription</strong><div style="font-size:12px; color:var(--muted);">View billing & plan details</div></div>
-        <span>›</span>
-      </div>
-      <div style="padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toast('Upgrade to Google AI Ultra opened')">
-        <div><strong>Upgrade to Google AI Ultra</strong><div style="font-size:12px; color:var(--muted);">Unlock advanced capabilities</div></div>
-        <span>⭐</span>
-      </div>
-
-      <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:6px;">Preferences</div>
-      <div style="padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between;" onclick="toast('Personal Intelligence settings')"><span>Personal Intelligence</span><span>›</span></div>
-      <div style="padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between;" onclick="toast('Skills settings')"><span>Skills</span><span>›</span></div>
-      <div style="padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between;" onclick="toast('Avatar customization')"><span>Avatar</span><span>›</span></div>
-      <div style="padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between;" onclick="toast('Gems settings')"><span>Gems</span><span>›</span></div>
+  const m = modal(state.lang==='hi' ? 'सेटिंग्स (Settings)' : 'Settings', `
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:10px; max-height: 70vh; overflow-y: auto; padding-right:4px; color:var(--text);">
+      <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase;">${state.lang==='hi'?'प्राथमिकताएं (Preferences)':'Preferences'}</div>
       
       <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>Theme</span>
+        <span>${state.lang==='hi'?'थीम (Theme)':'Theme'}</span>
         <select id="settings-theme-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
           <option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option>
           <option value="light" ${state.theme==='light'?'selected':''}>Light</option>
@@ -181,14 +191,14 @@ function openSettingsModal(){
       </label>
 
       <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>Language</span>
+        <span>${state.lang==='hi'?'भाषा (Language)':'Language'}</span>
         <select id="settings-lang-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
           <option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option>
           <option value="en" ${state.lang==='en'?'selected':''}>English</option>
         </select>
       </label>
 
-      <button class="btn primary" id="save-settings-btn" style="margin-top:10px; padding:10px; border-radius:8px; cursor:pointer;">Save Settings</button>
+      <button class="btn primary" id="save-settings-btn" style="margin-top:10px; padding:10px; border-radius:8px; cursor:pointer;">${state.lang==='hi'?'सेटिंग्स सहेजें':'Save Settings'}</button>
     </div>
   `);
 
@@ -247,10 +257,9 @@ function openGeminiStyleAccountPopup(targetEl) {
     </div>
 
     <div style="display:flex; flex-direction:column; gap:4px; font-size:13px;">
-      <div class="popup-item" data-action="google-account" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">👤 <span>Manage your Google Account</span></div>
-      <div class="popup-item" data-action="add-account" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">➕ <span>Add another account</span></div>
+      <div class="popup-item" data-action="settings" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">⚙️ <span>${state.lang==='hi'?'एप सेटिंग्स (भाषा/थीम)':'App Settings (Theme/Lang)'}</span></div>
       <div style="border-top:1px solid #3c4043; margin:6px 0;"></div>
-      <div class="popup-item" data-action="logout" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px; color:#f28b82; font-weight:600;">🚪 <span>Sign out</span></div>
+      <div class="popup-item" data-action="logout" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px; color:#f28b82; font-weight:600;">🚪 <span>${state.lang==='hi'?'लॉगआउट':'Sign out'}</span></div>
     </div>
   `;
 
@@ -265,8 +274,8 @@ function openGeminiStyleAccountPopup(targetEl) {
       popup.remove();
       if(action === 'logout') {
         $('logout').click();
-      } else {
-        toast(`Selected: ${action}`);
+      } else if(action === 'settings') {
+        openSettingsModal();
       }
     };
   });
@@ -337,7 +346,7 @@ function layout(){
       </div>
     </div>
   </div></aside>
-  <main><header class="topbar"><div><h2>${c?esc(c.name):'Create your business'}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:'One platform for GST and Non-GST businesses'}</p></div><div class="status">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
+  <main><header class="topbar"><div><h2>${c?esc(c.name):'Create your business'}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:'One platform for GST and Non-GST businesses'}</p></div><div class="status" id="logout" style="cursor:pointer;" title="Logout">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
   
   $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';render();});
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{state.page=b.dataset.page;renderPage();});
@@ -588,13 +597,13 @@ function renderChatGPTStyleLayout(c) {
 
   $('app').innerHTML = `
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
-      <!-- Expanded ChatGPT Style Left Sidebar -->
-      <div style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.3); height:100vh; box-sizing:border-box; overflow-y:auto;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff;">🏠</div>
-            <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
-          </div>
+      
+      <!-- Left Fixed Sidebar -->
+      <div style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto;">
+        
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff;">🏠</div>
+          <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
         </div>
 
         <button id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:var(--text); color:var(--bg); border:none; width:100%;">
@@ -623,13 +632,13 @@ function renderChatGPTStyleLayout(c) {
         </div>
       </div>
 
-      <!-- Main AI Workspace -->
-      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow-y:auto; background:var(--bg); height:100vh; width: calc(100vw - 260px);">
+      <!-- Right Main Workspace Area -->
+      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
         <header style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; width:100%; box-sizing:border-box;">
           <div><h2 style="font-size:16px; margin:0; color:var(--text);">${c?esc(c.name):'Create your business'}</h2></div>
           <div style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
         </header>
-        <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box;">
+        <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box; justify-content:center; align-items:center;">
           ${mainAreaContent}
         </div>
       </div>
