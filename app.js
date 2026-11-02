@@ -588,13 +588,13 @@ function renderChatGPTStyleLayout(c) {
 
   $('app').innerHTML = `
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
-      <!-- Expanded ChatGPT Style Left Sidebar -->
-      <div style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.3); height:100vh; box-sizing:border-box; overflow-y:auto;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff;">🏠</div>
-            <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
-          </div>
+      
+      <!-- Left Vertical ChatGPT Style Sidebar -->
+      <div style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; z-index:10;">
+        
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff;">🏠</div>
+          <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
         </div>
 
         <button id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:var(--text); color:var(--bg); border:none; width:100%;">
@@ -623,13 +623,13 @@ function renderChatGPTStyleLayout(c) {
         </div>
       </div>
 
-      <!-- Main AI Workspace -->
-      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow-y:auto; background:var(--bg); height:100vh; width: calc(100vw - 260px);">
+      <!-- Main Central Chat Workspace -->
+      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
         <header style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; width:100%; box-sizing:border-box;">
           <div><h2 style="font-size:16px; margin:0; color:var(--text);">${c?esc(c.name):'Create your business'}</h2></div>
           <div style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
         </header>
-        <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box;">
+        <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box; justify-content:center; align-items:center;">
           ${mainAreaContent}
         </div>
       </div>
@@ -753,7 +753,7 @@ function renderChatGPTStyleLayout(c) {
 async function dashboard(){
   const d=await api(`/api/companies/${state.companyId}/dashboard`);
   $('content').innerHTML=`<div class="cards">
-    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise]].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
+    ${[['Sales',d.sales_paise],['Purchases',d.purchases_paise],['Profit',d.net_profit_paise],['Cash',d.cash_paise],['Bank',d.bank_paise],['Inventory',d.stock_value_paise']].map(x=>`<div class="card"><div class="k-label">${x[0]}</div><div class="k-value">${money(x[1])}</div></div>`).join('')}
   </div>
   <section class="panel">
     <div class="panel-head"><h3>Dashboard Overview</h3></div>
