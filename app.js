@@ -597,7 +597,7 @@ function renderChatGPTStyleLayout(c) {
           </div>
         </div>
 
-        <button class="btn primary full" id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:var(--text); color:var(--bg); border:none;">
+        <button id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:var(--text); color:var(--bg); border:none; width:100%;">
           <span>+ New chat</span>
         </button>
 
@@ -624,12 +624,12 @@ function renderChatGPTStyleLayout(c) {
       </div>
 
       <!-- Main AI Workspace -->
-      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow-y:auto; background:var(--bg); height:100vh;">
-        <header style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow-y:auto; background:var(--bg); height:100vh; width: calc(100vw - 260px);">
+        <header style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; width:100%; box-sizing:border-box;">
           <div><h2 style="font-size:16px; margin:0; color:var(--text);">${c?esc(c.name):'Create your business'}</h2></div>
           <div style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
         </header>
-        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box;">
           ${mainAreaContent}
         </div>
       </div>
