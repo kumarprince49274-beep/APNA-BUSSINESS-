@@ -276,7 +276,7 @@ function showError(message){$('app').insertAdjacentHTML('afterbegin',`<div class
 async function api(path, options = {}) {
   const opts = {
     ...options,
-    credentials: 'include', // Ensures cookies are sent for authentication
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -515,7 +515,7 @@ async function renderPage(){
   if(!state.companyId){ createCompanyForm(); return; }
   layout();
   const p = state.page;
-  if(p === 'chat') { chatPage(); return; }
+  if(p === 'chat') { renderChatGPTStyleLayout(state.companies.find(x => x.id === state.companyId)); return; }
   try{
     if(p === 'dashboard') await dashboard(); 
     else if(p === 'vouchers') await vouchersPage();
@@ -936,7 +936,7 @@ function modal(title, html){
 }
 
 function createCompanyForm(){
-  const m = modal('Create Your Business', `<form id="company-form"><label>Business name<input name="name" required placeholder="APNA KIRANA STORE"></label><label>Business type<select name="business_type">${['Retail / Shop','Wholesale','Service','Manufacturing','Professional','Other'].map(x=>`<option>${x}</option>`).join('')}</select></label><label>Business state / UT<select name="business_state">${STATES.map(([code,name])=>`<option value="${name}" ${code==='09'?'selected':''}>${name} (${code})</option>`).join('')}</select></label><label>GST registration<select name="gst_type" id="new-gst"><option value="UNREGISTERED">I don't have GST registration</option><option value="REGULAR">GST Regular</option><option value="COMPOSITION">GST Composition</option><option value="OTHER">Other GST registration</option></select></label><label id="new-gstin-wrap" class="hidden">GSTIN<input name="name" placeholder="15-character GSTIN"></label><p id="new-gst-help" class="note">GSTIN is not required for an unregistered business.</p><label>Address<input name="address"></label><button class="btn primary" type="submit">Create business</button></form>`);
+  const m = modal('Create Your Business', `<form id="company-form"><label>Business name<input name="name" required placeholder="APNA KIRANA STORE"></label><label>Business type<select name="business_type">${['Retail / Shop','Wholesale','Service','Manufacturing','Professional','Other'].map(x=>`<option>${x}</option>`).join('')}</select></label><label>Business state / UT<select name="business_state">${STATES.map(([code,name])=>`<option value="${name}" ${code==='09'?'selected':''}>${name} (${code})</option>`).join('')}</select></label><label>GST registration<select name="gst_type" id="new-gst"><option value="UNREGISTERED">I don't have GST registration</option><option value="REGULAR">GST Regular</option><option value="COMPOSITION">GST Composition</option><option value="OTHER">Other GST registration</option></select></label><label id="new-gstin-wrap" class="hidden">GSTIN<input name="gstin" placeholder="15-character GSTIN"></label><p id="new-gst-help" class="note">GSTIN is not required for an unregistered business.</p><label>Address<input name="address"></label><button class="btn primary" type="submit">Create business</button></form>`);
   const sel = m.querySelector('#new-gst'), wrap = m.querySelector('#new-gstin-wrap'), help = m.querySelector('#new-gst-help');
   function update(){
     const reg = sel.value !== 'UNREGISTERED';
