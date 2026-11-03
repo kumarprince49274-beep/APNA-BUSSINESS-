@@ -272,28 +272,37 @@ function money(p){return `₹${(Number(p||0)/100).toLocaleString('en-IN',{minimu
 function toast(message){const el=document.createElement('div');el.className='toast';el.textContent=message;document.body.appendChild(el);setTimeout(()=>el.remove(),2800);}
 function showError(message){document.getElementById('app').insertAdjacentHTML('afterbegin',`<div class="banner">${esc(message)}</div>`);}
 
-async function api(path,options={}){
-  const opts={...options,headers:{'Content-Type':'application/json',...(options.headers||{})}};
-  if(opts.body && typeof opts.body!=='string') opts.body=JSON.stringify(opts.body);
-  if(state.csrf && opts.method && opts.method!=='GET') opts.headers['X-CSRF-Token']=state.csrf;
-  const r=await fetch(path,opts);
-  let data=null; try{data=await r.json();}catch{}
-  if(!r.ok) throw new Error(data?.error||`Request failed (${r.status})`);
+async function api(path, options = {}) {
+  const opts = {
+    ...options,
+    credentials: 'include', // <--- YE LOGIN FIX KAREGA (Cookies send karne ke liye)
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  };
+  if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+  if (state.csrf && opts.method && opts.method !== 'GET') opts.headers['X-CSRF-Token'] = state.csrf;
+  
+  const r = await fetch(path, opts);
+  let data = null; 
+  try { data = await r.json(); } catch {}
+  if (!r.ok) throw new Error(data?.error || `Request failed (${r.status})`);
   return data;
 }
 
 async function refreshSession(){
   try{
-    const me=await api('/api/auth/me');
+    const me = await api('/api/auth/me');
     if(!me || !me.user) return false;
-    state.user=me.user; 
-    state.csrf=me.csrf || '';
-    try { state.companies=await api('/api/companies'); } catch { state.companies = []; }
-    if(!state.companyId || !state.companies.some(c=>c.id===state.companyId)) {
-      state.companyId=state.companies[0]?.id||null;
+    state.user = me.user; 
+    state.csrf = me.csrf || '';
+    try { state.companies = await api('/api/companies'); } catch { state.companies = []; }
+    if(!state.companyId || !state.companies.some(c => c.id === state.companyId)) {
+      state.companyId = state.companies[0]?.id || null;
     }
     return true;
-  }catch{ return false; }
+  } catch { return false; }
 }
 
 function authView(mode='login'){
@@ -308,19 +317,19 @@ function authView(mode='login'){
     <div id="auth-error" class="error"></div></form>
   </section></main>`;
   
-  document.getElementById('login-tab').onclick=()=>authView('login');
-  document.getElementById('register-tab').onclick=()=>authView('register');
+  document.getElementById('login-tab').onclick = () => authView('login');
+  document.getElementById('register-tab').onclick = () => authView('register');
   
-  document.getElementById('auth-form').onsubmit=async e=>{
+  document.getElementById('auth-form').onsubmit = async e => {
     e.preventDefault();
-    const fd=new FormData(e.currentTarget);
-    try{
+    const fd = new FormData(e.currentTarget);
+    try {
       const email = fd.get('email');
       const password = fd.get('password');
-      if(mode==='register') {
-        await api('/api/auth/register',{method:'POST',body:{name:fd.get('name'),email,password}});
+      if(mode === 'register') {
+        await api('/api/auth/register', { method: 'POST', body: { name: fd.get('name'), email, password } });
       }
-      const loginRes = await api('/api/auth/login',{method:'POST',body:{email,password}});
+      const loginRes = await api('/api/auth/login', { method: 'POST', body: { email, password } });
       state.user = loginRes.user;
       state.csrf = loginRes.csrf;
       try {
@@ -331,8 +340,8 @@ function authView(mode='login'){
         state.companyId = null;
       }
       render();
-    }catch(err){
-      document.getElementById('auth-error').textContent=err.message;
+    } catch(err) {
+      document.getElementById('auth-error').textContent = err.message;
     }
   };
 }
@@ -423,8 +432,8 @@ function openGeminiStyleAccountPopup(targetEl) {
 }
 
 async function logoutUser() {
-  try { await api('/api/auth/logout',{method:'POST',body:{}}); } finally {
-    state.user=null; state.csrf=null; state.companies=[]; state.companyId=null; state.chats={}; authView('login');
+  try { await api('/api/auth/logout', { method: 'POST', body: {} }); } finally {
+    state.user = null; state.csrf = null; state.companies = []; state.companyId = null; state.chats = {}; authView('login');
   }
 }
 
