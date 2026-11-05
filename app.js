@@ -953,6 +953,7 @@ function renderChatGPTStyleLayout(c) {
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; justify-content:${open?'flex-start':'center'};">
           <div style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.28); display:flex; align-items:center; justify-content:center; flex:none;">${PULSE_ICON(18)}</div>
           ${open?'<span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>':''}
+          ${open?`<button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn} margin-left:auto;">${sbIcon}</button>`:''}
         </div>
 
         ${navBtn('ai-nav-home','home',I.chat,'Projects / Home')}
@@ -983,7 +984,7 @@ function renderChatGPTStyleLayout(c) {
       <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
         <header style="padding:10px 16px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; box-sizing:border-box; gap:8px;">
           <div style="display:flex; align-items:center; gap:6px; min-width:0;">
-            <button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn}">${sbIcon}</button>
+            ${open?'':`<button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn}">${sbIcon}</button>`}
             <button id="ai-back" title="Back" style="${iconBtn}${state.embed?' display:none;':''}">${backIcon}</button>
             <span style="font-size:14px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:4px;">${c?esc(c.name):''}</span>
           </div>
