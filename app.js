@@ -43,7 +43,7 @@ function setAiPanel(open){
     if (!panel) {
       panel = document.createElement('div');
       panel.id = 'ai-panel';
-      panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;z-index:50;background:var(--bg);transform:translateX(100%);transition:transform .25s ease;';
+      panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;z-index:50;background:var(--bg);clip-path:inset(0 100% 0 0);transition:clip-path .28s ease;';
       const f = document.createElement('iframe');
       f.title = 'AI Accountant';
       f.src = '/?embed=chat&company=' + encodeURIComponent(state.companyId || '');
@@ -53,9 +53,9 @@ function setAiPanel(open){
       panel.getBoundingClientRect();
     }
     panel.style.left = aiPanelLeft() + 'px';
-    requestAnimationFrame(() => { panel.style.transform = 'translateX(0)'; });
+    requestAnimationFrame(() => { panel.style.clipPath = 'inset(0 0 0 0)'; });
   } else if (panel) {
-    panel.style.transform = 'translateX(100%)';
+    panel.style.clipPath = 'inset(0 100% 0 0)';
   }
   const b = document.getElementById('ai-panel-toggle');
   if (b) b.style.background = open ? 'rgba(255,255,255,0.14)' : 'none';
@@ -943,8 +943,8 @@ function renderChatGPTStyleLayout(c) {
       <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
         <header style="padding:10px 16px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; box-sizing:border-box; gap:8px;">
           <div style="display:flex; align-items:center; gap:6px; min-width:0;">
-            <button id="ai-back" title="Back" style="${iconBtn}">${backIcon}</button>
             <button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn}">${sbIcon}</button>
+            <button id="ai-back" title="Back" style="${iconBtn}${state.embed?' display:none;':''}">${backIcon}</button>
             <span style="font-size:14px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:4px;">${c?esc(c.name):''}</span>
           </div>
           <div style="display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:3px;">
