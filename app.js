@@ -26,6 +26,44 @@ if (state.embed) {
   state.page = 'chat';
   if (_qs.get('company')) state.companyId = _qs.get('company');
 }
+
+// --- App-wide font (Settings mein badal sakte hain) ---
+const FONT_SANS_FALLBACK = "'Noto Sans Devanagari','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif";
+const FONT_SERIF_FALLBACK = "'Noto Serif Devanagari',Georgia,'Times New Roman',serif";
+const FONT_PRESETS = {
+  clean:    { label: 'Clean (Inter) - ChatGPT jaisa', body: "Inter," + FONT_SANS_FALLBACK, head: "Inter," + FONT_SANS_FALLBACK, g: ['Inter:wght@400;500;600;700','Noto+Sans+Devanagari:wght@400;500;600;700'] },
+  claude:   { label: 'Claude style (serif headings)', body: "Inter," + FONT_SANS_FALLBACK, head: "Lora," + FONT_SERIF_FALLBACK, g: ['Inter:wght@400;500;600;700','Lora:wght@500;600;700','Noto+Sans+Devanagari:wght@400;500;600;700','Noto+Serif+Devanagari:wght@500;600;700'] },
+  friendly: { label: 'Friendly (Nunito)', body: "Nunito," + FONT_SANS_FALLBACK, head: "Nunito," + FONT_SANS_FALLBACK, g: ['Nunito:wght@400;500;600;700;800','Noto+Sans+Devanagari:wght@400;500;600;700'] },
+  poppins:  { label: 'Modern (Poppins)', body: "Poppins," + FONT_SANS_FALLBACK, head: "Poppins," + FONT_SANS_FALLBACK, g: ['Poppins:wght@400;500;600;700'] },
+  classic:  { label: 'Classic serif (Lora)', body: "Lora," + FONT_SERIF_FALLBACK, head: "Lora," + FONT_SERIF_FALLBACK, g: ['Lora:wght@400;500;600;700','Noto+Serif+Devanagari:wght@400;500;600;700'] },
+  system:   { label: 'System default', body: FONT_SANS_FALLBACK, head: FONT_SANS_FALLBACK, g: [] }
+};
+state.font = (() => { try { const f = localStorage.getItem('apna_font'); return FONT_PRESETS[f] ? f : 'clean'; } catch { return 'clean'; } })();
+function applyFont(){
+  const p = FONT_PRESETS[state.font] || FONT_PRESETS.clean;
+  let link = document.getElementById('font-link');
+  if (p.g.length) {
+    const href = 'https://fonts.googleapis.com/css2?' + p.g.map(f => 'family=' + f).join('&') + '&display=swap';
+    if (!link) { link = document.createElement('link'); link.id = 'font-link'; link.rel = 'stylesheet'; document.head.appendChild(link); }
+    if (link.getAttribute('href') !== href) link.setAttribute('href', href);
+  } else if (link) { link.remove(); }
+  let st = document.getElementById('font-style');
+  if (!st) { st = document.createElement('style'); st.id = 'font-style'; document.head.appendChild(st); }
+  st.textContent =
+    "html,body,button,input,select,textarea{font-family:" + p.body + " !important;}" +
+    "h1,h2,h3,h4{font-family:" + p.head + " !important;letter-spacing:-0.02em;line-height:1.25;}" +
+    "body{line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}";
+}
+function setFont(k){
+  if (!FONT_PRESETS[k]) return;
+  state.font = k;
+  try { localStorage.setItem('apna_font', k); } catch {}
+  applyFont();
+}
+window.addEventListener('storage', e => {
+  if (e.key === 'apna_font' && FONT_PRESETS[e.newValue]) { state.font = e.newValue; applyFont(); }
+});
+applyFont();
 function closeEmbed(){ try { parent.postMessage({ type: 'apna-close-ai' }, location.origin); } catch {} }
 function aiPanelLeft(){
   if (window.innerWidth <= 800) return 0;
@@ -260,6 +298,8 @@ function openSettingsModal(startTab){
   const panels={
     general:()=>`<div style="${row}"><span>${hi?'थीम':'Theme'}</span><select id="st-theme" style="${sel}"><option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option><option value="light" ${state.theme==='light'?'selected':''}>Light</option></select></div>
       <div style="${row}"><span>${hi?'भाषा':'Language'}</span><select id="st-lang" style="${sel}"><option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option><option value="en" ${state.lang==='en'?'selected':''}>English</option></select></div>
+      <div style="${row}"><span>${hi?'फ़ॉन्ट (पूरे ऐप का)':'Font (whole app)'}</span><select id="st-font" style="${sel}">${Object.entries(FONT_PRESETS).map(([k,f])=>`<option value="${k}" ${state.font===k?'selected':''}>${f.label}</option>`).join('')}</select></div>
+      <p class="muted" style="font-size:13px; margin:10px 0 0;">Aa Bb Cc - नमस्ते, Apna Business ₹1,25,000</p>
       <button type="button" id="st-save-general" class="btn primary" style="margin-top:14px;">${hi?'सेटिंग्स सहेजें':'Save settings'}</button>`,
     personal:()=>`<p class="muted" style="margin:0 0 8px; font-size:13px;">${hi?'AI को बताइए कि वह आपसे कैसे बात करे (भाषा, लहजा, जवाब कितना छोटा या लंबा)। यह सिर्फ़ जवाब के तरीके को बदलता है; सुरक्षा नियम वही रहते हैं।':'Tell the AI how to talk to you (language, tone, answer length). This changes style only; safety rules stay the same.'}</p>
       <textarea id="st-custom" rows="6" maxlength="1500" placeholder="${hi?'जैसे: हमेशा आसान हिंदी में, छोटे जवाब दो।':'e.g. Always reply in simple Hindi, keep answers short.'}" style="width:100%; padding:10px; border-radius:10px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit; font-size:14px;"></textarea>
@@ -279,7 +319,7 @@ function openSettingsModal(startTab){
   };
 
   const binders={
-    general:()=>{m.querySelector('#st-save-general').onclick=()=>{
+    general:()=>{m.querySelector('#st-font').onchange=e=>setFont(e.target.value);m.querySelector('#st-save-general').onclick=()=>{
       state.lang=m.querySelector('#st-lang').value; state.theme=m.querySelector('#st-theme').value;
       try{localStorage.setItem('apna_lang',state.lang);localStorage.setItem('apna_theme',state.theme);}catch{}
       m.remove(); toast(state.lang==='hi'?'सेटिंग्स सहेज ली गई हैं!':'Settings saved successfully!'); render();
