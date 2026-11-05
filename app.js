@@ -13,6 +13,7 @@ const state = {
   chats: {}, 
   chatBusy: false, 
   aiMode: 'chat', 
+  sidebarOpen: window.innerWidth > 800, 
   aiSection: 'home', 
   lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
@@ -562,15 +563,22 @@ function renderChatGPTStyleLayout(c) {
           <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
           <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           
-          <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:24px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+          <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:28px; padding:14px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="Ask" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'अपने बिज़नेस के बारे में पूछें…':'Ask anything about your business'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
             <button type="button" id="chat-send" style="background:var(--text); color:var(--bg); border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Send">➤</button>
+          </div>
+
+          <div style="width:100%; max-width:700px; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
+            ${(state.lang==='hi'
+              ? ['आज की बिक्री बताओ','नया बिल बनाओ','कम स्टॉक वाला सामान दिखाओ','किस ग्राहक का पैसा बाकी है?']
+              : ["Show today's sales",'Create a new invoice','Show low-stock items','Which customers owe me money?']
+            ).map(t=>`<button type="button" data-suggest="${esc(t)}" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:9px 12px; font-size:14px; text-align:left; border-radius:8px; width:100%;">${esc(t)}</button>`).join('')}
           </div>
 
           <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:700px;">
@@ -596,54 +604,86 @@ function renderChatGPTStyleLayout(c) {
   const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
   const userInitial = userName[0].toUpperCase();
 
+  const open = state.sidebarOpen;
+  const ico = d => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;">${d}</svg>`;
+  const I = {
+    chat: ico('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'),
+    cal: ico('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'),
+    link: ico('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
+    img: ico('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>'),
+    cust: ico('<line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.2" fill="var(--bg)"/><circle cx="15" cy="17" r="2.2" fill="var(--bg)"/>'),
+    dash: ico('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
+    newc: ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')
+  };
+  const navBtn = (id, key, icon, label) => `<button id="${id}" title="${label}" style="background:${state.aiSection===key?'rgba(255,255,255,0.12)':'none'}; border:none; color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; width:100%;">${icon}${open?`<span>${label}</span>`:''}</button>`;
+  const recentHtml = open ? `<div style="display:flex; flex-direction:column; gap:2px; margin-top:8px; overflow:hidden;">
+          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Recent</div>
+          ${(chatLog().filter(m=>m.role==='user').slice(-6).reverse().map(m=>`<div style="padding:7px 10px; font-size:13px; color:var(--text); border-radius:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.85;">${esc(String(m.text).slice(0,40))}</div>`).join('')) || '<div style="padding:4px 10px; font-size:12px; color:var(--muted);">—</div>'}
+        </div>` : '';
+  const sbIcon = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><line x1="9" y1="4" x2="9" y2="20"/></svg>`;
+  const backIcon = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`;
+  const iconBtn = 'background:none; border:none; color:var(--text); border-radius:8px; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none;';
+
   $('app').innerHTML = `
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
       
       <!-- Left Fixed Sidebar -->
-      <div style="width:260px; min-width:260px; border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto;">
-        
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-          <div style="background:var(--primary); width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff;">🏠</div>
-          <span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>
+      <div style="width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; justify-content:${open?'flex-start':'center'};">
+          <div style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.28); display:flex; align-items:center; justify-content:center; flex:none;">${PULSE_ICON(18)}</div>
+          ${open?'<span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>':''}
         </div>
 
-        <button id="new-chat-btn" style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:var(--text); color:var(--bg); border:none; width:100%;">
-          <span>+ New chat</span>
-        </button>
+        <button id="new-chat-btn" title="New chat" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:9px ${open?'12px':'0'}; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:${open?'var(--text)':'none'}; color:${open?'var(--bg)':'var(--text)'}; border:none; width:100%;">${I.newc}${open?'<span>New chat</span>':''}</button>
 
-        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
-          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Workspace</div>
-          <button id="ai-nav-home" style="background:${state.aiSection==='home'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">💬 Projects / Home</button>
-          <button id="ai-nav-schedules" style="background:${state.aiSection==='schedules'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">📅 Schedules</button>
-          <button id="ai-nav-connectors" style="background:${state.aiSection==='connectors'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🔗 Connectors</button>
-          <button id="ai-nav-images" style="background:${state.aiSection==='images'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">🖼️ Images & Files</button>
-          <button id="ai-nav-customize" style="background:${state.aiSection==='customize'?'rgba(255,255,255,0.15)':'none'}; border:none; color:var(--text); text-align:left; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;">⚙️ Customize</button>
+        <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px;">
+          ${open?'<div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Workspace</div>':''}
+          ${navBtn('ai-nav-home','home',I.chat,'Projects / Home')}
+          ${navBtn('ai-nav-schedules','schedules',I.cal,'Schedules')}
+          ${navBtn('ai-nav-connectors','connectors',I.link,'Connectors')}
+          ${navBtn('ai-nav-images','images',I.img,'Images & Files')}
+          ${navBtn('ai-nav-customize','customize',I.cust,'Customize')}
         </div>
+
+        ${recentHtml}
 
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
-          <button id="back-to-dashboard-btn" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:8px; text-align:left;">📊 Dashboard & ERP</button>
-          
-          <div id="ai-sidebar-user-profile" style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
-            <div style="background:var(--primary); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px;">${userInitial}</div>
-            <div style="overflow:hidden; flex:1;">
-              <div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(userName)}</div>
-              <div style="font-size:11px; color:#4dabf7; font-weight:500;">Pro</div>
-            </div>
+          <button id="back-to-dashboard-btn" title="Dashboard & ERP" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px;">${I.dash}${open?'<span>Dashboard & ERP</span>':''}</button>
+
+          <div id="ai-sidebar-user-profile" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:${open?'8px 10px':'6px 0'}; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
+            <div style="background:#3b4a63; color:#fff; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; flex:none;">${userInitial}</div>
+            ${open?`<div style="overflow:hidden; flex:1;"><div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(userName)}</div><div style="font-size:11px; color:#4dabf7; font-weight:500;">Pro</div></div>`:''}
           </div>
         </div>
       </div>
 
       <!-- Right Main Workspace Area -->
       <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
-        <header style="padding:12px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; width:100%; box-sizing:border-box;">
-          <div><h2 style="font-size:16px; margin:0; color:var(--text);">${c?esc(c.name):'Create your business'}</h2></div>
-          <div style="font-size:13px; color:var(--muted);">${state.user?esc(state.user.email):''}</div>
+        <header style="padding:10px 16px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; box-sizing:border-box; gap:8px;">
+          <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+            <button id="ai-back" title="Back" style="${iconBtn}">${backIcon}</button>
+            <button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn}">${sbIcon}</button>
+            <span style="font-size:14px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:4px;">${c?esc(c.name):''}</span>
+          </div>
+          <div style="display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:3px;">
+            <button id="mode-chat" style="border:none; cursor:pointer; padding:7px 22px; border-radius:999px; font-size:13px; font-weight:600; background:${state.aiMode!=='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Chat</button>
+            <button id="mode-work" style="border:none; cursor:pointer; padding:7px 22px; border-radius:999px; font-size:13px; font-weight:600; background:${state.aiMode==='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Work</button>
+          </div>
+          <div></div>
         </header>
         <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box; justify-content:center; align-items:center;">
           ${mainAreaContent}
         </div>
       </div>
     </div>`;
+
+  $('ai-back').onclick = () => {
+    if (state.aiSection !== 'home') { state.aiSection = 'home'; renderChatGPTStyleLayout(c); }
+    else { state.page = 'dashboard'; render(); }
+  };
+  $('sidebar-toggle').onclick = () => { state.sidebarOpen = !state.sidebarOpen; renderChatGPTStyleLayout(c); };
+  $('mode-chat').onclick = () => { state.aiMode = 'chat'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
+  $('mode-work').onclick = () => { state.aiMode = 'task'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
 
   $('back-to-dashboard-btn').onclick = () => {
     state.page = 'dashboard';
@@ -669,6 +709,7 @@ function renderChatGPTStyleLayout(c) {
   const photoInput = $('chat-photo'), docInput = $('chat-document');
   const preview = $('file-preview'), img = $('file-img'), doc = $('file-doc'), fileName = $('file-name');
   if (!input) return;
+  document.querySelectorAll('[data-suggest]').forEach(b => b.onclick = () => sendChat(b.dataset.suggest));
 
   input.addEventListener('input', () => {
     input.style.height = 'auto';
