@@ -1,4 +1,3 @@
-
 const STATES = [
   ['01','Jammu and Kashmir'],['02','Himachal Pradesh'],['03','Punjab'],['04','Chandigarh'],['05','Uttarakhand'],['06','Haryana'],['07','Delhi'],['08','Rajasthan'],['09','Uttar Pradesh'],['10','Bihar'],['11','Sikkim'],['12','Arunachal Pradesh'],['13','Nagaland'],['14','Manipur'],['15','Mizoram'],['16','Tripura'],['17','Meghalaya'],['18','Assam'],['19','West Bengal'],['20','Jharkhand'],['21','Odisha'],['22','Chhattisgarh'],['23','Madhya Pradesh'],['24','Gujarat'],['26','Dadra and Nagar Haveli and Daman and Diu'],['27','Maharashtra'],['29','Karnataka'],['30','Goa'],['31','Lakshadweep'],['32','Kerala'],['33','Tamil Nadu'],['34','Puducherry'],['35','Andaman and Nicobar Islands'],['36','Telangana'],['37','Andhra Pradesh'],['38','Ladakh']
 ];
@@ -383,7 +382,10 @@ function layout(){
   <nav style="overflow-y:auto;max-height:calc(100vh - 310px);display:flex;flex-direction:column;gap:4px;">
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:6px;letter-spacing:.05em;">${t('mainMenu')}</div>
     <button data-page="dashboard" class="${state.page==='dashboard'?'active':''}">${t('dashboard')}</button>
-    <button data-page="chat" class="${state.page==='chat'?'active':''}">${t('aiChat')}</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button data-page="chat" class="${state.page==='chat'?'active':''}" style="flex:1;text-align:left;">${t('aiChat')}</button>
+      <div id="ai-toggle" role="switch" aria-checked="false" title="AI Accountant kholo" style="flex:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,0.18);position:relative;cursor:pointer;transition:background .2s;margin-right:4px;"><div id="ai-toggle-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>
+    </div>
     
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('vouchersBilling')}</div>
     <button data-page="vouchers" class="${state.page==='vouchers'?'active':''}">${t('vouchersList')}</button>
@@ -418,6 +420,11 @@ function layout(){
   $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';render();});
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{state.page=b.dataset.page;renderPage();});
   
+  $('ai-toggle')?.addEventListener('click', () => {
+    const tg = $('ai-toggle'), kn = $('ai-toggle-knob');
+    tg.style.background = '#4dabf7'; kn.style.left = '19px';
+    setTimeout(() => { state.page = 'chat'; render(); }, 180);
+  });
   $('top-create-company')?.addEventListener('click', createCompanyForm);
   $('top-alter-company')?.addEventListener('click', () => { state.page = 'settings'; renderPage(); });
   $('sidebar-user-profile')?.addEventListener('click', (e) => { openGeminiStyleAccountPopup(e.currentTarget); });
