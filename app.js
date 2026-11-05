@@ -439,7 +439,7 @@ function layout(){
     <button data-page="dashboard" class="${state.page==='dashboard'&&!state.aiPanel?'active':''}">${t('dashboard')}</button>
     <div style="display:flex;align-items:center;gap:6px;">
       <button data-page="chat" class="${state.aiPanel?'active':''}" style="flex:1;text-align:left;">${t('aiChat')}</button>
-      <button id="ai-panel-toggle" title="AI Accountant side mein kholo / band karo" style="flex:none;background:${state.aiPanel?'rgba(255,255,255,0.14)':'none'};border:none;color:var(--text);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+      <button id="ai-panel-toggle" title="AI Accountant side mein kholo / band karo" style="flex:none;padding:0;margin:0;box-sizing:border-box;min-width:36px;background:${state.aiPanel?'rgba(255,255,255,0.14)':'none'};border:none;color:var(--text);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><svg style="width:20px;height:20px;flex:none;" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
     </div>
     
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('vouchersBilling')}</div>
