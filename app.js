@@ -18,6 +18,57 @@ const state = {
   lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
+// --- Side-by-side AI panel: ERP ke saath chat ek iframe mein khulti hai ---
+const _qs = new URLSearchParams(location.search);
+state.embed = _qs.get('embed') === 'chat';
+state.aiPanel = false;
+if (state.embed) {
+  state.page = 'chat';
+  if (_qs.get('company')) state.companyId = _qs.get('company');
+}
+function closeEmbed(){ try { parent.postMessage({ type: 'apna-close-ai' }, location.origin); } catch {} }
+function aiPanelLeft(){
+  if (window.innerWidth <= 800) return 0;
+  const sb = document.querySelector('.workspace .sidebar');
+  return sb ? Math.round(sb.getBoundingClientRect().width) : 270;
+}
+function removeAiPanel(){
+  document.getElementById('ai-panel')?.remove();
+  state.aiPanel = false;
+}
+function setAiPanel(open){
+  let panel = document.getElementById('ai-panel');
+  state.aiPanel = open;
+  if (open) {
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'ai-panel';
+      panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;z-index:50;background:var(--bg);transform:translateX(100%);transition:transform .25s ease;';
+      const f = document.createElement('iframe');
+      f.title = 'AI Accountant';
+      f.src = '/?embed=chat&company=' + encodeURIComponent(state.companyId || '');
+      f.style.cssText = 'width:100%;height:100%;border:0;display:block;';
+      panel.appendChild(f);
+      document.body.appendChild(panel);
+      panel.getBoundingClientRect();
+    }
+    panel.style.left = aiPanelLeft() + 'px';
+    requestAnimationFrame(() => { panel.style.transform = 'translateX(0)'; });
+  } else if (panel) {
+    panel.style.transform = 'translateX(100%)';
+  }
+  const b = document.getElementById('ai-panel-toggle');
+  if (b) b.style.background = open ? 'rgba(255,255,255,0.14)' : 'none';
+}
+window.addEventListener('resize', () => {
+  const p = document.getElementById('ai-panel');
+  if (p) p.style.left = aiPanelLeft() + 'px';
+});
+function resetAiPanel(){ const was = state.aiPanel; removeAiPanel(); if (was) setAiPanel(true); }
+window.addEventListener('message', e => {
+  if (e.origin === location.origin && e.data && e.data.type === 'apna-close-ai') setAiPanel(false);
+});
+
 
 // Pure Bilingual Dictionary (English & Hindi)[cite: 5]
 const dict = {
@@ -121,6 +172,7 @@ async function refreshSession(){
 }
 
 function authView(mode='login'){
+  removeAiPanel();
   $('app').innerHTML=`<main class="auth-shell"><section class="auth-card" translate="no">
     <div class="logo">${PULSE_ICON(26)}</div><h1 translate="no">APNA BUSINESS</h1>
     <div class="seg"><button class="${mode==='login'?'active':''}" id="login-tab">${state.lang==='hi'?'लॉगिन':'Login'}</button><button class="${mode==='register'?'active':''}" id="register-tab">${state.lang==='hi'?'अकाउंट बनाएं':'Create account'}</button></div>
@@ -339,6 +391,7 @@ function openGeminiStyleAccountPopup(targetEl) {
       if(action === 'logout') {
         doLogout();
       } else if(action === 'dashboard') {
+        if (state.embed) { closeEmbed(); return; }
         state.page = 'dashboard'; render();
       } else if(action === 'settings') {
         openSettingsModal();
@@ -359,6 +412,8 @@ function openGeminiStyleAccountPopup(targetEl) {
 }
 
 function layout(){
+  if (state.embed) state.page = 'chat';
+  else if (state.page === 'chat') { state.page = 'dashboard'; state.aiPanelPending = true; }
   const c=state.companies.find(x=>x.id===state.companyId);
   
   if (state.page === 'chat') {
@@ -381,10 +436,10 @@ function layout(){
 
   <nav style="overflow-y:auto;max-height:calc(100vh - 310px);display:flex;flex-direction:column;gap:4px;">
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:6px;letter-spacing:.05em;">${t('mainMenu')}</div>
-    <button data-page="dashboard" class="${state.page==='dashboard'?'active':''}">${t('dashboard')}</button>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button data-page="chat" class="${state.page==='chat'?'active':''}" style="flex:1;text-align:left;">${t('aiChat')}</button>
-      <div id="ai-toggle" role="switch" aria-checked="false" title="AI Accountant kholo" style="flex:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,0.18);position:relative;cursor:pointer;transition:background .2s;margin-right:4px;"><div id="ai-toggle-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;"></div></div>
+    <button data-page="dashboard" class="${state.page==='dashboard'&&!state.aiPanel?'active':''}">${t('dashboard')}</button>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button data-page="chat" class="${state.aiPanel?'active':''}" style="flex:1;text-align:left;">${t('aiChat')}</button>
+      <button id="ai-panel-toggle" title="AI Accountant side mein kholo / band karo" style="flex:none;background:${state.aiPanel?'rgba(255,255,255,0.14)':'none'};border:none;color:var(--text);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
     </div>
     
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:10px;letter-spacing:.05em;">${t('vouchersBilling')}</div>
@@ -417,14 +472,11 @@ function layout(){
   </div></aside>
   <main><header class="topbar"><div><h2>${c?esc(c.name):'Create your business'}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:'One platform for GST and Non-GST businesses'}</p></div><div class="status" id="logout" style="cursor:pointer;" title="Logout">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
   
-  $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';render();});
-  document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{state.page=b.dataset.page;renderPage();});
+  $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';resetAiPanel();render();});
+  document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{if(b.dataset.page==='chat'){setAiPanel(true);return;}if(state.aiPanel)setAiPanel(false);state.page=b.dataset.page;renderPage();});
   
-  $('ai-toggle')?.addEventListener('click', () => {
-    const tg = $('ai-toggle'), kn = $('ai-toggle-knob');
-    tg.style.background = '#4dabf7'; kn.style.left = '19px';
-    setTimeout(() => { state.page = 'chat'; render(); }, 180);
-  });
+  $('ai-panel-toggle')?.addEventListener('click', () => setAiPanel(!state.aiPanel));
+  if (state.aiPanelPending) { state.aiPanelPending = false; setAiPanel(true); }
   $('top-create-company')?.addEventListener('click', createCompanyForm);
   $('top-alter-company')?.addEventListener('click', () => { state.page = 'settings'; renderPage(); });
   $('sidebar-user-profile')?.addEventListener('click', (e) => { openGeminiStyleAccountPopup(e.currentTarget); });
@@ -917,13 +969,14 @@ function renderChatGPTStyleLayout(c) {
 
   $('ai-back').onclick = () => {
     if (state.aiSection !== 'home') { state.aiSection = 'home'; renderChatGPTStyleLayout(c); }
-    else { state.page = 'dashboard'; render(); }
+    else { if (state.embed) { closeEmbed(); return; } state.page = 'dashboard'; render(); }
   };
-  $('sidebar-toggle').onclick = () => { state.sidebarOpen = !state.sidebarOpen; renderChatGPTStyleLayout(c); };
+  $('sidebar-toggle').onclick = () => { if (state.embed) { closeEmbed(); return; } state.sidebarOpen = !state.sidebarOpen; renderChatGPTStyleLayout(c); };
   $('mode-chat').onclick = () => { state.aiMode = 'chat'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
   $('mode-work').onclick = () => { state.aiMode = 'task'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
 
   $('back-to-dashboard-btn').onclick = () => {
+    if (state.embed) { closeEmbed(); return; }
     state.page = 'dashboard';
     render();
   };
