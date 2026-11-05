@@ -19,8 +19,7 @@ import { importBankLines, listBankLines, matchBankLine, reconciliationCandidates
 import { businessReminders } from './reminders.js';
 import { createDraft, listDrafts, approveDraft, rejectDraft } from './drafts.js';
 import { saveDocument, listDocuments, getDocument, deleteDocument } from './documents.js';
-// Yahan chats.js ki jagah chatService.js kar diya gaya hai:
-import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chatService.js';
+import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chats.js';
 import { requestPasswordReset, resetPassword } from './password-reset.js';
 import { sendResetEmail, hasResetEmailProvider } from './email-service.js';
 
@@ -668,12 +667,12 @@ export function createServer(
 
   const server = http.createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('Referrer-Policy', 'no-referrer');
 
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
     );
 
     const pathName = new URL(
