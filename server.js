@@ -19,7 +19,8 @@ import { importBankLines, listBankLines, matchBankLine, reconciliationCandidates
 import { businessReminders } from './reminders.js';
 import { createDraft, listDrafts, approveDraft, rejectDraft } from './drafts.js';
 import { saveDocument, listDocuments, getDocument, deleteDocument } from './documents.js';
-import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chats.js';
+// Yahan chats.js ki jagah chatService.js kar diya gaya hai:
+import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chatService.js';
 import { requestPasswordReset, resetPassword } from './password-reset.js';
 import { sendResetEmail, hasResetEmailProvider } from './email-service.js';
 
