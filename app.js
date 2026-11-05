@@ -14,6 +14,7 @@ const state = {
   chatBusy: false, 
   aiMode: 'chat', 
   sidebarOpen: window.innerWidth > 800, 
+  threads: [], threadId: null, threadsCompany: null, threadSearch: '', 
   aiSection: 'home', 
   lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
@@ -179,45 +180,106 @@ function authView(mode='login'){
 
 function companySelect(){return `<select id="company-select">${state.companies.map(c=>`<option value="${esc(c.id)}" ${c.id===state.companyId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`;}
 
-function openSettingsModal(){
-  const m = modal(state.lang==='hi' ? 'सेटिंग्स (Settings)' : 'Settings', `
-    <div style="display:flex;flex-direction:column;gap:14px;margin-top:10px; max-height: 70vh; overflow-y: auto; padding-right:4px; color:var(--text);">
-      <div style="font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase;">${state.lang==='hi'?'प्राथमिकताएं (Preferences)':'Preferences'}</div>
-      
-      <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>${state.lang==='hi'?'थीम (Theme)':'Theme'}</span>
-        <select id="settings-theme-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
-          <option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option>
-          <option value="light" ${state.theme==='light'?'selected':''}>Light</option>
-        </select>
-      </label>
+function downloadBlob(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function fmtSize(n){n=Number(n||0);return n>1048576?(n/1048576).toFixed(1)+' MB':n>1024?Math.round(n/1024)+' KB':n+' B';}
+function fmtDate(v){try{return new Date(v).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}catch{return String(v||'');}}
 
-      <label style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
-        <span>${state.lang==='hi'?'भाषा (Language)':'Language'}</span>
-        <select id="settings-lang-select" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border);">
-          <option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option>
-          <option value="en" ${state.lang==='en'?'selected':''}>English</option>
-        </select>
-      </label>
+async function loadPrefsInto(textarea){
+  try{const r=await api('/api/auth/preferences');textarea.value=r.custom_instructions||'';}catch{}
+}
+async function savePrefsFrom(textarea){
+  try{await api('/api/auth/preferences',{method:'PATCH',body:{custom_instructions:textarea.value}});toast(state.lang==='hi'?'सहेज लिया गया':'Saved');}
+  catch(err){toast(err.message);}
+}
 
-      <button class="btn primary" id="save-settings-btn" style="margin-top:10px; padding:10px; border-radius:8px; cursor:pointer;">${state.lang==='hi'?'सेटिंग्स सहेजें':'Save Settings'}</button>
-    </div>
-  `);
+function openSettingsModal(startTab){
+  const hi=state.lang==='hi';
+  const tabs=[['general',hi?'सामान्य':'General'],['personal',hi?'पर्सनलाइज़ेशन':'Personalization'],['account',hi?'अकाउंट':'Account'],['data',hi?'डेटा कंट्रोल':'Data controls'],['about',hi?'जानकारी':'About']];
+  const m=modal(hi?'सेटिंग्स':'Settings',`<div id="settings-tabs" style="display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 12px; border-bottom:1px solid var(--border); padding-bottom:10px;">${tabs.map(([k,l])=>`<button type="button" data-tab="${k}" style="border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-size:13px; color:var(--text); background:transparent;">${l}</button>`).join('')}</div><div id="settings-body" style="max-height:60vh; overflow-y:auto; padding-right:4px; color:var(--text);"></div>`);
+  const body=m.querySelector('#settings-body');
+  const row='display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);';
+  const sel='padding:5px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border); width:auto; margin:0;';
+  const btn='padding:9px 14px; border-radius:8px; cursor:pointer; background:transparent; color:var(--text); border:1px solid var(--border);';
+  const name=esc(state.user?.name||''), email=esc(state.user?.email||'');
 
-  m.querySelector('#save-settings-btn').onclick = () => {
-    const newLang = m.querySelector('#settings-lang-select').value;
-    const newTheme = m.querySelector('#settings-theme-select').value;
-    state.lang = newLang;
-    state.theme = newTheme;
-    try {
-      localStorage.setItem('apna_lang', newLang);
-      localStorage.setItem('apna_theme', newTheme);
-    } catch {}
-    document.body.classList.toggle('light', state.theme === 'light');
-    m.remove();
-    toast(state.lang==='hi' ? 'सेटिंग्स सहेज ली गई हैं!' : 'Settings saved successfully!');
-    render();
+  const panels={
+    general:()=>`<div style="${row}"><span>${hi?'थीम':'Theme'}</span><select id="st-theme" style="${sel}"><option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option><option value="light" ${state.theme==='light'?'selected':''}>Light</option></select></div>
+      <div style="${row}"><span>${hi?'भाषा':'Language'}</span><select id="st-lang" style="${sel}"><option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option><option value="en" ${state.lang==='en'?'selected':''}>English</option></select></div>
+      <button type="button" id="st-save-general" class="btn primary" style="margin-top:14px;">${hi?'सेटिंग्स सहेजें':'Save settings'}</button>`,
+    personal:()=>`<p class="muted" style="margin:0 0 8px; font-size:13px;">${hi?'AI को बताइए कि वह आपसे कैसे बात करे (भाषा, लहजा, जवाब कितना छोटा या लंबा)। यह सिर्फ़ जवाब के तरीके को बदलता है; सुरक्षा नियम वही रहते हैं।':'Tell the AI how to talk to you (language, tone, answer length). This changes style only; safety rules stay the same.'}</p>
+      <textarea id="st-custom" rows="6" maxlength="1500" placeholder="${hi?'जैसे: हमेशा आसान हिंदी में, छोटे जवाब दो।':'e.g. Always reply in simple Hindi, keep answers short.'}" style="width:100%; padding:10px; border-radius:10px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit; font-size:14px;"></textarea>
+      <button type="button" id="st-save-custom" class="btn primary" style="margin-top:10px;">${hi?'सहेजें':'Save'}</button>`,
+    account:()=>`<div style="${row}"><span>${hi?'नाम':'Name'}</span><strong>${name}</strong></div>
+      <div style="${row}"><span>Email</span><strong>${email}</strong></div>
+      <div style="margin-top:14px; font-weight:600;">${hi?'पासवर्ड बदलें':'Change password'}</div>
+      <label style="margin-top:8px;">${hi?'मौजूदा पासवर्ड':'Current password'}<input id="st-cur" type="password" autocomplete="current-password"></label>
+      <label>${hi?'नया पासवर्ड (कम से कम 8 अक्षर)':'New password (at least 8 characters)'}<input id="st-new" type="password" autocomplete="new-password"></label>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;"><button type="button" id="st-pw" class="btn primary">${hi?'पासवर्ड बदलो':'Update password'}</button><button type="button" id="st-logout" style="${btn} color:#f28b82;">${hi?'लॉगआउट':'Sign out'}</button></div>`,
+    data:()=>`<div style="${row}"><span>${hi?'सारी चैट डाउनलोड करें (JSON)':'Export all chats (JSON)'}</span><button type="button" id="st-export-chats" style="${btn}">${hi?'डाउनलोड':'Export'}</button></div>
+      <div style="${row}"><span>${hi?'सारी चैट हमेशा के लिए हटाएँ':'Delete all chats'}</span><button type="button" id="st-clear-chats" style="${btn} color:#f28b82;">${hi?'सब हटाओ':'Delete all'}</button></div>
+      <p class="muted" style="font-size:12px; margin-top:12px;">${hi?'अकाउंटिंग डेटा (बिल, स्टॉक) का CSV Connectors पेज से डाउनलोड होता है। अकाउंटिंग डेटा यहाँ से नहीं हटता।':'Accounting data (invoices, stock) can be exported as CSV from the Connectors page. Accounting data is never deleted from here.'}</p>`,
+    about:()=>`<div style="${row}"><span>${hi?'ऐप':'App'}</span><strong>APNA BUSINESS</strong></div>
+      <div style="${row}"><span>${hi?'वर्शन':'Version'}</span><strong>0.9.0</strong></div>
+      <p class="muted" style="font-size:12px; margin-top:12px;">${hi?'GST और नॉन-GST दोनों तरह के बिज़नेस के लिए अकाउंटिंग और ऑटोमेशन।':'Accounting and automation for GST and non-GST businesses.'}</p>`
   };
+
+  const binders={
+    general:()=>{m.querySelector('#st-save-general').onclick=()=>{
+      state.lang=m.querySelector('#st-lang').value; state.theme=m.querySelector('#st-theme').value;
+      try{localStorage.setItem('apna_lang',state.lang);localStorage.setItem('apna_theme',state.theme);}catch{}
+      m.remove(); toast(state.lang==='hi'?'सेटिंग्स सहेज ली गई हैं!':'Settings saved successfully!'); render();
+    };},
+    personal:()=>{const ta=m.querySelector('#st-custom');loadPrefsInto(ta);m.querySelector('#st-save-custom').onclick=()=>savePrefsFrom(ta);},
+    account:()=>{
+      m.querySelector('#st-pw').onclick=async()=>{
+        const cur=m.querySelector('#st-cur').value, nw=m.querySelector('#st-new').value;
+        if(nw.length<8){toast(hi?'नया पासवर्ड कम से कम 8 अक्षर का हो':'New password must be at least 8 characters');return;}
+        try{await api('/api/auth/change-password',{method:'POST',body:{current_password:cur,new_password:nw}});
+          m.querySelector('#st-cur').value='';m.querySelector('#st-new').value='';toast(hi?'पासवर्ड बदल गया':'Password updated');}
+        catch(err){toast(err.message);}
+      };
+      m.querySelector('#st-logout').onclick=()=>{m.remove();doLogout();};
+    },
+    data:()=>{
+      m.querySelector('#st-export-chats').onclick=async()=>{
+        const cid=state.companyId;
+        try{
+          const list=await api(`/api/companies/${cid}/chats`); const out=[];
+          for(const t of list){const r=await api(`/api/companies/${cid}/chats/${t.id}`);out.push({title:t.title,updated_at:t.updated_at,messages:r.messages});}
+          downloadBlob(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),'apna-business-chats.json');
+        }catch(err){toast(err.message);}
+      };
+      m.querySelector('#st-clear-chats').onclick=async()=>{
+        if(!confirm(hi?'सभी चैट हमेशा के लिए हटा दें?':'Delete all chats permanently?'))return;
+        const cid=state.companyId;
+        try{
+          const list=await api(`/api/companies/${cid}/chats`);
+          for(const t of list) await api(`/api/companies/${cid}/chats/${t.id}`,{method:'DELETE',body:{}});
+          state.threads=[];state.threadId=null;state.chats[cid]=[];
+          toast(hi?'सभी चैट हटा दी गईं':'All chats deleted'); renderRecent(); renderChatLog();
+        }catch(err){toast(err.message);}
+      };
+    },
+    about:()=>{}
+  };
+
+  function show(k){
+    m.querySelectorAll('[data-tab]').forEach(b=>{b.style.background=b.dataset.tab===k?'rgba(255,255,255,0.14)':'transparent';});
+    body.innerHTML=panels[k](); binders[k]();
+  }
+  m.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>show(b.dataset.tab));
+  show(startTab&&panels[startTab]?startTab:'general');
+}
+
+async function doLogout(){
+  try{ await api('/api/auth/logout',{method:'POST',body:{}}); }catch{}
+  state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};
+  state.threads=[];state.threadId=null;state.threadsCompany=null;state.threadSearch='';
+  authView('login');
 }
 
 function openGeminiStyleAccountPopup(targetEl) {
@@ -233,7 +295,7 @@ function openGeminiStyleAccountPopup(targetEl) {
   popup.style.cssText = `
     position: fixed;
     bottom: 70px;
-    left: 12px;
+    left: ${state.sidebarOpen?12:64}px;
     width: 320px;
     background: #1e1e1e;
     color: #f1f3f4;
@@ -260,6 +322,7 @@ function openGeminiStyleAccountPopup(targetEl) {
 
     <div style="display:flex; flex-direction:column; gap:4px; font-size:13px;">
       <div class="popup-item" data-action="settings" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">⚙️ <span>${state.lang==='hi'?'एप सेटिंग्स (भाषा/थीम)':'App Settings (Theme/Lang)'}</span></div>
+      <div class="popup-item" data-action="dashboard" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">📊 <span>Dashboard & ERP</span></div>
       <div style="border-top:1px solid #3c4043; margin:6px 0;"></div>
       <div class="popup-item" data-action="logout" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px; color:#f28b82; font-weight:600;">🚪 <span>${state.lang==='hi'?'लॉगआउट':'Sign out'}</span></div>
     </div>
@@ -275,7 +338,9 @@ function openGeminiStyleAccountPopup(targetEl) {
       const action = item.dataset.action;
       popup.remove();
       if(action === 'logout') {
-        $('logout').click();
+        doLogout();
+      } else if(action === 'dashboard') {
+        state.page = 'dashboard'; render();
       } else if(action === 'settings') {
         openSettingsModal();
       }
@@ -286,7 +351,7 @@ function openGeminiStyleAccountPopup(targetEl) {
 
   setTimeout(() => {
     document.addEventListener('click', function closePopup(e) {
-      if (!popup.contains(e.target) && e.target.id !== 'sidebar-user-profile' && !e.target.closest('#sidebar-user-profile')) {
+      if (!popup.contains(e.target) && !e.target.closest('#ai-sidebar-user-profile')) {
         popup.remove();
         document.removeEventListener('click', closePopup);
       }
@@ -411,15 +476,83 @@ function renderChatLog(){
   const log=$('chat-log');if(!log)return;
   const msgs=chatLog();
   if(!msgs.length){
-    log.innerHTML=`<div class="chat-hello" style="text-align:center; padding:10px;"><div class="chat-avatar">${PULSE_ICON(26)}</div><h3 style="font-size: 38px; font-weight: 600; margin-top: 12px; letter-spacing: -0.5px;">How can I help you?</h3><p style="font-size: 16px; color: var(--muted); margin-top: 4px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p></div>`;
+    log.innerHTML='';
   }else{
     log.innerHTML=msgs.map((m,i)=>m.role==='user'
       ?`<div class="msg user" style="margin:8px 0; text-align:right;"><div class="bubble" style="display:inline-block; background:var(--primary); padding:8px 12px; border-radius:12px;">${m.fileUrl?fileBubble(m):''}${esc(m.text)}</div></div>`
       :`<div class="msg bot" style="margin:8px 0; text-align:left;"><div class="bubble ${m.error?'err':''} ${m.typing?'typing':''}" style="display:inline-block; background:rgba(255,255,255,0.08); padding:8px 12px; border-radius:12px;">${esc(m.text)}${m.draft?draftCard(m,i):''}</div></div>`).join('');
   }
   log.scrollTop=log.scrollHeight;
+  document.querySelectorAll('.hero-el').forEach(e=>{e.style.display=msgs.length?'none':'';});
   log.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>decideDraft(msgs[Number(b.dataset.i)],b.dataset.act));
   const send=$('chat-send');if(send)send.disabled=state.chatBusy;
+}
+
+async function persistExchange(cid,userText,botText){
+  try{
+    if(cid!==state.companyId) return;
+    if(!state.threadId){
+      const t=await api(`/api/companies/${cid}/chats`,{method:'POST',body:{title:String(userText).slice(0,40)}});
+      state.threadId=t.id; state.threads.unshift(t);
+    }
+    await api(`/api/companies/${cid}/chats/${state.threadId}/messages`,{method:'POST',body:{messages:[{role:'user',text:userText},{role:'bot',text:botText}]}});
+    const i=state.threads.findIndex(x=>x.id===state.threadId);
+    if(i>0){const [t]=state.threads.splice(i,1);state.threads.unshift(t);}
+    renderRecent();
+  }catch{}
+}
+
+async function loadThreads(){
+  const cid=state.companyId; if(!cid) return;
+  try{
+    const list=await api(`/api/companies/${cid}/chats`);
+    if(cid!==state.companyId) return;
+    state.threads=list; state.threadsCompany=cid;
+  }catch{}
+  renderRecent();
+}
+
+function renderRecent(){
+  const box=$('recent-list'); if(!box) return;
+  const q=String(state.threadSearch||'').toLowerCase();
+  const items=state.threads.filter(t=>!q||String(t.title).toLowerCase().includes(q));
+  const btn='background:none; border:none; color:var(--muted); cursor:pointer; padding:2px 4px; font-size:13px; flex:none;';
+  box.innerHTML=items.length?items.map(t=>`<div data-id="${esc(t.id)}" style="display:flex; align-items:center; gap:2px; padding:2px 6px 2px 10px; border-radius:8px; background:${t.id===state.threadId?'rgba(255,255,255,0.12)':'transparent'};"><span class="recent-title" style="flex:1; padding:6px 0; font-size:13px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(t.title)}</span><button type="button" data-ren="${esc(t.id)}" title="Rename" style="${btn}">✎</button><button type="button" data-del="${esc(t.id)}" title="Delete" style="${btn}">🗑</button></div>`).join(''):`<div style="padding:4px 10px; font-size:12px; color:var(--muted);">${state.lang==='hi'?'कोई चैट नहीं':'No chats'}</div>`;
+  box.querySelectorAll('.recent-title').forEach(el=>el.onclick=()=>openThread(el.parentElement.dataset.id));
+  box.querySelectorAll('[data-ren]').forEach(b=>b.onclick=e=>{e.stopPropagation();renameThreadUi(b.dataset.ren);});
+  box.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();deleteThreadUi(b.dataset.del);});
+}
+
+async function openThread(id){
+  const cid=state.companyId;
+  try{
+    const r=await api(`/api/companies/${cid}/chats/${id}`);
+    state.threadId=id;
+    state.chats[cid]=r.messages.map(m=>({role:m.role,text:m.content}));
+    state.aiSection='home'; state.aiMode='chat';
+    renderChatGPTStyleLayout(state.companies.find(x=>x.id===cid));
+  }catch(err){toast(err.message);}
+}
+
+async function renameThreadUi(id){
+  const t=state.threads.find(x=>x.id===id); if(!t) return;
+  const name=prompt(state.lang==='hi'?'चैट का नया नाम':'New chat name',t.title);
+  if(name===null||!name.trim()) return;
+  try{
+    const r=await api(`/api/companies/${state.companyId}/chats/${id}`,{method:'PATCH',body:{title:name.trim()}});
+    t.title=r.title; renderRecent();
+  }catch(err){toast(err.message);}
+}
+
+async function deleteThreadUi(id){
+  if(!confirm(state.lang==='hi'?'यह चैट हटा दें?':'Delete this chat?')) return;
+  const cid=state.companyId;
+  try{
+    await api(`/api/companies/${cid}/chats/${id}`,{method:'DELETE',body:{}});
+    state.threads=state.threads.filter(x=>x.id!==id);
+    if(state.threadId===id){ state.threadId=null; state.chats[cid]=[]; renderChatLog(); }
+    renderRecent();
+  }catch(err){toast(err.message);}
 }
 
 function fileBubble(m){
@@ -439,6 +572,7 @@ async function sendChat(raw){
     const r=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:textValue,history}});
     pending.text=r.reply||'Samajh nahi aaya, dobara likhiye.';pending.typing=false;
     if(r.mode==='DRAFT_CREATED'&&r.draft_id) pending.draft={id:r.draft_id,preview:r.preview||[],status:'PENDING'};
+    persistExchange(cid,textValue,pending.text);
   }catch(err){pending.text=err.message;pending.typing=false;pending.error=true;}
   finally{state.chatBusy=false;if(state.page==='chat'&&state.companyId===cid)renderChatLog();}
 }
@@ -480,6 +614,7 @@ async function sendChatWithFile(text,file,type){
     if(res.mode==='DRAFT_CREATED'&&res.draft_id){
       pending.draft={id:res.draft_id,preview:res.preview||[],status:'PENDING'};
     }
+    persistExchange(cid,text||'File bheji',pending.text);
   }catch(err){
     pending.text=err.message;pending.typing=false;pending.error=true;
   }finally{
@@ -539,30 +674,116 @@ function startVoice(input){
   recognition.start();
 }
 
+
+async function fillWorkBox(){
+  const box=$('work-box'); if(!box) return;
+  const hi=state.lang==='hi';
+  try{
+    const r=await api(`/api/companies/${state.companyId}/reminders`);
+    const low=r.low_stock||[], unpaid=r.unpaid_invoices||[];
+    const panel='background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:14px;';
+    const rowS='display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px solid var(--border); font-size:14px;';
+    const goBtn='background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px;';
+    const total=unpaid.reduce((a,i)=>a+(Number(i.total_paise)-Number(i.paid_paise)),0);
+    box.innerHTML=`<h2 style="margin-bottom:4px;">${hi?'पेंडिंग काम और रिमाइंडर':'Pending work & reminders'}</h2>
+      <p class="muted" style="font-size:13px;">${hi?'आपके असली डेटा से बना है।':'Built from your live business data.'}</p>
+      <div style="${panel}"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><strong>${hi?'कम स्टॉक':'Low stock'} (${low.length})</strong><button type="button" data-go="products" style="${goBtn}">${hi?'स्टॉक खोलें':'Open stock'}</button></div>
+        ${low.length?low.map(p=>`<div style="${rowS}"><span>${esc(p.name)} <span class="muted">${esc(p.sku||'')}</span></span><span>${Number(p.quantity)} / ${Number(p.reorder_level)}</span></div>`).join(''):`<div class="muted" style="font-size:14px;">✓ ${hi?'सब ठीक है':'All good'}</div>`}</div>
+      <div style="${panel}"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><strong>${hi?'बकाया बिल':'Unpaid invoices'} (${unpaid.length}) · ${money(total)}</strong><button type="button" data-go="invoices" style="${goBtn}">${hi?'बिल खोलें':'Open invoices'}</button></div>
+        ${unpaid.length?unpaid.slice(0,30).map(i=>`<div style="${rowS}"><span>${esc(i.number)} <span class="muted">${esc(fmtDate(i.date))}</span></span><span>${money(Number(i.total_paise)-Number(i.paid_paise))}</span></div>`).join(''):`<div class="muted" style="font-size:14px;">✓ ${hi?'कोई बकाया नहीं':'Nothing outstanding'}</div>`}</div>`;
+    box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{state.page=b.dataset.go;render();});
+  }catch(err){box.textContent=err.message;}
+}
+
+async function fillFilesBox(){
+  const box=$('files-box'); if(!box) return;
+  const hi=state.lang==='hi', cid=state.companyId;
+  const bt='background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:13px;';
+  async function draw(){
+    let list=[];
+    try{list=await api(`/api/companies/${cid}/documents`);}catch(err){box.textContent=err.message;return;}
+    box.innerHTML=`<h2 style="margin-bottom:4px;">${hi?'फ़ोटो और फ़ाइलें':'Images & Files'}</h2>
+      <p class="muted" style="font-size:13px;">${hi?'बिल, रसीद और दस्तावेज़ यहाँ सुरक्षित रहते हैं (हर फ़ाइल 5 MB तक)।':'Bills, receipts and documents are kept here (up to 5 MB each).'}</p>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:14px 0;">
+        <select id="up-kind" style="width:auto; margin:0;"><option value="Receipt">${hi?'रसीद':'Receipt'}</option><option value="Invoice">${hi?'बिल':'Invoice'}</option><option value="Document">${hi?'दस्तावेज़':'Document'}</option></select>
+        <input type="file" id="up-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx" style="display:none;">
+        <button type="button" id="up-btn" class="btn primary">+ ${hi?'फ़ाइल जोड़ें':'Add file'}</button>
+      </div>
+      ${list.length?list.map(d=>`<div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--border);"><div style="flex:1; min-width:0;"><div style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(d.name)}</div><div class="muted" style="font-size:12px;">${esc(d.kind)} · ${fmtSize(d.size_bytes)} · ${esc(fmtDate(d.created_at))}</div></div><button type="button" data-view="${esc(d.id)}" style="${bt}">${hi?'देखें':'View'}</button><button type="button" data-dl="${esc(d.id)}" style="${bt}">${hi?'डाउनलोड':'Download'}</button><button type="button" data-rm="${esc(d.id)}" style="${bt} color:#f28b82;">🗑</button></div>`).join(''):`<div class="muted" style="padding:14px 0;">${hi?'अभी कोई फ़ाइल नहीं है।':'No files yet.'}</div>`}`;
+    const up=$('up-file');
+    $('up-btn').onclick=()=>up.click();
+    up.onchange=async()=>{
+      const f=up.files[0]; if(!f) return;
+      try{
+        const content_base64=await fileToBase64(f);
+        await api(`/api/companies/${cid}/documents`,{method:'POST',body:{name:f.name,kind:$('up-kind').value,content_base64}});
+        toast(hi?'फ़ाइल जुड़ गई':'File added'); draw();
+      }catch(err){toast(err.message);}
+    };
+    async function fetchBlob(id){
+      const r=await api(`/api/companies/${cid}/documents/${id}`);
+      const bin=atob(r.content_base64); const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      return {blob:new Blob([bytes],{type:r.mime_type}),name:r.name};
+    }
+    box.querySelectorAll('[data-view]').forEach(b=>b.onclick=async()=>{try{const {blob}=await fetchBlob(b.dataset.view);window.open(URL.createObjectURL(blob),'_blank');}catch(err){toast(err.message);}});
+    box.querySelectorAll('[data-dl]').forEach(b=>b.onclick=async()=>{try{const {blob,name}=await fetchBlob(b.dataset.dl);downloadBlob(blob,name);}catch(err){toast(err.message);}});
+    box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{
+      if(!confirm(hi?'यह फ़ाइल हटा दें?':'Delete this file?')) return;
+      try{await api(`/api/companies/${cid}/documents/${b.dataset.rm}`,{method:'DELETE',body:{}});draw();}catch(err){toast(err.message);}
+    });
+  }
+  draw();
+}
+
+function fillConnectorsBox(){
+  const box=$('connectors-box'); if(!box) return;
+  const hi=state.lang==='hi', cid=state.companyId;
+  const card='background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-top:12px; display:flex; align-items:center; gap:12px;';
+  const bt='background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 12px; cursor:pointer; font-size:13px; flex:none;';
+  const exp=[['invoices',hi?'बिल / इनवॉइस':'Invoices'],['products',hi?'प्रोडक्ट':'Products'],['stock',hi?'स्टॉक':'Stock']];
+  const soon=[[hi?'बैंक फ़ीड':'Bank feeds',hi?'बैंक स्टेटमेंट अपने आप जुड़ना':'Automatic bank statement sync'],[hi?'WhatsApp / SMS रिमाइंडर':'WhatsApp / SMS reminders',hi?'ग्राहकों को बकाया का संदेश':'Payment reminders to customers'],[hi?'Google से साइन-इन':'Google sign-in',hi?'Google अकाउंट से लॉगिन':'Log in with a Google account'],[hi?'GST पोर्टल':'GST portal',hi?'रिटर्न फ़ाइलिंग की तैयारी':'Return filing preparation']];
+  box.innerHTML=`<h2 style="margin-bottom:4px;">${hi?'कनेक्टर और एक्सपोर्ट':'Connectors & export'}</h2>
+    <p class="muted" style="font-size:13px;">${hi?'अपना डेटा CSV में डाउनलोड करें (Excel में खुलता है)।':'Download your data as CSV (opens in Excel).'}</p>
+    ${exp.map(([k,l])=>`<div style="${card}"><div style="flex:1;"><strong>${l}</strong><div class="muted" style="font-size:12px;">CSV</div></div><button type="button" data-exp="${k}" style="${bt}">${hi?'डाउनलोड':'Download'}</button></div>`).join('')}
+    <h3 style="margin-top:22px; font-size:15px;">${hi?'जल्द आ रहे हैं':'Coming soon'}</h3>
+    ${soon.map(([t,d])=>`<div style="${card} opacity:0.7;"><div style="flex:1;"><strong>${t}</strong><div class="muted" style="font-size:12px;">${d}</div></div><span class="muted" style="font-size:12px;">${hi?'जल्द':'Soon'}</span></div>`).join('')}`;
+  box.querySelectorAll('[data-exp]').forEach(b=>b.onclick=async()=>{
+    try{
+      const r=await fetch(`/api/companies/${cid}/export/${b.dataset.exp}`,{credentials:'include'});
+      if(!r.ok) throw new Error(`Request failed (${r.status})`);
+      downloadBlob(await r.blob(),`apna-business-${b.dataset.exp}.csv`);
+    }catch(err){toast(err.message);}
+  });
+}
+
+function fillCustomizeBox(){
+  const box=$('customize-box'); if(!box) return;
+  const hi=state.lang==='hi';
+  box.innerHTML=`<h2 style="margin-bottom:4px;">${hi?'AI को अपने हिसाब से ढालें':'Customize your AI'}</h2>
+    <p class="muted" style="font-size:13px; margin-bottom:12px;">${hi?'बताइए AI आपसे कैसे बात करे: भाषा, लहजा, जवाब की लंबाई। यह सिर्फ़ जवाब का तरीका बदलता है; बिना आपके Confirm के कोई एंट्री नहीं होती।':'Tell the AI how to talk to you: language, tone, answer length. It only changes style; no entry is ever posted without your Confirm.'}</p>
+    <textarea id="cz-text" rows="8" maxlength="1500" placeholder="${hi?'जैसे: हमेशा आसान हिंदी में, छोटे जवाब दो।':'e.g. Always reply in simple Hindi, keep answers short.'}" style="width:100%; padding:12px; border-radius:12px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit; font-size:14px;"></textarea>
+    <button type="button" id="cz-save" class="btn primary" style="margin-top:12px;">${hi?'सहेजें':'Save'}</button>`;
+  const ta=$('cz-text'); loadPrefsInto(ta); $('cz-save').onclick=()=>savePrefsFrom(ta);
+}
+
 function renderChatGPTStyleLayout(c) {
+  if (state.threadsCompany && state.threadsCompany !== state.companyId) { state.threads = []; state.threadId = null; state.threadsCompany = null; }
   const sec = state.aiSection;
   let mainAreaContent = '';
 
   if(sec === 'home') {
     if(state.aiMode === 'task') {
-      mainAreaContent = `
-        <div style="padding:40px; max-width:800px; margin:0 auto; width:100%;">
-          <h2>📋 Pending Business Tasks & Reminders</h2>
-          <p class="muted">AI tracks pending invoices, low stock items, and customer payments here.</p>
-          <div class="panel" style="background:rgba(255,255,255,0.03); padding:20px; border-radius:12px; margin-top:20px;">
-            <strong>1. Check Low Stock Items</strong><br><small class="muted">Review reorder levels for inventory items.</small>
-          </div>
-          <div class="panel" style="background:rgba(255,255,255,0.03); padding:20px; border-radius:12px; margin-top:15px;">
-            <strong>2. Follow up on Pending Invoices</strong><br><small class="muted">Check customer outstanding balances.</small>
-          </div>
-        </div>`;
+      mainAreaContent = `<div id="work-box" style="padding:30px 24px; max-width:800px; width:100%; height:100%; overflow-y:auto; box-sizing:border-box;">…</div>`;
     } else {
       mainAreaContent = `
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
-          <div class="chat-avatar" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
-          <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
-          <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
+          <div class="chat-avatar hero-el" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
+          <h1 class="hero-el" style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
+          <p class="hero-el" style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           
+          <div id="chat-log" style="width:100%; max-width:700px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
+
           <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:28px; padding:14px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
@@ -574,7 +795,7 @@ function renderChatGPTStyleLayout(c) {
             <button type="button" id="chat-send" style="background:var(--text); color:var(--bg); border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Send">➤</button>
           </div>
 
-          <div style="width:100%; max-width:700px; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
+          <div class="hero-el" style="width:100%; max-width:700px; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
             ${(state.lang==='hi'
               ? ['आज की बिक्री बताओ','नया बिल बनाओ','कम स्टॉक वाला सामान दिखाओ','किस ग्राहक का पैसा बाकी है?']
               : ["Show today's sales",'Create a new invoice','Show low-stock items','Which customers owe me money?']
@@ -587,17 +808,17 @@ function renderChatGPTStyleLayout(c) {
             <button class="file-remove" id="file-remove" type="button" aria-label="Remove file">×</button>
           </div>
 
-          <div id="chat-log" style="width:100%; max-width:700px; margin-top:20px; max-height:300px; overflow-y:auto;"></div>
+
         </div>`;
     }
   } else if(sec === 'schedules') {
-    mainAreaContent = `<div style="padding:40px; max-width:800px; margin:0 auto; width:100%;"><h2>📅 Schedules & Reminders</h2><p class="muted">No pending schedules configured yet.</p></div>`;
+    mainAreaContent = `<div id="work-box" style="padding:30px 24px; max-width:800px; width:100%; height:100%; overflow-y:auto; box-sizing:border-box;">…</div>`;
   } else if(sec === 'connectors') {
-    mainAreaContent = `<div style="padding:40px; max-width:800px; margin:0 auto; width:100%;"><h2>🔗 Connectors & Integrations</h2><p class="muted">Connect external APIs, bank feeds, or tax portals here.</p></div>`;
+    mainAreaContent = `<div id="connectors-box" style="padding:30px 24px; max-width:800px; width:100%; height:100%; overflow-y:auto; box-sizing:border-box;"></div>`;
   } else if(sec === 'images') {
-    mainAreaContent = `<div style="padding:40px; max-width:800px; margin:0 auto; width:100%;"><h2>🖼️ Uploaded Images / Documents</h2><p class="muted">All uploaded receipts and documents will appear here.</p></div>`;
+    mainAreaContent = `<div id="files-box" style="padding:30px 24px; max-width:800px; width:100%; height:100%; overflow-y:auto; box-sizing:border-box;">…</div>`;
   } else if(sec === 'customize') {
-    mainAreaContent = `<div style="padding:40px; max-width:800px; margin:0 auto; width:100%;"><h2>⚙️ Customize AI Assistant</h2><p class="muted">Tailor your AI accountant prompt rules and behavior.</p></div>`;
+    mainAreaContent = `<div id="customize-box" style="padding:30px 24px; max-width:800px; width:100%; height:100%; overflow-y:auto; box-sizing:border-box;"></div>`;
   }
 
   const userName = state.user?.name || 'Prince Kumar';
@@ -616,9 +837,10 @@ function renderChatGPTStyleLayout(c) {
     newc: ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')
   };
   const navBtn = (id, key, icon, label) => `<button id="${id}" title="${label}" style="background:${state.aiSection===key?'rgba(255,255,255,0.12)':'none'}; border:none; color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; width:100%;">${icon}${open?`<span>${label}</span>`:''}</button>`;
-  const recentHtml = open ? `<div style="display:flex; flex-direction:column; gap:2px; margin-top:8px; overflow:hidden;">
-          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Recent</div>
-          ${(chatLog().filter(m=>m.role==='user').slice(-6).reverse().map(m=>`<div style="padding:7px 10px; font-size:13px; color:var(--text); border-radius:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.85;">${esc(String(m.text).slice(0,40))}</div>`).join('')) || '<div style="padding:4px 10px; font-size:12px; color:var(--muted);">—</div>'}
+  const recentHtml = open ? `<div style="display:flex; flex-direction:column; gap:4px; margin-top:8px; min-height:0;">
+          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">${state.lang==='hi'?'हाल की चैट':'Recent'}</div>
+          <input id="thread-search" type="search" value="${esc(state.threadSearch||'')}" placeholder="${state.lang==='hi'?'चैट खोजें…':'Search chats'}" style="margin:0 0 4px; padding:7px 10px; font-size:13px; border-radius:8px;">
+          <div id="recent-list" style="display:flex; flex-direction:column; gap:2px;"></div>
         </div>` : '';
   const sbIcon = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><line x1="9" y1="4" x2="9" y2="20"/></svg>`;
   const backIcon = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`;
@@ -677,6 +899,15 @@ function renderChatGPTStyleLayout(c) {
       </div>
     </div>`;
 
+  if (sec === 'schedules' || (sec === 'home' && state.aiMode === 'task')) fillWorkBox();
+  if (sec === 'images') fillFilesBox();
+  if (sec === 'connectors') fillConnectorsBox();
+  if (sec === 'customize') fillCustomizeBox();
+
+  $('thread-search')?.addEventListener('input', e => { state.threadSearch = e.target.value; renderRecent(); });
+  renderRecent();
+  if (state.threadsCompany !== state.companyId) loadThreads();
+
   $('ai-back').onclick = () => {
     if (state.aiSection !== 'home') { state.aiSection = 'home'; renderChatGPTStyleLayout(c); }
     else { state.page = 'dashboard'; render(); }
@@ -691,6 +922,7 @@ function renderChatGPTStyleLayout(c) {
   };
 
   $('new-chat-btn').onclick = () => {
+    state.threadId = null; state.chats[state.companyId] = []; state.aiMode = 'chat';
     state.aiSection = 'home';
     renderChatGPTStyleLayout(c);
   };
