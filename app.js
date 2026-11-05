@@ -909,17 +909,18 @@ function renderChatGPTStyleLayout(c) {
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
       
       <!-- Left Fixed Sidebar -->
-      <div style="width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
+      <div style="${open?'':'display:none; '}width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; justify-content:${open?'flex-start':'center'};">
           <div style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.28); display:flex; align-items:center; justify-content:center; flex:none;">${PULSE_ICON(18)}</div>
           ${open?'<span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>':''}
         </div>
 
+        ${navBtn('ai-nav-home','home',I.chat,'Projects / Home')}
+
         <button id="new-chat-btn" title="New chat" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:9px ${open?'12px':'0'}; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; background:${open?'var(--text)':'none'}; color:${open?'var(--bg)':'var(--text)'}; border:none; width:100%;">${I.newc}${open?'<span>New chat</span>':''}</button>
 
         <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px;">
           ${open?'<div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">Workspace</div>':''}
-          ${navBtn('ai-nav-home','home',I.chat,'Projects / Home')}
           ${navBtn('ai-nav-schedules','schedules',I.cal,'Schedules')}
           ${navBtn('ai-nav-connectors','connectors',I.link,'Connectors')}
           ${navBtn('ai-nav-images','images',I.img,'Images & Files')}
@@ -931,10 +932,10 @@ function renderChatGPTStyleLayout(c) {
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
           <button id="back-to-dashboard-btn" title="Dashboard & ERP" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px;">${I.dash}${open?'<span>Dashboard & ERP</span>':''}</button>
 
-          <div id="ai-sidebar-user-profile" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:${open?'8px 10px':'6px 0'}; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
+          ${state.embed?'':`<div id="ai-sidebar-user-profile" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:${open?'8px 10px':'6px 0'}; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
             <div style="background:#3b4a63; color:#fff; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; flex:none;">${userInitial}</div>
             ${open?`<div style="overflow:hidden; flex:1;"><div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(userName)}</div><div style="font-size:11px; color:#4dabf7; font-weight:500;">Pro</div></div>`:''}
-          </div>
+          </div>`}
         </div>
       </div>
 
@@ -971,7 +972,7 @@ function renderChatGPTStyleLayout(c) {
     if (state.aiSection !== 'home') { state.aiSection = 'home'; renderChatGPTStyleLayout(c); }
     else { if (state.embed) { closeEmbed(); return; } state.page = 'dashboard'; render(); }
   };
-  $('sidebar-toggle').onclick = () => { if (state.embed) { closeEmbed(); return; } state.sidebarOpen = !state.sidebarOpen; renderChatGPTStyleLayout(c); };
+  $('sidebar-toggle').onclick = () => { state.sidebarOpen = !state.sidebarOpen; renderChatGPTStyleLayout(c); };
   $('mode-chat').onclick = () => { state.aiMode = 'chat'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
   $('mode-work').onclick = () => { state.aiMode = 'task'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
 
@@ -993,7 +994,7 @@ function renderChatGPTStyleLayout(c) {
   $('ai-nav-images').onclick = () => { state.aiSection = 'images'; renderChatGPTStyleLayout(c); };
   $('ai-nav-customize').onclick = () => { state.aiSection = 'customize'; renderChatGPTStyleLayout(c); };
 
-  $('ai-sidebar-user-profile').onclick = (e) => { openGeminiStyleAccountPopup(e.currentTarget); };
+  const _up = $('ai-sidebar-user-profile'); if (_up) _up.onclick = (e) => { openGeminiStyleAccountPopup(e.currentTarget); };
 
   if(sec !== 'home' || state.aiMode === 'task') return;
 
