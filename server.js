@@ -19,6 +19,7 @@ import { importBankLines, listBankLines, matchBankLine, reconciliationCandidates
 import { businessReminders } from './reminders.js';
 import { createDraft, listDrafts, approveDraft, rejectDraft } from './drafts.js';
 import { saveDocument, listDocuments, getDocument, deleteDocument } from './documents.js';
+import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chats.js';
 import { requestPasswordReset, resetPassword } from './password-reset.js';
 import { sendResetEmail, hasResetEmailProvider } from './email-service.js';
 
@@ -184,6 +185,9 @@ export function createServer(
   add('POST', '/api/auth/change-password', 'auth', ({ session, body }) =>
     changePassword(db, session.user.id, body, session.token_hash)
   );
+
+  add('GET', '/api/auth/preferences', 'auth', ({ session }) => getPrefs(db, session.user.id));
+  add('PATCH', '/api/auth/preferences', 'auth', ({ session, body }) => setPrefs(db, session.user.id, body));
 
   add('GET', '/api/companies', 'auth', ({ session }) =>
     listCompanies(db, session.user.id)
@@ -522,6 +526,25 @@ export function createServer(
     aiChat(db, params.companyId, session.user.id, body)
   );
 
+  add('GET', '/api/companies/:companyId/chats', 'read', ({ params, session }) =>
+    listThreads(db, params.companyId, session.user.id)
+  );
+  add('POST', '/api/companies/:companyId/chats', 'read', ({ params, body, session }) =>
+    createThread(db, params.companyId, session.user.id, body)
+  );
+  add('GET', '/api/companies/:companyId/chats/:threadId', 'read', ({ params, session }) =>
+    getThread(db, params.companyId, session.user.id, params.threadId)
+  );
+  add('PATCH', '/api/companies/:companyId/chats/:threadId', 'read', ({ params, body, session }) =>
+    renameThread(db, params.companyId, session.user.id, params.threadId, body)
+  );
+  add('DELETE', '/api/companies/:companyId/chats/:threadId', 'read', ({ params, session }) =>
+    deleteThread(db, params.companyId, session.user.id, params.threadId)
+  );
+  add('POST', '/api/companies/:companyId/chats/:threadId/messages', 'read', ({ params, body, session }) =>
+    addMessages(db, params.companyId, session.user.id, params.threadId, body)
+  );
+
   add('GET', '/api/companies/:companyId/subscription', 'read', ({ params }) => ({
     subscription: one(db, 'SELECT * FROM subscriptions WHERE company_id=?', params.companyId),
     plans: PLANS,
@@ -649,7 +672,7 @@ export function createServer(
 
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
     );
 
     const pathName = new URL(
