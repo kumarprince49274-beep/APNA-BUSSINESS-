@@ -1,9 +1,11 @@
+
 import { one, all } from './db.js';
 import { dashboard, stockReport, outstandingReport } from './reports.js';
 import { createDraft } from './drafts.js';
 import { assertRole } from './auth.js';
 import { localAssistant } from './assistant.js';
 import { fail, today } from './utils.js';
+import { customInstructionBlock } from './chats.js';
 
 // ---------------------------------------------------------------------------
 // ChatGPT-style assistant for Apna Business.
@@ -397,7 +399,7 @@ export async function aiChat(db, companyId, userId, body = {}) {
   try {
     const context = buildContext(db, companyId);
     const raw = await callGemini(
-      systemPrompt(context, canDraft),
+      systemPrompt(context, canDraft) + customInstructionBlock(db, userId),
       buildContents(body.history, userText)
     );
     const parsed = parseModelJson(raw);
