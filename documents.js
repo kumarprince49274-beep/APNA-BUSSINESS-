@@ -53,7 +53,11 @@ export function getDocument(db,companyId,id){
  return {name:file.name,kind:file.kind,mime_type:file.mime_type,size_bytes:file.size_bytes,content_base64:Buffer.from(file.content).toString('base64')};
 }
 export function deleteDocument(db,companyId,id){
- const r=run(db,'DELETE FROM private_documents WHERE company_id=? AND id=?',companyId,id);
- if(r.changes===0)fail('Document not found',404);
- return {ok:true};
+ return transaction(db,()=>{
+  const r=run(db,'DELETE FROM private_documents WHERE company_id=? AND id=?',companyId,id);
+  if(r.changes===0)fail('Document not found',404);
+  // Jis draft se yeh receipt judi thi, usme tootta hua link na rahe
+  run(db,'UPDATE posting_drafts SET document_id=NULL WHERE company_id=? AND document_id=?',companyId,id);
+  return {ok:true};
+ });
 }
