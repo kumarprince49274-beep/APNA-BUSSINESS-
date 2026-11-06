@@ -17,11 +17,18 @@ export function createDraft(db,companyId,userId,input){
   debit+=d;credit+=c;return {account_id:a.id,debit_paise:d,credit_paise:c};
  });
  if(!Number.isSafeInteger(debit)||debit!==credit||debit===0)fail('Unbalanced draft');
+ // Receipt/photo proof (optional): sirf isi company ki saved file jud sakti hai
+ let documentId=null;
+ if(input.document_id){
+  const doc=one(db,'SELECT id FROM private_documents WHERE id=? AND company_id=?',String(input.document_id),companyId);
+  if(!doc)fail('Attached receipt is not in this company');
+  documentId=doc.id;
+ }
  const id=uid();
- run(db,'INSERT INTO posting_drafts (id,company_id,created_by,date,memo,lines_json,status,created_at) VALUES (?,?,?,?,?,?,?,?)',id,companyId,userId,when,memo,JSON.stringify(lines),'PENDING',now());
- return {id,status:'PENDING',debit_paise:debit};
+ run(db,'INSERT INTO posting_drafts (id,company_id,created_by,date,memo,lines_json,status,document_id,created_at) VALUES (?,?,?,?,?,?,?,?,?)',id,companyId,userId,when,memo,JSON.stringify(lines),'PENDING',documentId,now());
+ return {id,status:'PENDING',debit_paise:debit,document_id:documentId};
 }
-export function listDrafts(db,companyId){return all(db,'SELECT id,date,memo,status,created_at,posted_voucher_id FROM posting_drafts WHERE company_id=? ORDER BY created_at DESC',companyId);}
+export function listDrafts(db,companyId){return all(db,'SELECT id,date,memo,status,created_at,posted_voucher_id,document_id FROM posting_drafts WHERE company_id=? ORDER BY created_at DESC',companyId);}
 export function approveDraft(db,companyId,userId,draftId){
  return transaction(db,()=>{
   const d=one(db,'SELECT * FROM posting_drafts WHERE id=? AND company_id=?',draftId,companyId);
