@@ -1,3 +1,4 @@
+```javascript
 const STATES = [
   ['01','Jammu and Kashmir'],['02','Himachal Pradesh'],['03','Punjab'],['04','Chandigarh'],['05','Uttarakhand'],['06','Haryana'],['07','Delhi'],['08','Rajasthan'],['09','Uttar Pradesh'],['10','Bihar'],['11','Sikkim'],['12','Arunachal Pradesh'],['13','Nagaland'],['14','Manipur'],['15','Mizoram'],['16','Tripura'],['17','Meghalaya'],['18','Assam'],['19','West Bengal'],['20','Jharkhand'],['21','Odisha'],['22','Chhattisgarh'],['23','Madhya Pradesh'],['24','Gujarat'],['26','Dadra and Nagar Haveli and Daman and Diu'],['27','Maharashtra'],['29','Karnataka'],['30','Goa'],['31','Lakshadweep'],['32','Kerala'],['33','Tamil Nadu'],['34','Puducherry'],['35','Andaman and Nicobar Islands'],['36','Telangana'],['37','Andhra Pradesh'],['38','Ladakh']
 ];
@@ -35,7 +36,7 @@ const FONT_PRESETS = {
   claude:   { label: 'Claude style (serif headings)', body: "Inter," + FONT_SANS_FALLBACK, head: "Lora," + FONT_SERIF_FALLBACK, g: ['Inter:wght@400;500;600;700','Lora:wght@500;600;700','Noto+Sans+Devanagari:wght@400;500;600;700','Noto+Serif+Devanagari:wght@500;600;700'] },
   friendly: { label: 'Friendly (Nunito)', body: "Nunito," + FONT_SANS_FALLBACK, head: "Nunito," + FONT_SANS_FALLBACK, g: ['Nunito:wght@400;500;600;700;800','Noto+Sans+Devanagari:wght@400;500;600;700'] },
   poppins:  { label: 'Modern (Poppins)', body: "Poppins," + FONT_SANS_FALLBACK, head: "Poppins," + FONT_SANS_FALLBACK, g: ['Poppins:wght@400;500;600;700'] },
-  classic:  { label: 'Classic serif (Lora)', body: "Lora," + FONT_SERIF_FALLBACK, head: "Lora," + FONT_SERIF_FALLBACK, g: ['Lora:wght@400;500;600;700','Noto+Serif+Devanagari:wght@400;500;600;700'] },
+  classic:  { label: 'Classic serif (Lora)', body: "Lora," + FONT_SERIF_FALLBACK, head: "Lora," + FONT_SERIF_FALLBACK, g: ['Lora:wght@400;500;600;700','Noto+Serif+Devanagari:wght@500;600;700'] },
   system:   { label: 'System default', body: FONT_SANS_FALLBACK, head: FONT_SANS_FALLBACK, g: [] }
 };
 state.font = (() => { try { const f = localStorage.getItem('apna_font'); return FONT_PRESETS[f] ? f : 'clean'; } catch { return 'clean'; } })();
@@ -108,7 +109,7 @@ window.addEventListener('message', e => {
 });
 
 
-// Pure Bilingual Dictionary (English & Hindi)[cite: 5]
+// Pure Bilingual Dictionary (English & Hindi)
 const dict = {
   hi: {
     brandSub: 'अकाउंटिंग और ईआरपी',
@@ -334,10 +335,18 @@ function qrSvg(text,size=220){
   }catch{return '';}
 }
 
+// Updated openSettingsModal function with a vertical sidebar layout
 function openSettingsModal(startTab){
   const hi=state.lang==='hi';
   const tabs=[['general',hi?'सामान्य':'General'],['profile',hi?'बिज़नेस प्रोफ़ाइल':'Business Profile'],['invoice',hi?'इनवॉइस':'Invoice'],['reminders',hi?'रिमाइंडर और सूचनाएँ':'Reminders'],['personal',hi?'AI सेटिंग':'AI'],['account',hi?'अकाउंट और सुरक्षा':'Account & Security'],['data',hi?'बैकअप / डेटा':'Backup & Data'],['help',hi?'मदद':'Help'],['about',hi?'जानकारी':'About']];
-  const m=modal(hi?'सेटिंग्स':'Settings',`<div id="settings-tabs" style="display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 12px; border-bottom:1px solid var(--border); padding-bottom:10px;">${tabs.map(([k,l])=>`<button type="button" data-tab="${k}" style="border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-size:13px; color:var(--text); background:transparent;">${l}</button>`).join('')}</div><div id="settings-body" style="max-height:60vh; overflow-y:auto; padding-right:4px; color:var(--text);"></div>`);
+  const m=modal(hi?'सेटिंग्स':'Settings',`
+    <div style="display:flex; gap:16px; align-items:flex-start; min-height:400px;">
+      <div id="settings-tabs" style="display:flex; flex-direction:column; gap:4px; width:190px; border-right:1px solid var(--border); padding-right:10px; flex-shrink:0;">
+        ${tabs.map(([k,l])=>`<button type="button" data-tab="${k}" style="border:none; cursor:pointer; padding:9px 12px; border-radius:8px; font-size:13px; text-align:left; color:var(--text); background:transparent; width:100%;">${l}</button>`).join('')}
+      </div>
+      <div id="settings-body" style="flex:1; max-height:60vh; overflow-y:auto; padding-right:4px; color:var(--text);"></div>
+    </div>
+  `);
   const body=m.querySelector('#settings-body');
   const row='display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);';
   const sel='padding:5px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border); width:auto; margin:0;';
@@ -461,7 +470,10 @@ function openSettingsModal(startTab){
   };
 
   function show(k){
-    m.querySelectorAll('[data-tab]').forEach(b=>{b.style.background=b.dataset.tab===k?'rgba(255,255,255,0.14)':'transparent';});
+    m.querySelectorAll('[data-tab]').forEach(b=>{
+      b.style.background = b.dataset.tab === k ? 'rgba(255,255,255,0.12)' : 'transparent';
+      b.style.fontWeight = b.dataset.tab === k ? '600' : 'normal';
+    });
     body.innerHTML=panels[k](); binders[k]();
   }
   m.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>show(b.dataset.tab));
@@ -1419,3 +1431,4 @@ function invoiceForm(kind){
 })();
 
 (async()=>{if(await refreshSession()) render(); else authView('login');})();
+```
