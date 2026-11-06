@@ -205,6 +205,7 @@ async function refreshSession(){
     if(!state.companyId || !state.companies.some(c=>c.id===state.companyId)) {
       state.companyId=state.companies[0]?.id||null;
     }
+    await cfgSyncFromServer();
     return true;
   }catch{ return false; }
 }
@@ -286,7 +287,52 @@ async function savePrefsFrom(textarea){
 }
 
 function cfgGet(){try{return JSON.parse(localStorage.getItem('apna_cfg_'+state.companyId)||'{}');}catch{return {};}}
-function cfgSet(p){try{localStorage.setItem('apna_cfg_'+state.companyId,JSON.stringify({...cfgGet(),...p}));}catch{}}
+function cfgSet(p){
+  try{localStorage.setItem('apna_cfg_'+state.companyId,JSON.stringify({...cfgGet(),...p}));}catch{}
+  cfgPushSoon(state.companyId);
+}
+// ---- Settings ko server par bhi rakhna (dusre phone/browser par wahi dikhe) ----
+const CFG_SERVER_KEYS=['profile','invoice','reminders'];
+let cfgTimer=null;
+function cfgForServer(cid){
+  let all={};try{all=JSON.parse(localStorage.getItem('apna_cfg_'+cid)||'{}');}catch{}
+  const out={};CFG_SERVER_KEYS.forEach(k=>{if(all[k]&&typeof all[k]==='object')out[k]=all[k];});
+  return out;
+}
+async function cfgPush(cid){
+  if(!cid) return;
+  const config=cfgForServer(cid);
+  if(!Object.keys(config).length) return;
+  try{await api(`/api/companies/${cid}/profile`,{method:'PATCH',body:{config}});}catch{/* sirf owner server par badal sakta hai; baaki ke liye yeh browser mein hi rahega */}
+}
+function cfgPushSoon(cid){clearTimeout(cfgTimer);cfgTimer=setTimeout(()=>cfgPush(cid),700);}
+async function cfgSyncFromServer(){
+  const cid=state.companyId;
+  if(!cid) return false;
+  state.cfgSynced=state.cfgSynced||new Set();
+  if(state.cfgSynced.has(cid)) return false;
+  state.cfgSynced.add(cid);
+  try{
+    const p=await api(`/api/companies/${cid}/profile`);
+    const srv=p&&p.config&&typeof p.config==='object'?p.config:{};
+    if(Object.keys(srv).length){
+      let local={};try{local=JSON.parse(localStorage.getItem('apna_cfg_'+cid)||'{}');}catch{}
+      try{localStorage.setItem('apna_cfg_'+cid,JSON.stringify({...local,...srv}));}catch{}
+      return true;
+    }
+    // Server par abhi kuch nahi: is browser ki purani saved settings server par bhej do
+    await cfgPush(cid);
+  }catch{}
+  return false;
+}
+// UPI QR: bahar ki website ke bina, app ke andar hi banta hai
+function qrSvg(text,size=220){
+  try{
+    if(typeof qrcode!=='function') return '';
+    const q=qrcode(0,'M');q.addData(String(text));q.make();
+    return q.createSvgTag({cellSize:4,margin:2,scalable:true}).replace('<svg','<svg width="'+size+'" height="'+size+'"');
+  }catch{return '';}
+}
 
 function openSettingsModal(startTab){
   const hi=state.lang==='hi';
@@ -567,7 +613,7 @@ function layout(){
   </div></aside>
   <main><header class="topbar"><div><h2>${c?esc(c.name):'Create your business'}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:'One platform for GST and Non-GST businesses'}</p></div><div class="status" id="logout" style="cursor:pointer;" title="Logout">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
   
-  $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';resetAiPanel();render();});
+  $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';resetAiPanel();render();cfgSyncFromServer().then(ch=>{if(ch)render();});});
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{if(b.dataset.page==='chat'){setAiPanel(true);return;}if(state.aiPanel)setAiPanel(false);state.page=b.dataset.page;renderPage();});
   
   $('ai-panel-toggle')?.addEventListener('click', () => setAiPanel(!state.aiPanel));
@@ -907,7 +953,7 @@ async function fillAutomation(hub, r){
         return;
       }
       body.innerHTML=`<div style="font-size:15px; margin-bottom:8px;"><strong>${rs(x.total)}</strong> · ${esc(iv.upi)}</div>
-        <div style="background:#fff; display:inline-block; padding:10px; border-radius:10px;"><img alt="UPI QR" width="220" height="220" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}"></div>
+        <div style="background:#fff; display:inline-block; padding:10px; border-radius:10px; line-height:0;">${qrSvg(link)||`<div style="width:220px;height:220px;display:flex;align-items:center;justify-content:center;color:#000;font-size:12px;line-height:1.4;">${hi?'QR नहीं बन सका। नीचे UPI लिंक कॉपी करें।':'Could not make the QR. Copy the UPI link below.'}</div>`}</div>
         <p class="muted" style="font-size:12px;">${hi?'ग्राहक अपने UPI ऐप से यह QR स्कैन करे।':'Customer scans this with any UPI app.'}</p>
         <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"><button type="button" id="qr-copy" style="${btn}">${hi?'UPI लिंक कॉपी':'Copy UPI link'}</button><a style="${btn}" target="_blank" rel="noopener" href="${waUrl((contactOf(x.name)||{}).phone,dueMsg(x))}">WhatsApp</a></div>`;
       m.querySelector('#qr-copy').onclick=()=>copy(link);
