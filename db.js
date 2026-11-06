@@ -341,6 +341,7 @@ function migrate(db) {
       lines_json TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'PENDING',
       posted_voucher_id TEXT,
+      document_id TEXT,
       reviewed_by TEXT,
       reviewed_at TEXT,
       created_at TEXT NOT NULL,
@@ -393,6 +394,28 @@ function migrate(db) {
       FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS company_profile (
+      company_id TEXT PRIMARY KEY,
+      business_name TEXT NOT NULL DEFAULT '',
+      owner_name TEXT NOT NULL DEFAULT '',
+      phone TEXT NOT NULL DEFAULT '',
+      email TEXT NOT NULL DEFAULT '',
+      address TEXT NOT NULL DEFAULT '',
+      logo_data TEXT NOT NULL DEFAULT '',
+      bank_name TEXT NOT NULL DEFAULT '',
+      bank_holder TEXT NOT NULL DEFAULT '',
+      bank_account TEXT NOT NULL DEFAULT '',
+      bank_ifsc TEXT NOT NULL DEFAULT '',
+      upi_id TEXT NOT NULL DEFAULT '',
+      invoice_prefix TEXT NOT NULL DEFAULT '',
+      invoice_terms TEXT NOT NULL DEFAULT '',
+      invoice_footer TEXT NOT NULL DEFAULT '',
+      config_json TEXT NOT NULL DEFAULT '{}',
+      updated_by TEXT,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+    );
+
     CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
     CREATE INDEX IF NOT EXISTS idx_chat_threads_user ON chat_threads(company_id,user_id,updated_at);
     CREATE INDEX IF NOT EXISTS idx_chat_messages_thread ON chat_messages(thread_id);
@@ -420,6 +443,17 @@ function migrate(db) {
     CREATE INDEX IF NOT EXISTS idx_bank_lines_company ON bank_statement_lines(company_id);
     CREATE INDEX IF NOT EXISTS idx_workbooks_company ON workbooks(company_id);
   `);
+
+  // Purane database mein posting_drafts ke saath receipt jodne ka column nahi tha
+  addColumnIfMissing(db, 'posting_drafts', 'document_id', 'TEXT');
+  addColumnIfMissing(db, 'company_profile', 'config_json', "TEXT NOT NULL DEFAULT '{}'");
+}
+
+function addColumnIfMissing(db, table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (cols.length && !cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
+  }
 }
 
 function fixOldJournalLines(db) {
