@@ -4,6 +4,12 @@ data/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.sqlite-journal
+# Asli database file (default naam apna-business.db) GitHub par kabhi nahi jaani chahiye
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+uploads/
 .DS_Store
 backups/
-*.sqlite-journal
