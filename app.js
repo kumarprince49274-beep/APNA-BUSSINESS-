@@ -64,12 +64,6 @@ window.addEventListener('storage', e => {
   if (e.key === 'apna_font' && FONT_PRESETS[e.newValue]) { state.font = e.newValue; applyFont(); }
 });
 applyFont();
-(function(){
-  if (document.getElementById('layout-tune')) return;
-  const st = document.createElement('style'); st.id = 'layout-tune';
-  st.textContent = '@media (min-width:801px){.workspace{grid-template-columns:168px minmax(0,1fr)!important}.workspace .sidebar{width:168px!important;min-width:168px!important;max-width:168px!important;padding-left:10px!important;padding-right:10px!important;box-sizing:border-box}.workspace .sidebar .brand{gap:8px}.workspace .sidebar .brand small{font-size:10px}.workspace .sidebar nav button,.workspace .sidebar .btn{font-size:13px!important;padding-left:10px!important;padding-right:10px!important}}';
-  document.head.appendChild(st);
-})();
 function closeEmbed(){ try { parent.postMessage({ type: 'apna-close-ai' }, location.origin); } catch {} }
 function aiPanelLeft(){
   if (window.innerWidth <= 800) return 0;
@@ -939,15 +933,14 @@ function renderChatGPTStyleLayout(c) {
     } else {
       mainAreaContent = `
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
-          <div class="hero-el" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:8vh;">
-          <div class="chat-avatar" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
+          <div class="hero-el" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:56px;">
           <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
           <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           </div>
           
-          <div id="chat-log" style="width:100%; max-width:880px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
+          <div id="chat-log" style="width:100%; max-width:760px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
 
-          <div id="composer" style="width:100%; max-width:880px; transition:transform .4s ease; will-change:transform;">
+          <div id="composer" style="width:100%; max-width:760px; transition:transform .4s ease; will-change:transform;">
           <div style="width:100%; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:34px; padding:22px 26px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
@@ -967,7 +960,7 @@ function renderChatGPTStyleLayout(c) {
           </div>
 
           </div>
-          <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:880px;">
+          <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:760px;">
             <img id="file-img" class="hidden" alt="Selected photo" style="max-height:80px; border-radius:6px;">
             <div id="file-doc" class="hidden">📄 <span id="file-name"></span></div>
             <button class="file-remove" id="file-remove" type="button" aria-label="Remove file">×</button>
@@ -1001,7 +994,7 @@ function renderChatGPTStyleLayout(c) {
     dash: ico('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
     newc: ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')
   };
-  const navBtn = (id, key, icon, label) => `<button id="${id}" title="${label}" style="background:${state.aiSection===key?'rgba(255,255,255,0.12)':'none'}; border:none; color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; width:100%;">${icon}${open?`<span>${label}</span>`:''}</button>`;
+  const navBtn = (id, key, icon, label) => `<button id="${id}" title="${label}" style="background:${state.aiSection===key?'rgba(255,255,255,0.12)':'none'}; border:none; color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; width:100%; white-space:nowrap;">${icon}${open?`<span>${label}</span>`:''}</button>`;
   const recentHtml = open ? `<div style="display:flex; flex-direction:column; gap:4px; margin-top:8px; min-height:0;">
           <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; padding:4px 8px;">${state.lang==='hi'?'हाल की चैट':'Recent'}</div>
           <input id="thread-search" type="search" value="${esc(state.threadSearch||'')}" placeholder="${state.lang==='hi'?'चैट खोजें…':'Search chats'}" style="margin:0 0 4px; padding:7px 10px; font-size:13px; border-radius:8px;">
@@ -1015,9 +1008,8 @@ function renderChatGPTStyleLayout(c) {
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
       
       <!-- Left Fixed Sidebar -->
-      <div style="${open?'':'display:none; '}width:${open?158:56}px; min-width:${open?158:56}px; border-right:1px solid var(--border); padding:${open?'14px 8px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
+      <div style="${open?'':'display:none; '}width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; justify-content:${open?'flex-start':'center'};">
-          <div style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.28); display:flex; align-items:center; justify-content:center; flex:none;">${PULSE_ICON(18)}</div>
           ${open?`<button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn} margin-left:auto;">${sbIcon}</button>`:''}
         </div>
 
@@ -1036,7 +1028,6 @@ function renderChatGPTStyleLayout(c) {
         ${recentHtml}
 
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
-          <button id="back-to-dashboard-btn" title="Dashboard & ERP" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:9px ${open?'8px':'0'}; border-radius:8px; cursor:pointer; font-size:12px; white-space:nowrap; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:8px;">${I.dash}${open?'<span>Dashboard & ERP</span>':''}</button>
 
           ${state.embed?'':`<div id="ai-sidebar-user-profile" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:${open?'8px 10px':'6px 0'}; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
             <div style="background:#3b4a63; color:#fff; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; flex:none;">${userInitial}</div>
@@ -1082,7 +1073,7 @@ function renderChatGPTStyleLayout(c) {
   $('mode-chat').onclick = () => { state.aiMode = 'chat'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
   $('mode-work').onclick = () => { state.aiMode = 'task'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
 
-  $('back-to-dashboard-btn').onclick = () => {
+  const _bd = $('back-to-dashboard-btn'); if (_bd) _bd.onclick = () => {
     if (state.embed) { closeEmbed(); return; }
     state.page = 'dashboard';
     render();
@@ -1114,7 +1105,7 @@ function renderChatGPTStyleLayout(c) {
     const upd = (raise) => {
       if (!cp || !cp.isConnected) return;
       const chatting = chatLog().length > 0;
-      cp.style.transform = (!chatting && (raise || input.value.trim())) ? 'translateY(-18vh)' : 'none';
+      cp.style.transform = 'none';
     };
     window.__composerUpd = () => upd(false);
     cp?.addEventListener('pointerdown', () => upd(true));
