@@ -331,6 +331,7 @@ function openSettingsModal(startTab){
       <button type="button" id="bp-save" class="btn primary" style="margin-top:14px;">${hi?'सहेजें':'Save'}</button>`,
     invoice:()=>{const g=cfgGet().invoice||{};return `<label>${hi?'बिल नंबर का शुरुआती अक्षर':'Invoice number prefix'}<input id="iv-prefix" value="${esc(g.prefix||'INV-')}" maxlength="12"></label>
       <p class="muted" style="font-size:12px; margin:2px 0 8px;">${hi?'जैसे: INV-0001':'e.g. INV-0001'}</p>
+      <label>UPI ID<input id="iv-upi" value="${esc(g.upi||'')}" placeholder="name@bank"></label>
       <label>${hi?'डिफ़ॉल्ट GST दर':'Default GST rate'}<select id="iv-gst">${[0,5,12,18,28].map(r=>`<option value="${r}" ${Number(g.gst??18)===r?'selected':''}>${r}%</option>`).join('')}</select></label>
       <label>${hi?'बिल के नीचे की शर्तें':'Terms & conditions'}<textarea id="iv-terms" rows="3" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;">${esc(g.terms||'')}</textarea></label>
       <label>${hi?'नोट':'Note'}<textarea id="iv-note" rows="2" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;">${esc(g.note||'')}</textarea></label>
@@ -407,7 +408,7 @@ function openSettingsModal(startTab){
         }catch(err){toast(err.message);}
       };
     },
-    invoice:()=>{m.querySelector('#iv-save').onclick=()=>{cfgSet({invoice:{prefix:m.querySelector('#iv-prefix').value||'INV-',gst:Number(m.querySelector('#iv-gst').value),terms:m.querySelector('#iv-terms').value,note:m.querySelector('#iv-note').value,bank:m.querySelector('#iv-bank').value}});toast(hi?'सहेज लिया गया':'Saved');};},
+    invoice:()=>{m.querySelector('#iv-save').onclick=()=>{cfgSet({invoice:{upi:m.querySelector('#iv-upi').value.trim(),prefix:m.querySelector('#iv-prefix').value||'INV-',gst:Number(m.querySelector('#iv-gst').value),terms:m.querySelector('#iv-terms').value,note:m.querySelector('#iv-note').value,bank:m.querySelector('#iv-bank').value}});toast(hi?'सहेज लिया गया':'Saved');};},
     reminders:()=>{m.querySelector('#rem-save').onclick=()=>{const g={};m.querySelectorAll('[data-rem]').forEach(i=>g[i.dataset.rem]=i.checked);cfgSet({reminders:g});toast(hi?'सहेज लिया गया':'Saved');};},
     help:()=>{m.querySelector('#hp-send').onclick=()=>{const t=m.querySelector('#hp-text').value.trim();if(!t){toast(hi?'पहले कुछ लिखें':'Write something first');return;}location.href='mailto:kumarprince49274@gmail.com?subject='+encodeURIComponent('APNA BUSINESS feedback')+'&body='+encodeURIComponent(t);};},
     about:()=>{}
@@ -830,6 +831,109 @@ function startVoice(input){
 }
 
 
+// ===== Automation hub (Work tab): dues reminders, UPI QR, morning report, reorder draft, receipt expense =====
+async function fillAutomation(hub, r){
+  const hi=state.lang==='hi', cid=state.companyId;
+  const panel='background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:14px;';
+  const btn='background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block;';
+  const rowS='display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--border); font-size:14px; flex-wrap:wrap;';
+  const inp='padding:7px 10px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-size:13px; margin:0; width:auto;';
+  let d={}, inv=[], cts=[];
+  try{ [d,inv,cts]=await Promise.all([api(`/api/companies/${cid}/dashboard`),api(`/api/companies/${cid}/invoices`),api(`/api/companies/${cid}/contacts`)]); }
+  catch(err){ hub.textContent=err.message; return; }
+  const company=state.companies.find(x=>x.id===cid)||{};
+  const iv=(cfgGet().invoice)||{};
+  const biz=company.name||'APNA BUSINESS';
+  const low=r.low_stock||[], unpaid=r.unpaid_invoices||[];
+  const rs=p=>money(p);
+  const digits=v=>String(v||'').replace(/\D/g,'');
+  const intl=p=>{p=digits(p).replace(/^0+/,'');return p.length===10?'91'+p:p;};
+  const contactOf=n=>cts.find(c=>String(c.name||'').trim().toLowerCase()===String(n||'').trim().toLowerCase());
+  const waUrl=(phone,text)=>`https://wa.me/${intl(phone)}?text=${encodeURIComponent(text)}`;
+  const smsUrl=(phone,text)=>`sms:${digits(phone)}?body=${encodeURIComponent(text)}`;
+  const upiLink=(paise,note)=>iv.upi?`upi://pay?pa=${encodeURIComponent(iv.upi)}&pn=${encodeURIComponent(biz)}&am=${(Number(paise)/100).toFixed(2)}&cu=INR&tn=${encodeURIComponent(note||'')}`:'';
+  const copy=async t=>{try{await navigator.clipboard.writeText(t);toast(hi?'कॉपी हो गया':'Copied');}catch{toast(hi?'कॉपी नहीं हो सका':'Copy failed');}};
+
+  // ---- dues grouped by party ----
+  const dues={};
+  inv.filter(i=>String(i.kind||'').toUpperCase()!=='PURCHASE' && Number(i.outstanding_paise)>0).forEach(i=>{
+    const n=i.contact_name||'—'; (dues[n]=dues[n]||{name:n,total:0,nums:[]});
+    dues[n].total+=Number(i.outstanding_paise); dues[n].nums.push(i.number);
+  });
+  const dueList=Object.values(dues).sort((a,b)=>b.total-a.total);
+  const dueMsg=x=>hi
+    ?`नमस्ते ${x.name} जी, ${biz} की ओर से याद दिलाना: आपका ${rs(x.total)} बकाया है (बिल: ${x.nums.join(', ')}). कृपया भुगतान कर दें.${iv.upi?` UPI ID: ${iv.upi}`:''} धन्यवाद।`
+    :`Hello ${x.name}, a gentle reminder from ${biz}: ${rs(x.total)} is pending (invoices: ${x.nums.join(', ')}). Please pay at your earliest.${iv.upi?` UPI ID: ${iv.upi}`:''} Thank you.`;
+
+  // ---- morning report ----
+  const today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const unpaidTotal=dueList.reduce((a,x)=>a+x.total,0);
+  const report=[`📊 ${biz} — ${hi?'सुबह की रिपोर्ट':'Morning report'} (${today})`,
+    `${hi?'बिक्री':'Sales'}: ${rs(d.sales_paise)} | ${hi?'खरीद':'Purchases'}: ${rs(d.purchases_paise)} | ${hi?'मुनाफ़ा':'Profit'}: ${rs(d.net_profit_paise)}`,
+    `${hi?'कैश':'Cash'}: ${rs(d.cash_paise)} | ${hi?'बैंक':'Bank'}: ${rs(d.bank_paise)} | ${hi?'स्टॉक वैल्यू':'Stock value'}: ${rs(d.stock_value_paise)}`,
+    `${hi?'बकाया':'Outstanding'}: ${dueList.length} ${hi?'पार्टी':'parties'} · ${rs(unpaidTotal)}${dueList.length?' ('+dueList.slice(0,3).map(x=>x.name+' '+rs(x.total)).join(', ')+')':''}`,
+    `${hi?'कम स्टॉक':'Low stock'}: ${low.length}${low.length?' — '+low.slice(0,5).map(p=>p.name).join(', '):''}`].join('\n');
+
+  const suppliers=cts.filter(c=>String(c.kind||'').toUpperCase()==='SUPPLIER');
+
+  hub.innerHTML=`
+  <div style="${panel}"><div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;"><strong>☀️ ${hi?'सुबह की रिपोर्ट':'Morning report'}</strong><span style="display:flex; gap:8px;"><a id="mr-wa" style="${btn}" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(report)}">WhatsApp</a><button type="button" id="mr-copy" style="${btn}">${hi?'कॉपी':'Copy'}</button></span></div>
+    <pre style="white-space:pre-wrap; font-family:inherit; font-size:14px; margin:10px 0 0; color:var(--text);">${esc(report)}</pre></div>
+
+  <div style="${panel}"><strong>💬 ${hi?'बकाया की याद (WhatsApp / SMS)':'Dues reminders (WhatsApp / SMS)'}</strong>
+    <p class="muted" style="font-size:12px; margin:4px 0 6px;">${hi?'बटन दबाते ही संदेश तैयार खुलता है; आप भेज दें। ग्राहक का फ़ोन नंबर Contacts में होना चाहिए।':'Tap a button and the message opens ready to send. The customer needs a phone number in Contacts.'}</p>
+    ${dueList.length?dueList.map((x,k)=>{const c=contactOf(x.name), ph=c&&c.phone?c.phone:'';return `<div style="${rowS}"><span>${esc(x.name)} <span class="muted">${x.nums.length} ${hi?'बिल':'bill(s)'}${ph?'':' · '+(hi?'फ़ोन नहीं':'no phone')}</span></span><span style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><strong>${rs(x.total)}</strong><a style="${btn}" target="_blank" rel="noopener" href="${waUrl(ph,dueMsg(x))}">WhatsApp</a>${ph?`<a style="${btn}" href="${smsUrl(ph,dueMsg(x))}">SMS</a>`:''}<button type="button" data-qr="${k}" style="${btn}">UPI QR</button></span></div>`;}).join(''):`<div class="muted" style="font-size:14px; margin-top:8px;">✓ ${hi?'कोई बकाया नहीं':'Nothing outstanding'}</div>`}</div>
+
+  <div style="${panel}"><strong>📦 ${hi?'कम स्टॉक — ख़रीद ऑर्डर का ड्राफ़्ट':'Low stock — purchase order draft'}</strong>
+    ${low.length?`<div style="margin-top:8px;">${low.map((p,k)=>`<div style="${rowS}"><span>${esc(p.name)} <span class="muted">${Number(p.quantity)} / ${Number(p.reorder_level)}</span></span><span>${hi?'मंगाना':'Order'} <input type="number" min="0" data-poq="${k}" value="${Math.max(Number(p.reorder_level)*2-Number(p.quantity),1)}" style="${inp} width:80px;"></span></div>`).join('')}</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;"><select id="po-sup" style="${inp}"><option value="">${hi?'सप्लायर चुनें (वैकल्पिक)':'Pick supplier (optional)'}</option>${suppliers.map((s,k)=>`<option value="${k}">${esc(s.name)}</option>`).join('')}</select><button type="button" id="po-wa" style="${btn}">WhatsApp</button><button type="button" id="po-copy" style="${btn}">${hi?'कॉपी':'Copy'}</button><button type="button" id="po-print" style="${btn}">${hi?'प्रिंट':'Print'}</button></div>
+    <p class="muted" style="font-size:12px; margin:8px 0 0;">${hi?'यह सिर्फ़ ड्राफ़्ट है; इससे कोई अकाउंटिंग एंट्री नहीं होती।':'This is only a draft; it posts no accounting entry.'}</p>`:`<div class="muted" style="font-size:14px; margin-top:8px;">✓ ${hi?'सब ठीक है':'All good'}</div>`}</div>
+
+  <div style="${panel}"><strong>🧾 ${hi?'रसीद की फ़ोटो से खर्च':'Expense from a receipt photo'}</strong>
+    <p class="muted" style="font-size:12px; margin:4px 0 8px;">${hi?'फ़ोटो चुनें, रकम और विवरण लिखें। फ़ोटो रसीद के रूप में सेव होगी और चैट में खर्च का ड्राफ़्ट बनेगा; Confirm दबाने पर ही एंट्री होगी।':'Pick the photo, enter amount and note. The photo is saved as a receipt and a draft appears in chat; nothing posts until you Confirm.'}</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;"><input type="file" id="rc-file" accept="image/*" style="${inp}"><input id="rc-amt" type="number" min="0" step="0.01" placeholder="₹" style="${inp} width:110px;"><input id="rc-note" placeholder="${hi?'किस चीज़ का खर्च':'What was it for'}" style="${inp} flex:1; min-width:140px;"><button type="button" id="rc-go" style="${btn}">${hi?'ड्राफ़्ट बनाओ':'Create draft'}</button></div></div>`;
+
+  // ---- wiring ----
+  $('mr-copy').onclick=()=>copy(report);
+  hub.querySelectorAll('[data-qr]').forEach(b=>b.onclick=()=>{
+    const x=dueList[Number(b.dataset.qr)];
+    const m=modal(`UPI — ${esc(x.name)}`,`<div id="qr-body" style="text-align:center; color:var(--text);"></div>`);
+    const body=m.querySelector('#qr-body');
+    const draw=()=>{
+      const link=upiLink(x.total,x.nums.join(','));
+      if(!link){
+        body.innerHTML=`<p class="muted" style="font-size:13px;">${hi?'पहले अपनी UPI ID डालें (जैसे name@bank):':'Enter your UPI ID first (e.g. name@bank):'}</p><input id="qr-upi" placeholder="name@bank" style="${inp} width:80%;"><br><button type="button" id="qr-save" class="btn primary" style="margin-top:10px;">${hi?'सहेजें':'Save'}</button>`;
+        m.querySelector('#qr-save').onclick=()=>{const v=m.querySelector('#qr-upi').value.trim();if(!/^[\w.\-]{2,}@[\w.\-]{2,}$/.test(v)){toast(hi?'सही UPI ID लिखें':'Enter a valid UPI ID');return;}iv.upi=v;cfgSet({invoice:{...iv}});draw();};
+        return;
+      }
+      body.innerHTML=`<div style="font-size:15px; margin-bottom:8px;"><strong>${rs(x.total)}</strong> · ${esc(iv.upi)}</div>
+        <div style="background:#fff; display:inline-block; padding:10px; border-radius:10px;"><img alt="UPI QR" width="220" height="220" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}"></div>
+        <p class="muted" style="font-size:12px;">${hi?'ग्राहक अपने UPI ऐप से यह QR स्कैन करे।':'Customer scans this with any UPI app.'}</p>
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;"><button type="button" id="qr-copy" style="${btn}">${hi?'UPI लिंक कॉपी':'Copy UPI link'}</button><a style="${btn}" target="_blank" rel="noopener" href="${waUrl((contactOf(x.name)||{}).phone,dueMsg(x))}">WhatsApp</a></div>`;
+      m.querySelector('#qr-copy').onclick=()=>copy(link);
+    };
+    draw();
+  });
+  const poText=()=>{
+    const sup=suppliers[Number($('po-sup').value)]; 
+    const lines=[...hub.querySelectorAll('[data-poq]')].map(i=>({p:low[Number(i.dataset.poq)],q:Number(i.value)})).filter(x=>x.q>0).map((x,n)=>`${n+1}. ${x.p.name}${x.p.sku?' ('+x.p.sku+')':''} — ${x.q}`);
+    return [`${hi?'ख़रीद ऑर्डर':'Purchase order'} — ${biz}`,`${hi?'तारीख़':'Date'}: ${today}`,sup?`${hi?'सप्लायर':'Supplier'}: ${sup.name}`:'',...lines,hi?'कृपया जल्द भेजें। धन्यवाद।':'Please dispatch soon. Thank you.'].filter(Boolean).join('\n');
+  };
+  if(low.length){
+    $('po-copy').onclick=()=>copy(poText());
+    $('po-wa').onclick=()=>{const sup=suppliers[Number($('po-sup').value)];window.open(waUrl(sup&&sup.phone?sup.phone:'',poText()),'_blank','noopener');};
+    $('po-print').onclick=()=>{const w=window.open('','_blank');if(!w)return;w.document.write(`<pre style="font:16px/1.6 sans-serif; white-space:pre-wrap; padding:24px;">${esc(poText())}</pre>`);w.document.close();w.focus();w.print();};
+  }
+  $('rc-go').onclick=()=>{
+    const f=$('rc-file').files[0], amt=Number($('rc-amt').value), note=$('rc-note').value.trim();
+    if(!f){toast(hi?'पहले रसीद की फ़ोटो चुनें':'Pick the receipt photo first');return;}
+    if(!(amt>0)){toast(hi?'रकम लिखें':'Enter the amount');return;}
+    const text=hi?`खर्च की एंट्री: ₹${amt}${note?' — '+note:''}. रसीद की फ़ोटो साथ में है।`:`Expense entry: ₹${amt}${note?' — '+note:''}. Receipt photo attached.`;
+    state.aiMode='chat'; state.aiSection='home'; renderChatGPTStyleLayout(company);
+    sendChatWithFile(text,f,'IMAGE');
+  };
+}
+
 async function fillWorkBox(){
   const box=$('work-box'); if(!box) return;
   const hi=state.lang==='hi';
@@ -842,11 +946,13 @@ async function fillWorkBox(){
     const total=unpaid.reduce((a,i)=>a+(Number(i.total_paise)-Number(i.paid_paise)),0);
     box.innerHTML=`<h2 style="margin-bottom:4px;">${hi?'पेंडिंग काम और रिमाइंडर':'Pending work & reminders'}</h2>
       <p class="muted" style="font-size:13px;">${hi?'आपके असली डेटा से बना है।':'Built from your live business data.'}</p>
+      <div id="auto-hub"></div>
       <div style="${panel}"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><strong>${hi?'कम स्टॉक':'Low stock'} (${low.length})</strong><button type="button" data-go="products" style="${goBtn}">${hi?'स्टॉक खोलें':'Open stock'}</button></div>
         ${low.length?low.map(p=>`<div style="${rowS}"><span>${esc(p.name)} <span class="muted">${esc(p.sku||'')}</span></span><span>${Number(p.quantity)} / ${Number(p.reorder_level)}</span></div>`).join(''):`<div class="muted" style="font-size:14px;">✓ ${hi?'सब ठीक है':'All good'}</div>`}</div>
       <div style="${panel}"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><strong>${hi?'बकाया बिल':'Unpaid invoices'} (${unpaid.length}) · ${money(total)}</strong><button type="button" data-go="invoices" style="${goBtn}">${hi?'बिल खोलें':'Open invoices'}</button></div>
         ${unpaid.length?unpaid.slice(0,30).map(i=>`<div style="${rowS}"><span>${esc(i.number)} <span class="muted">${esc(fmtDate(i.date))}</span></span><span>${money(Number(i.total_paise)-Number(i.paid_paise))}</span></div>`).join(''):`<div class="muted" style="font-size:14px;">✓ ${hi?'कोई बकाया नहीं':'Nothing outstanding'}</div>`}</div>`;
     box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{state.page=b.dataset.go;render();});
+    const hubEl=$('auto-hub'); if(hubEl) fillAutomation(hubEl,r);
   }catch(err){box.textContent=err.message;}
 }
 
@@ -938,14 +1044,14 @@ function renderChatGPTStyleLayout(c) {
           <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           </div>
           
-          <div id="chat-log" style="width:100%; max-width:760px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
+          <div id="chat-log" style="width:100%; max-width:820px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
 
-          <div id="composer" style="width:100%; max-width:760px; transition:transform .4s ease; will-change:transform;">
-          <div style="width:100%; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:34px; padding:22px 26px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
+          <div id="composer" style="width:100%; max-width:820px; margin-bottom:7vh;">
+          <div style="width:100%; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:36px; padding:26px 30px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'अपने बिज़नेस के बारे में पूछें…':'Ask anything about your business'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:17px; max-height:140px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'अपने बिज़नेस के बारे में पूछें…':'Ask anything about your business'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:18px; max-height:140px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
@@ -960,7 +1066,7 @@ function renderChatGPTStyleLayout(c) {
           </div>
 
           </div>
-          <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:760px;">
+          <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:820px;">
             <img id="file-img" class="hidden" alt="Selected photo" style="max-height:80px; border-radius:6px;">
             <div id="file-doc" class="hidden">📄 <span id="file-name"></span></div>
             <button class="file-remove" id="file-remove" type="button" aria-label="Remove file">×</button>
@@ -1105,7 +1211,7 @@ function renderChatGPTStyleLayout(c) {
     const upd = (raise) => {
       if (!cp || !cp.isConnected) return;
       const chatting = chatLog().length > 0;
-      cp.style.transform = 'none';
+      cp.style.transform = 'none'; cp.style.marginBottom = chatting ? '0' : '7vh';
     };
     window.__composerUpd = () => upd(false);
     cp?.addEventListener('pointerdown', () => upd(true));
