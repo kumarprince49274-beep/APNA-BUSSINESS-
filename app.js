@@ -64,6 +64,12 @@ window.addEventListener('storage', e => {
   if (e.key === 'apna_font' && FONT_PRESETS[e.newValue]) { state.font = e.newValue; applyFont(); }
 });
 applyFont();
+(function(){
+  if (document.getElementById('layout-tune')) return;
+  const st = document.createElement('style'); st.id = 'layout-tune';
+  st.textContent = '@media (min-width:801px){.workspace{grid-template-columns:168px minmax(0,1fr)!important}.workspace .sidebar{width:168px!important;min-width:168px!important;max-width:168px!important;padding-left:10px!important;padding-right:10px!important;box-sizing:border-box}.workspace .sidebar .brand{gap:8px}.workspace .sidebar .brand small{font-size:10px}.workspace .sidebar nav button,.workspace .sidebar .btn{font-size:13px!important;padding-left:10px!important;padding-right:10px!important}}';
+  document.head.appendChild(st);
+})();
 function closeEmbed(){ try { parent.postMessage({ type: 'apna-close-ai' }, location.origin); } catch {} }
 function aiPanelLeft(){
   if (window.innerWidth <= 800) return 0;
@@ -285,9 +291,12 @@ async function savePrefsFrom(textarea){
   catch(err){toast(err.message);}
 }
 
+function cfgGet(){try{return JSON.parse(localStorage.getItem('apna_cfg_'+state.companyId)||'{}');}catch{return {};}}
+function cfgSet(p){try{localStorage.setItem('apna_cfg_'+state.companyId,JSON.stringify({...cfgGet(),...p}));}catch{}}
+
 function openSettingsModal(startTab){
   const hi=state.lang==='hi';
-  const tabs=[['general',hi?'सामान्य':'General'],['personal',hi?'पर्सनलाइज़ेशन':'Personalization'],['account',hi?'अकाउंट':'Account'],['data',hi?'डेटा कंट्रोल':'Data controls'],['about',hi?'जानकारी':'About']];
+  const tabs=[['general',hi?'सामान्य':'General'],['profile',hi?'बिज़नेस प्रोफ़ाइल':'Business Profile'],['invoice',hi?'इनवॉइस':'Invoice'],['reminders',hi?'रिमाइंडर और सूचनाएँ':'Reminders'],['personal',hi?'AI सेटिंग':'AI'],['account',hi?'अकाउंट और सुरक्षा':'Account & Security'],['data',hi?'बैकअप / डेटा':'Backup & Data'],['help',hi?'मदद':'Help'],['about',hi?'जानकारी':'About']];
   const m=modal(hi?'सेटिंग्स':'Settings',`<div id="settings-tabs" style="display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 12px; border-bottom:1px solid var(--border); padding-bottom:10px;">${tabs.map(([k,l])=>`<button type="button" data-tab="${k}" style="border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-size:13px; color:var(--text); background:transparent;">${l}</button>`).join('')}</div><div id="settings-body" style="max-height:60vh; overflow-y:auto; padding-right:4px; color:var(--text);"></div>`);
   const body=m.querySelector('#settings-body');
   const row='display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);';
@@ -303,16 +312,43 @@ function openSettingsModal(startTab){
       <button type="button" id="st-save-general" class="btn primary" style="margin-top:14px;">${hi?'सेटिंग्स सहेजें':'Save settings'}</button>`,
     personal:()=>`<p class="muted" style="margin:0 0 8px; font-size:13px;">${hi?'AI को बताइए कि वह आपसे कैसे बात करे (भाषा, लहजा, जवाब कितना छोटा या लंबा)। यह सिर्फ़ जवाब के तरीके को बदलता है; सुरक्षा नियम वही रहते हैं।':'Tell the AI how to talk to you (language, tone, answer length). This changes style only; safety rules stay the same.'}</p>
       <textarea id="st-custom" rows="6" maxlength="1500" placeholder="${hi?'जैसे: हमेशा आसान हिंदी में, छोटे जवाब दो।':'e.g. Always reply in simple Hindi, keep answers short.'}" style="width:100%; padding:10px; border-radius:10px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit; font-size:14px;"></textarea>
-      <button type="button" id="st-save-custom" class="btn primary" style="margin-top:10px;">${hi?'सहेजें':'Save'}</button>`,
+      <button type="button" id="st-save-custom" class="btn primary" style="margin-top:10px;">${hi?'सहेजें':'Save'}</button>
+      <div style="${row} margin-top:14px;"><span>${hi?'AI के बनाए ड्राफ़्ट पोस्ट करने से पहले हमेशा Confirm माँगना':'Always ask Confirm before posting AI drafts'}</span><input type="checkbox" checked disabled style="width:18px; height:18px; margin:0;"></div>
+      <p class="muted" style="font-size:12px;">${hi?'यह सुरक्षा नियम हमेशा चालू रहता है।':'This safety rule is always on.'}</p>`,
     account:()=>`<div style="${row}"><span>${hi?'नाम':'Name'}</span><strong>${name}</strong></div>
       <div style="${row}"><span>Email</span><strong>${email}</strong></div>
       <div style="margin-top:14px; font-weight:600;">${hi?'पासवर्ड बदलें':'Change password'}</div>
       <label style="margin-top:8px;">${hi?'मौजूदा पासवर्ड':'Current password'}<input id="st-cur" type="password" autocomplete="current-password"></label>
       <label>${hi?'नया पासवर्ड (कम से कम 8 अक्षर)':'New password (at least 8 characters)'}<input id="st-new" type="password" autocomplete="new-password"></label>
       <div style="display:flex; gap:10px; flex-wrap:wrap;"><button type="button" id="st-pw" class="btn primary">${hi?'पासवर्ड बदलो':'Update password'}</button><button type="button" id="st-logout" style="${btn} color:#f28b82;">${hi?'लॉगआउट':'Sign out'}</button></div>`,
-    data:()=>`<div style="${row}"><span>${hi?'सारी चैट डाउनलोड करें (JSON)':'Export all chats (JSON)'}</span><button type="button" id="st-export-chats" style="${btn}">${hi?'डाउनलोड':'Export'}</button></div>
+    data:()=>`${[['invoices',hi?'बिल / इनवॉइस (CSV)':'Invoices (CSV)'],['products',hi?'प्रोडक्ट (CSV)':'Products (CSV)'],['stock',hi?'स्टॉक (CSV)':'Stock (CSV)']].map(([k,l])=>`<div style="${row}"><span>${l}</span><button type="button" data-exp2="${k}" style="${btn}">${hi?'डाउनलोड':'Download'}</button></div>`).join('')}
+      <div style="${row}"><span>${hi?'सारी चैट डाउनलोड करें (JSON)':'Export all chats (JSON)'}</span><button type="button" id="st-export-chats" style="${btn}">${hi?'डाउनलोड':'Export'}</button></div>
       <div style="${row}"><span>${hi?'सारी चैट हमेशा के लिए हटाएँ':'Delete all chats'}</span><button type="button" id="st-clear-chats" style="${btn} color:#f28b82;">${hi?'सब हटाओ':'Delete all'}</button></div>
       <p class="muted" style="font-size:12px; margin-top:12px;">${hi?'अकाउंटिंग डेटा (बिल, स्टॉक) का CSV Connectors पेज से डाउनलोड होता है। अकाउंटिंग डेटा यहाँ से नहीं हटता।':'Accounting data (invoices, stock) can be exported as CSV from the Connectors page. Accounting data is never deleted from here.'}</p>`,
+    profile:()=>`<p class="muted" style="margin:0 0 8px; font-size:13px;">${hi?'यही जानकारी आपके बिल पर छपेगी।':'This information is printed on your bills.'}</p>
+      <label>${hi?'बिज़नेस का नाम':'Business name'}<input id="bp-name"></label>
+      <label>${hi?'पता':'Address'}<textarea id="bp-address" rows="2" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;"></textarea></label>
+      <label>${hi?'फ़ोन':'Phone'}<input id="bp-phone" inputmode="tel"></label>
+      <label>${hi?'राज्य':'State / UT'}<select id="bp-state">${STATES.map(([code,nm])=>`<option value="${esc(nm)}">${nm} (${code})</option>`).join('')}</select></label>
+      <label>${hi?'GST का प्रकार':'GST type'}<select id="bp-gsttype"><option value="UNREGISTERED">${hi?'GST रजिस्ट्रेशन नहीं है':"No GST registration"}</option><option value="REGULAR">GST Regular</option><option value="COMPOSITION">GST Composition</option><option value="OTHER">${hi?'अन्य GST':'Other GST registration'}</option></select></label>
+      <label>GSTIN<input id="bp-gstin" placeholder="${hi?'रजिस्टर्ड प्रकार के लिए ज़रूरी':'Required for registered types'}"></label>
+      <label>${hi?'लोगो':'Logo'}<input id="bp-logo" type="file" accept="image/*"></label>
+      <img id="bp-logo-prev" alt="" style="display:none; max-height:60px; margin-top:6px; border-radius:6px;">
+      <button type="button" id="bp-save" class="btn primary" style="margin-top:14px;">${hi?'सहेजें':'Save'}</button>`,
+    invoice:()=>{const g=cfgGet().invoice||{};return `<label>${hi?'बिल नंबर का शुरुआती अक्षर':'Invoice number prefix'}<input id="iv-prefix" value="${esc(g.prefix||'INV-')}" maxlength="12"></label>
+      <p class="muted" style="font-size:12px; margin:2px 0 8px;">${hi?'जैसे: INV-0001':'e.g. INV-0001'}</p>
+      <label>${hi?'डिफ़ॉल्ट GST दर':'Default GST rate'}<select id="iv-gst">${[0,5,12,18,28].map(r=>`<option value="${r}" ${Number(g.gst??18)===r?'selected':''}>${r}%</option>`).join('')}</select></label>
+      <label>${hi?'बिल के नीचे की शर्तें':'Terms & conditions'}<textarea id="iv-terms" rows="3" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;">${esc(g.terms||'')}</textarea></label>
+      <label>${hi?'नोट':'Note'}<textarea id="iv-note" rows="2" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;">${esc(g.note||'')}</textarea></label>
+      <label>${hi?'बैंक की जानकारी':'Bank details'}<textarea id="iv-bank" rows="3" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;">${esc(g.bank||'')}</textarea></label>
+      <button type="button" id="iv-save" class="btn primary" style="margin-top:12px;">${hi?'सहेजें':'Save'}</button>`;},
+    reminders:()=>{const g=cfgGet().reminders||{};const items=[['overdue',hi?'बकाया पैसे की याद दिलाना':'Overdue payment reminders'],['lowstock',hi?'कम स्टॉक की सूचना':'Low-stock alerts'],['daily',hi?'रोज़ की रिपोर्ट':'Daily report'],['weekly',hi?'हफ़्ते की रिपोर्ट':'Weekly report'],['email',hi?'ईमेल सूचनाएँ':'Email notifications'],['duedate',hi?'भुगतान की तारीख़ की सूचना':'Payment due-date alerts']];
+      return items.map(([k,l])=>`<div style="${row}"><span>${l}</span><input type="checkbox" data-rem="${k}" ${g[k]?'checked':''} style="width:18px; height:18px; margin:0;"></div>`).join('')+`<button type="button" id="rem-save" class="btn primary" style="margin-top:14px;">${hi?'सहेजें':'Save'}</button>`;},
+    help:()=>`<div style="${row}"><span>${hi?'संपर्क':'Contact'}</span><strong>kumarprince49274@gmail.com</strong></div>
+      <div style="margin-top:12px; font-weight:600;">${hi?'अक्सर पूछे जाने वाले सवाल':'FAQ'}</div>
+      <p class="muted" style="font-size:13px;">${hi?'• नया बिल कैसे बनाएँ? चैट में लिखें "नया बिल बनाओ"।\n• एंट्री कब होती है? आपके Confirm दबाने के बाद ही।\n• डेटा कैसे निकालें? सेटिंग्स → डेटा में CSV डाउनलोड।':'• New invoice? Type "Create a new invoice" in chat.\n• When is an entry posted? Only after you press Confirm.\n• Export data? Settings → Data → CSV download.'}</p>
+      <label style="margin-top:10px;">${hi?'सुझाव / समस्या भेजें':'Send feedback'}<textarea id="hp-text" rows="4" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;"></textarea></label>
+      <button type="button" id="hp-send" class="btn primary" style="margin-top:10px;">${hi?'भेजें':'Send'}</button>`,
     about:()=>`<div style="${row}"><span>${hi?'ऐप':'App'}</span><strong>APNA BUSINESS</strong></div>
       <div style="${row}"><span>${hi?'वर्शन':'Version'}</span><strong>0.9.0</strong></div>
       <p class="muted" style="font-size:12px; margin-top:12px;">${hi?'GST और नॉन-GST दोनों तरह के बिज़नेस के लिए अकाउंटिंग और ऑटोमेशन।':'Accounting and automation for GST and non-GST businesses.'}</p>`
@@ -344,6 +380,7 @@ function openSettingsModal(startTab){
           downloadBlob(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),'apna-business-chats.json');
         }catch(err){toast(err.message);}
       };
+      m.querySelectorAll('[data-exp2]').forEach(b=>b.onclick=async()=>{try{const r=await fetch(`/api/companies/${state.companyId}/export/${b.dataset.exp2}`,{credentials:'include'});if(!r.ok)throw new Error(`Request failed (${r.status})`);downloadBlob(await r.blob(),`apna-business-${b.dataset.exp2}.csv`);}catch(err){toast(err.message);}});
       m.querySelector('#st-clear-chats').onclick=async()=>{
         if(!confirm(hi?'सभी चैट हमेशा के लिए हटा दें?':'Delete all chats permanently?'))return;
         const cid=state.companyId;
@@ -355,6 +392,30 @@ function openSettingsModal(startTab){
         }catch(err){toast(err.message);}
       };
     },
+    profile:async()=>{
+      const cid=state.companyId; let cc={};
+      try{cc=await api(`/api/companies/${cid}`);}catch(err){toast(err.message);}
+      const x=cfgGet().profile||{};
+      const set=(id,v)=>{const e=m.querySelector(id);if(e)e.value=v==null?'':v;};
+      set('#bp-name',cc.name);set('#bp-address',x.address);set('#bp-phone',x.phone);set('#bp-state',cc.business_state);set('#bp-gsttype',cc.gst_type||'UNREGISTERED');set('#bp-gstin',cc.gstin);
+      const prev=m.querySelector('#bp-logo-prev'); let logo=x.logo||'';
+      if(logo){prev.src=logo;prev.style.display='block';}
+      m.querySelector('#bp-logo').onchange=e=>{const f=e.target.files[0];if(!f)return;
+        if(f.size>300*1024){toast(hi?'लोगो 300 KB से छोटा रखें':'Keep the logo under 300 KB');e.target.value='';return;}
+        const r=new FileReader();r.onload=()=>{logo=r.result;prev.src=logo;prev.style.display='block';};r.readAsDataURL(f);};
+      m.querySelector('#bp-save').onclick=async()=>{
+        const gt=m.querySelector('#bp-gsttype').value, gstin=m.querySelector('#bp-gstin').value.trim();
+        if(gt!=='UNREGISTERED'&&!gstin){toast(hi?'GSTIN डालें':'Please enter GSTIN');return;}
+        try{
+          await api(`/api/companies/${cid}`,{method:'PATCH',body:{name:m.querySelector('#bp-name').value.trim(),business_type:cc.business_type||'Other',business_state:m.querySelector('#bp-state').value,gst_type:gt,gstin:gt==='UNREGISTERED'?'':gstin}});
+          cfgSet({profile:{address:m.querySelector('#bp-address').value,phone:m.querySelector('#bp-phone').value,logo}});
+          await refreshSession(); toast(hi?'बिज़नेस प्रोफ़ाइल सहेज ली':'Business profile saved');
+        }catch(err){toast(err.message);}
+      };
+    },
+    invoice:()=>{m.querySelector('#iv-save').onclick=()=>{cfgSet({invoice:{prefix:m.querySelector('#iv-prefix').value||'INV-',gst:Number(m.querySelector('#iv-gst').value),terms:m.querySelector('#iv-terms').value,note:m.querySelector('#iv-note').value,bank:m.querySelector('#iv-bank').value}});toast(hi?'सहेज लिया गया':'Saved');};},
+    reminders:()=>{m.querySelector('#rem-save').onclick=()=>{const g={};m.querySelectorAll('[data-rem]').forEach(i=>g[i.dataset.rem]=i.checked);cfgSet({reminders:g});toast(hi?'सहेज लिया गया':'Saved');};},
+    help:()=>{m.querySelector('#hp-send').onclick=()=>{const t=m.querySelector('#hp-text').value.trim();if(!t){toast(hi?'पहले कुछ लिखें':'Write something first');return;}location.href='mailto:kumarprince49274@gmail.com?subject='+encodeURIComponent('APNA BUSINESS feedback')+'&body='+encodeURIComponent(t);};},
     about:()=>{}
   };
 
@@ -413,7 +474,6 @@ function openGeminiStyleAccountPopup(targetEl) {
 
     <div style="display:flex; flex-direction:column; gap:4px; font-size:13px;">
       <div class="popup-item" data-action="settings" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">⚙️ <span>${state.lang==='hi'?'एप सेटिंग्स (भाषा/थीम)':'App Settings (Theme/Lang)'}</span></div>
-      <div class="popup-item" data-action="dashboard" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px;">📊 <span>Dashboard & ERP</span></div>
       <div style="border-top:1px solid #3c4043; margin:6px 0;"></div>
       <div class="popup-item" data-action="logout" style="padding:8px 10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px; color:#f28b82; font-weight:600;">🚪 <span>${state.lang==='hi'?'लॉगआउट':'Sign out'}</span></div>
     </div>
@@ -581,10 +641,12 @@ function renderChatLog(){
       ?`<div class="msg user" style="margin:8px 0; text-align:right;"><div class="bubble" style="display:inline-block; background:var(--primary); padding:8px 12px; border-radius:12px;">${m.fileUrl?fileBubble(m):''}${esc(m.text)}</div></div>`
       :`<div class="msg bot" style="margin:8px 0; text-align:left;"><div class="bubble ${m.error?'err':''} ${m.typing?'typing':''}" style="display:inline-block; background:rgba(255,255,255,0.08); padding:8px 12px; border-radius:12px;">${esc(m.text)}${m.draft?draftCard(m,i):''}</div></div>`).join('');
   }
+  log.style.flex=msgs.length?'1':'0 0 auto';
   log.scrollTop=log.scrollHeight;
   document.querySelectorAll('.hero-el').forEach(e=>{e.style.display=msgs.length?'none':'';});
   log.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>decideDraft(msgs[Number(b.dataset.i)],b.dataset.act));
   const send=$('chat-send');if(send)send.disabled=state.chatBusy;
+  if(window.__composerUpd)window.__composerUpd();
 }
 
 async function persistExchange(cid,userText,botText){
@@ -877,31 +939,35 @@ function renderChatGPTStyleLayout(c) {
     } else {
       mainAreaContent = `
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
-          <div class="chat-avatar hero-el" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
-          <h1 class="hero-el" style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
-          <p class="hero-el" style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
+          <div class="hero-el" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:8vh;">
+          <div class="chat-avatar" style="margin-bottom:12px;">${PULSE_ICON(44)}</div>
+          <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
+          <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
+          </div>
           
-          <div id="chat-log" style="width:100%; max-width:700px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
+          <div id="chat-log" style="width:100%; max-width:880px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
 
-          <div style="width:100%; max-width:700px; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:28px; padding:14px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
+          <div id="composer" style="width:100%; max-width:880px; transition:transform .4s ease; will-change:transform;">
+          <div style="width:100%; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:34px; padding:22px 26px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'अपने बिज़नेस के बारे में पूछें…':'Ask anything about your business'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:15px; max-height:120px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'अपने बिज़नेस के बारे में पूछें…':'Ask anything about your business'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:17px; max-height:140px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
             <button type="button" id="chat-send" style="background:var(--text); color:var(--bg); border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Send">➤</button>
           </div>
 
-          <div class="hero-el" style="width:100%; max-width:700px; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
+          <div class="hero-el" style="width:100%; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
             ${(state.lang==='hi'
               ? ['आज की बिक्री बताओ','नया बिल बनाओ','कम स्टॉक वाला सामान दिखाओ','किस ग्राहक का पैसा बाकी है?']
               : ["Show today's sales",'Create a new invoice','Show low-stock items','Which customers owe me money?']
             ).map(t=>`<button type="button" data-suggest="${esc(t)}" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:9px 12px; font-size:14px; text-align:left; border-radius:8px; width:100%;">${esc(t)}</button>`).join('')}
           </div>
 
-          <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:700px;">
+          </div>
+          <div class="file-preview hidden" id="file-preview" style="margin-top:10px; width:100%; max-width:880px;">
             <img id="file-img" class="hidden" alt="Selected photo" style="max-height:80px; border-radius:6px;">
             <div id="file-doc" class="hidden">📄 <span id="file-name"></span></div>
             <button class="file-remove" id="file-remove" type="button" aria-label="Remove file">×</button>
@@ -949,10 +1015,9 @@ function renderChatGPTStyleLayout(c) {
     <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
       
       <!-- Left Fixed Sidebar -->
-      <div style="${open?'':'display:none; '}width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
+      <div style="${open?'':'display:none; '}width:${open?158:56}px; min-width:${open?158:56}px; border-right:1px solid var(--border); padding:${open?'14px 8px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; justify-content:${open?'flex-start':'center'};">
           <div style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.28); display:flex; align-items:center; justify-content:center; flex:none;">${PULSE_ICON(18)}</div>
-          ${open?'<span style="font-weight:bold; font-size:14px; color:var(--text);">APNA BUSINESS</span>':''}
           ${open?`<button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn} margin-left:auto;">${sbIcon}</button>`:''}
         </div>
 
@@ -971,7 +1036,7 @@ function renderChatGPTStyleLayout(c) {
         ${recentHtml}
 
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
-          <button id="back-to-dashboard-btn" title="Dashboard & ERP" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:9px ${open?'10px':'0'}; border-radius:8px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px;">${I.dash}${open?'<span>Dashboard & ERP</span>':''}</button>
+          <button id="back-to-dashboard-btn" title="Dashboard & ERP" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:9px ${open?'8px':'0'}; border-radius:8px; cursor:pointer; font-size:12px; white-space:nowrap; display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:8px;">${I.dash}${open?'<span>Dashboard & ERP</span>':''}</button>
 
           ${state.embed?'':`<div id="ai-sidebar-user-profile" style="display:flex; align-items:center; justify-content:${open?'flex-start':'center'}; gap:10px; padding:${open?'8px 10px':'6px 0'}; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.04);">
             <div style="background:#3b4a63; color:#fff; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; flex:none;">${userInitial}</div>
@@ -988,9 +1053,9 @@ function renderChatGPTStyleLayout(c) {
             <button id="ai-back" title="Back" style="${iconBtn}${state.embed?' display:none;':''}">${backIcon}</button>
             <span style="font-size:14px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:4px;">${c?esc(c.name):''}</span>
           </div>
-          <div style="display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:3px;">
-            <button id="mode-chat" style="border:none; cursor:pointer; padding:7px 22px; border-radius:999px; font-size:13px; font-weight:600; background:${state.aiMode!=='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Chat</button>
-            <button id="mode-work" style="border:none; cursor:pointer; padding:7px 22px; border-radius:999px; font-size:13px; font-weight:600; background:${state.aiMode==='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Work</button>
+          <div style="display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:5px;">
+            <button id="mode-chat" style="border:none; cursor:pointer; padding:11px 38px; border-radius:999px; font-size:16px; font-weight:600; background:${state.aiMode!=='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Chat</button>
+            <button id="mode-work" style="border:none; cursor:pointer; padding:11px 38px; border-radius:999px; font-size:16px; font-weight:600; background:${state.aiMode==='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Work</button>
           </div>
           <div></div>
         </header>
@@ -1044,6 +1109,18 @@ function renderChatGPTStyleLayout(c) {
   const preview = $('file-preview'), img = $('file-img'), doc = $('file-doc'), fileName = $('file-name');
   if (!input) return;
   document.querySelectorAll('[data-suggest]').forEach(b => b.onclick = () => sendChat(b.dataset.suggest));
+  {
+    const cp = $('composer');
+    const upd = (raise) => {
+      if (!cp || !cp.isConnected) return;
+      const chatting = chatLog().length > 0;
+      cp.style.transform = (!chatting && (raise || input.value.trim())) ? 'translateY(-18vh)' : 'none';
+    };
+    window.__composerUpd = () => upd(false);
+    cp?.addEventListener('pointerdown', () => upd(true));
+    input.addEventListener('input', () => upd(true));
+    input.addEventListener('blur', () => setTimeout(() => upd(false), 150));
+  }
 
   input.addEventListener('input', () => {
     input.style.height = 'auto';
@@ -1184,5 +1261,18 @@ function productForm(){const m=modal('Add product',`<form id="f"><label>SKU<inpu
 function invoiceForm(kind){
   // invoice creation/landings
 }
+
+(function splashAndIcon(){
+  const a = document.getElementById('app');
+  if (a && !state.user) {
+    a.innerHTML = '<style>@keyframes apna-pulse{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}</style><div id="splash" style="position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:99999;"><div style="animation:apna-pulse 1.4s ease-in-out infinite;">' + PULSE_ICON(72) + '</div></div>';
+  }
+  try {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#000"/><g transform="translate(4 4)"><path d="M22 12h-4l-3 9L9 3l-3 9H2" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>';
+    let l = document.querySelector('link[rel~="icon"]');
+    if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
+    l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+  } catch {}
+})();
 
 (async()=>{if(await refreshSession()) render(); else authView('login');})();
