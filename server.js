@@ -90,7 +90,7 @@ function inputBody(req, limit = 1024 * 1024) {
 function serveStatic(req, res, pathname) {
   const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
 
-  if (!['index.html', 'app.js', 'style.css', 'favicon.svg', 'manifest.webmanifest'].includes(relative)) {
+  if (!['index.html', 'app.js', 'qrcode.js', 'style.css', 'favicon.svg', 'manifest.webmanifest'].includes(relative)) {
     res.writeHead(404);
     return res.end('Not found');
   }
@@ -125,6 +125,233 @@ function serveStatic(req, res, pathname) {
     res.end('Missing static resource');
   }
 }
+
+const PROFILE_TEXT_FIELDS = {
+  business_name: 120,
+  owner_name: 120,
+  phone: 30,
+  email: 200,
+  address: 500,
+  bank_name: 120,
+  bank_holder: 120,
+  bank_account: 30,
+  invoice_prefix: 12,
+  invoice_terms: 1000,
+  invoice_footer: 300
+};
+
+const PROFILE_FIELDS = [
+  ...Object.keys(PROFILE_TEXT_FIELDS),
+  'bank_ifsc',
+  'upi_id',
+  'logo_data'
+];
+
+const MAX_LOGO_CHARS = 400 * 1024;
+
+// App ki Settings (Business profile, Invoice, Reminders) jaisi hain waisi hi server par rakhi jaati hain,
+// taaki dusre phone / browser par bhi wahi dikhein.
+const CONFIG_KEYS = ['profile', 'invoice', 'reminders'];
+const MAX_CONFIG_CHARS = 450 * 1024;
+
+function cleanConfig(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) fail('Invalid settings');
+
+  const out = {};
+
+  for (const k of CONFIG_KEYS) {
+    if (v[k] === undefined) continue;
+    if (!v[k] || typeof v[k] !== 'object' || Array.isArray(v[k])) fail(`Invalid ${k} settings`);
+    out[k] = v[k];
+  }
+
+  const logo = out.profile?.logo;
+  if (logo && !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(String(logo))) {
+    fail('Logo must be a PNG, JPG, WEBP or GIF image');
+  }
+
+  const upi = out.invoice?.upi;
+  if (upi && !/^[\w.\-]{2,}@[\w.\-]{2,}$/.test(String(upi))) {
+    fail('Invalid UPI ID (example: name@bank)');
+  }
+
+  if (JSON.stringify(out).length > MAX_CONFIG_CHARS) {
+    fail('Settings too large (logo should be under about 300 KB)');
+  }
+
+  return out;
+}
+
+function parseConfig(raw) {
+  try {
+    const v = JSON.parse(raw || '{}');
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  } catch {
+    return {};
+  }
+}
+
+function profileDefaults(db, companyId) {
+  const c = one(db, 'SELECT name,address FROM companies WHERE id=?', companyId) || {};
+  return {
+    company_id: companyId,
+    business_name: c.name || '',
+    owner_name: '',
+    phone: '',
+    email: '',
+    address: c.address || '',
+    logo_data: '',
+    bank_name: '',
+    bank_holder: '',
+    bank_account: '',
+    bank_ifsc: '',
+    upi_id: '',
+    invoice_prefix: '',
+    invoice_terms: '',
+    invoice_footer: '',
+    config: {},
+    updated_at: null
+  };
+}
+
+function getProfile(db, companyId) {
+  const row = one(db, 'SELECT * FROM company_profile WHERE company_id=?', companyId);
+  const base = profileDefaults(db, companyId);
+
+  if (!row) return base;
+
+  // Jo field khaali saved hai, uske liye company ka naam/pata dikhao
+  const { config_json, ...rest } = row;
+
+  return {
+    ...base,
+    ...rest,
+    business_name: row.business_name || base.business_name,
+    address: row.address || base.address,
+    config: parseConfig(config_json)
+  };
+}
+
+function cleanProfileValue(key, value) {
+  const v = String(value ?? '').trim();
+
+  if (key in PROFILE_TEXT_FIELDS) {
+    if (v.length > PROFILE_TEXT_FIELDS[key]) fail(`${key} is too long`);
+    return v;
+  }
+
+  if (key === 'bank_ifsc') {
+    const x = v.toUpperCase();
+    if (x && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(x)) fail('Invalid IFSC code');
+    return x;
+  }
+
+  if (key === 'upi_id') {
+    if (v && !/^[A-Za-z0-9._-]{2,64}@[A-Za-z][A-Za-z0-9.-]{1,63}$/.test(v)) {
+      fail('Invalid UPI ID (example: name@bank)');
+    }
+    return v;
+  }
+
+  if (key === 'logo_data') {
+    if (!v) return '';
+    if (v.length > MAX_LOGO_CHARS) fail('Logo is too large (max about 300 KB)');
+    if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)) {
+      fail('Logo must be a PNG, JPG or WEBP image');
+    }
+    return v;
+  }
+
+  return v;
+}
+
+function saveProfile(db, companyId, userId, body) {
+  const current = getProfile(db, companyId);
+  const next = { ...current };
+  const changed = [];
+
+  if (body.config !== undefined) {
+    const incoming = cleanConfig(body.config);
+    const merged = { ...current.config, ...incoming };
+
+    if (JSON.stringify(merged) !== JSON.stringify(current.config)) changed.push('config');
+    next.config = merged;
+  }
+
+  for (const key of PROFILE_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(body, key)) {
+      const cleaned = cleanProfileValue(key, body[key]);
+      if (cleaned !== current[key]) changed.push(key);
+      next[key] = cleaned;
+    }
+  }
+
+  return transaction(db, () => {
+    run(
+      db,
+      `INSERT INTO company_profile (
+         company_id,business_name,owner_name,phone,email,address,logo_data,
+         bank_name,bank_holder,bank_account,bank_ifsc,upi_id,
+         invoice_prefix,invoice_terms,invoice_footer,config_json,updated_by,updated_at
+       ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+       ON CONFLICT(company_id) DO UPDATE SET
+         business_name=excluded.business_name,
+         owner_name=excluded.owner_name,
+         phone=excluded.phone,
+         email=excluded.email,
+         address=excluded.address,
+         logo_data=excluded.logo_data,
+         bank_name=excluded.bank_name,
+         bank_holder=excluded.bank_holder,
+         bank_account=excluded.bank_account,
+         bank_ifsc=excluded.bank_ifsc,
+         upi_id=excluded.upi_id,
+         invoice_prefix=excluded.invoice_prefix,
+         invoice_terms=excluded.invoice_terms,
+         invoice_footer=excluded.invoice_footer,
+         config_json=excluded.config_json,
+         updated_by=excluded.updated_by,
+         updated_at=excluded.updated_at`,
+      companyId,
+      next.business_name,
+      next.owner_name,
+      next.phone,
+      next.email,
+      next.address,
+      next.logo_data,
+      next.bank_name,
+      next.bank_holder,
+      next.bank_account,
+      next.bank_ifsc,
+      next.upi_id,
+      next.invoice_prefix,
+      next.invoice_terms,
+      next.invoice_footer,
+      JSON.stringify(next.config || {}),
+      userId,
+      now()
+    );
+
+    if (changed.length) {
+      // Audit mein sirf field ke naam jaate hain, bank/UPI ki value nahi
+      run(
+        db,
+        'INSERT INTO audit_log VALUES (?,?,?,?,?,?,?)',
+        uid(),
+        companyId,
+        userId,
+        'PROFILE_UPDATE',
+        companyId,
+        JSON.stringify({ fields: changed }),
+        now()
+      );
+    }
+
+    return getProfile(db, companyId);
+  });
+}
+
+const STAFF_ROLES = ['ACCOUNTANT', 'MANAGER', 'SALES', 'VIEWER'];
 
 export function createServer(
   db,
@@ -240,6 +467,100 @@ export function createServer(
         params.companyId,
         u.id,
         role
+      );
+
+      return { ok: true };
+    })
+  );
+
+  add('GET', '/api/companies/:companyId/my-role', 'read', ({ params, session }) => {
+    const row = one(
+      db,
+      'SELECT role FROM company_users WHERE company_id=? AND user_id=?',
+      params.companyId,
+      session.user.id
+    );
+
+    return { role: row?.role || null };
+  });
+
+  add('GET', '/api/companies/:companyId/profile', 'read', ({ params }) =>
+    getProfile(db, params.companyId)
+  );
+
+  add('PATCH', '/api/companies/:companyId/profile', 'owner', ({ params, body, session }) =>
+    saveProfile(db, params.companyId, session.user.id, body)
+  );
+
+  add('PATCH', '/api/companies/:companyId/members/:userId', 'owner', ({ params, body, session }) =>
+    transaction(db, () => {
+      if (!STAFF_ROLES.includes(body.role)) {
+        fail('Invalid staff role');
+      }
+
+      const m = one(
+        db,
+        'SELECT role FROM company_users WHERE company_id=? AND user_id=?',
+        params.companyId,
+        params.userId
+      );
+
+      if (!m) fail('Team member not found', 404);
+      if (m.role === 'OWNER') fail('Owner role cannot be changed');
+
+      run(
+        db,
+        'UPDATE company_users SET role=? WHERE company_id=? AND user_id=?',
+        body.role,
+        params.companyId,
+        params.userId
+      );
+
+      run(
+        db,
+        'INSERT INTO audit_log VALUES (?,?,?,?,?,?,?)',
+        uid(),
+        params.companyId,
+        session.user.id,
+        'MEMBER_ROLE_CHANGE',
+        params.userId,
+        JSON.stringify({ from: m.role, to: body.role }),
+        now()
+      );
+
+      return { ok: true };
+    })
+  );
+
+  add('DELETE', '/api/companies/:companyId/members/:userId', 'owner', ({ params, session }) =>
+    transaction(db, () => {
+      const m = one(
+        db,
+        'SELECT role FROM company_users WHERE company_id=? AND user_id=?',
+        params.companyId,
+        params.userId
+      );
+
+      if (!m) fail('Team member not found', 404);
+      if (m.role === 'OWNER') fail('Owner cannot be removed');
+
+      run(
+        db,
+        'DELETE FROM company_users WHERE company_id=? AND user_id=?',
+        params.companyId,
+        params.userId
+      );
+
+      run(
+        db,
+        'INSERT INTO audit_log VALUES (?,?,?,?,?,?,?)',
+        uid(),
+        params.companyId,
+        session.user.id,
+        'MEMBER_REMOVE',
+        params.userId,
+        JSON.stringify({ role: m.role }),
+        now()
       );
 
       return { ok: true };
