@@ -7,11 +7,29 @@
   <meta name="theme-color" content="#000000">
   <title>APNA BUSINESS</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='120' fill='%23000000'/%3E%3Cg transform='translate(96 96) scale(13.33)' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-4l-3 9L9 3l-3 9H2'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <style>
+    html, body { margin: 0; background: #000; }
+    .boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #000; color: #fff; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+    .boot-logo { width: 72px; height: 72px; border-radius: 20px; background: #111; display: flex; align-items: center; justify-content: center; animation: bootpulse 1.4s ease-in-out infinite; }
+    .boot-name { font-size: 13px; letter-spacing: .2em; font-weight: 600; opacity: .85; }
+    @keyframes bootpulse { 0%, 100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.08); opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .boot-logo { animation: none; } }
+  </style>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div id="app"></div>
+  <!-- app.js jab render karta hai to #app ka andar ka loader apne aap hat jaata hai -->
+  <div id="app">
+    <div class="boot" role="status" aria-label="Loading">
+      <div class="boot-logo">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="boot-name" translate="no">APNA BUSINESS</div>
+    </div>
+  </div>
   <noscript>APNA BUSINESS chalane ke liye JavaScript on karna zaroori hai.</noscript>
+  <script src="/qrcode.js"></script>
   <script src="/app.js"></script>
 </body>
-</html><link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</html>
