@@ -172,7 +172,47 @@ const dict = {
   }
 };
 
-const t = (key) => dict[state.lang]?.[key] || dict['hi'][key] || key;
+// ===== 18 LANGUAGES: code, native name, direction, speech-code, English name =====
+const LANGS = [
+  ['hi','हिंदी (Hindi)','ltr','hi-IN','Hindi'],['en','English','ltr','en-IN','English'],
+  ['bho','भोजपुरी (Bhojpuri)','ltr','hi-IN','Bhojpuri'],['ur','اردو (Urdu)','rtl','ur-IN','Urdu'],
+  ['sa','संस्कृतम् (Sanskrit)','ltr','hi-IN','Sanskrit'],['pa','ਪੰਜਾਬੀ (Punjabi)','ltr','pa-IN','Punjabi'],
+  ['bn','বাংলা (Bengali)','ltr','bn-IN','Bengali'],['mr','मराठी (Marathi)','ltr','mr-IN','Marathi'],
+  ['gu','ગુજરાતી (Gujarati)','ltr','gu-IN','Gujarati'],['ta','தமிழ் (Tamil)','ltr','ta-IN','Tamil'],
+  ['te','తెలుగు (Telugu)','ltr','te-IN','Telugu'],['ne','नेपाली (Nepali)','ltr','ne-NP','Nepali'],
+  ['ar','العربية (Arabic)','rtl','ar-SA','Arabic'],['fr','Français (French)','ltr','fr-FR','French'],
+  ['de','Deutsch (German)','ltr','de-DE','German'],['es','Español (Spanish)','ltr','es-ES','Spanish'],
+  ['ja','日本語 (Japanese)','ltr','ja-JP','Japanese'],['zh','中文 (Chinese)','ltr','zh-CN','Chinese']
+];
+const langMeta = () => LANGS.find(l => l[0] === state.lang) || LANGS[0];
+function applyLangDir(){
+  const m = langMeta();
+  document.documentElement.lang = m[0];
+  document.documentElement.dir = m[2];
+}
+const DICT_KEYS = ['brandSub','mainMenu','dashboard','aiChat','vouchersBilling','vouchersList','salesPurchases','accountsSheet','balanceSheet','profitLoss','inventoryStock','productsInv','contactsList','gstTax','gstBreakdown','companyMgmt','companyAlter','appSettings','createCompanyBtn','alterCompanyBtn','logout','sales','purchases','profit','cash','bank','inventoryVal','welcomeMsg','settingsTitle','languageLbl','themeLbl','searchLbl'];
+const DICT_PACK = {
+  bho: ['अकाउंटिंग आ ईआरपी','मुख्य डैशबोर्ड','डैशबोर्ड','एआई अकाउंटेंट','वाउचर आ बिलिंग','वाउचर सूची','बिक्री / खरीद','खाता आ बैलेंस शीट','बैलेंस शीट','नफा आ नोकसान (P&L)','इन्वेंटरी आ स्टॉक','स्टॉक / इन्वेंटरी','ग्राहक / सप्लायर','जीएसटी आ टैक्स','जीएसटी ब्रेकडाउन','कंपनी मैनेजमेंट','कंपनी बदलीं / एडिट','एप सेटिंग्स','+ नया कंपनी बनाईं','कंपनी बदलीं','लॉगआउट','कुल बिक्री','कुल खरीद','शुद्ध नफा','नकद','बैंक','स्टॉक के कीमत','आपन बिजनेस के पूरा हिसाब-किताब आ हालत इहाँ देखीं।','सेटिंग्स','भाषा','थीम','खोजीं'],
+  ur: ['اکاؤنٹنگ اور ای آر پی','مرکزی ڈیش بورڈ','ڈیش بورڈ','اے آئی اکاؤنٹنٹ','واؤچر اور بلنگ','واؤچر فہرست','فروخت / خریداری','کھاتہ اور بیلنس شیٹ','بیلنس شیٹ','نفع و نقصان (P&L)','انوینٹری اور اسٹاک','اسٹاک / انوینٹری','گاہک / سپلائر','جی ایس ٹی اور ٹیکس','جی ایس ٹی تفصیل','کمپنی مینجمنٹ','کمپنی ترمیم','ایپ سیٹنگز','+ نئی کمپنی بنائیں','کمپنی ترمیم','لاگ آؤٹ','کل فروخت','کل خریداری','خالص منافع','نقد','بینک','اسٹاک کی قیمت','اپنے کاروبار کا مکمل حساب اور مالی صورتحال یہاں دیکھیں۔','سیٹنگز','زبان','تھیم','تلاش'],
+  sa: ['लेखाकर्म तथा ईआरपी','मुख्य पटलम्','पटलम्','एआई लेखापालः','प्रमाणपत्राणि च देयकानि','प्रमाणपत्रसूची','विक्रयः / क्रयः','लेखा च तुलनापत्रम्','तुलनापत्रम्','लाभहानिः (P&L)','सामग्री च संग्रहः','संग्रहः / सामग्री','ग्राहकाः / आपूर्तिकर्तारः','जीएसटी करश्च','जीएसटी विवरणम्','संस्थाप्रबन्धः','संस्थासंशोधनम्','अनुप्रयोगविन्यासाः','+ नूतनां संस्थां रचयतु','संस्थां संशोधयतु','निर्गमनम्','कुल विक्रयः','कुल क्रयः','शुद्धलाभः','नगदम्','बैङ्कः','संग्रहमूल्यम्','स्वव्यापारस्य सम्पूर्णं लेखाजोखं वित्तस्थितिं च अत्र पश्यतु।','विन्यासाः','भाषा','रूपम्','अन्विष्यताम्'],
+  pa: ['ਅਕਾਊਂਟਿੰਗ ਅਤੇ ਈਆਰਪੀ','ਮੁੱਖ ਡੈਸ਼ਬੋਰਡ','ਡੈਸ਼ਬੋਰਡ','ਏਆਈ ਅਕਾਊਂਟੈਂਟ','ਵਾਊਚਰ ਅਤੇ ਬਿਲਿੰਗ','ਵਾਊਚਰ ਸੂਚੀ','ਵਿਕਰੀ / ਖਰੀਦ','ਖਾਤਾ ਅਤੇ ਬੈਲੰਸ ਸ਼ੀਟ','ਬੈਲੰਸ ਸ਼ੀਟ','ਲਾਭ ਅਤੇ ਨੁਕਸਾਨ (P&L)','ਇਨਵੈਂਟਰੀ ਅਤੇ ਸਟਾਕ','ਸਟਾਕ / ਇਨਵੈਂਟਰੀ','ਗਾਹਕ / ਸਪਲਾਇਰ','ਜੀਐਸਟੀ ਅਤੇ ਟੈਕਸ','ਜੀਐਸਟੀ ਵੇਰਵਾ','ਕੰਪਨੀ ਪ੍ਰਬੰਧਨ','ਕੰਪਨੀ ਸੋਧ / ਐਡਿਟ','ਐਪ ਸੈਟਿੰਗਾਂ','+ ਨਵੀਂ ਕੰਪਨੀ ਬਣਾਓ','ਕੰਪਨੀ ਸੋਧੋ','ਲੌਗਆਊਟ','ਕੁੱਲ ਵਿਕਰੀ','ਕੁੱਲ ਖਰੀਦ','ਸ਼ੁੱਧ ਲਾਭ','ਨਕਦ','ਬੈਂਕ','ਸਟਾਕ ਮੁੱਲ','ਆਪਣੇ ਕਾਰੋਬਾਰ ਦਾ ਪੂਰਾ ਹਿਸਾਬ ਅਤੇ ਵਿੱਤੀ ਸਥਿਤੀ ਇੱਥੇ ਦੇਖੋ।','ਸੈਟਿੰਗਾਂ','ਭਾਸ਼ਾ','ਥੀਮ','ਖੋਜੋ'],
+  bn: ['অ্যাকাউন্টিং ও ইআরপি','প্রধান ড্যাশবোর্ড','ড্যাশবোর্ড','এআই অ্যাকাউন্ট্যান্ট','ভাউচার ও বিলিং','ভাউচার তালিকা','বিক্রয় / ক্রয়','হিসাব ও ব্যালেন্স শিট','ব্যালেন্স শিট','লাভ ও ক্ষতি (P&L)','ইনভেন্টরি ও স্টক','স্টক / ইনভেন্টরি','গ্রাহক / সরবরাহকারী','জিএসটি ও ট্যাক্স','জিএসটি বিবরণ','কোম্পানি ব্যবস্থাপনা','কোম্পানি সম্পাদনা','অ্যাপ সেটিংস','+ নতুন কোম্পানি তৈরি করুন','কোম্পানি সম্পাদনা','লগআউট','মোট বিক্রয়','মোট ক্রয়','নিট লাভ','নগদ','ব্যাংক','স্টকের মূল্য','আপনার ব্যবসার সম্পূর্ণ হিসাব ও আর্থিক অবস্থা এখানে দেখুন।','সেটিংস','ভাষা','থিম','খুঁজুন'],
+  mr: ['अकाउंटिंग आणि ईआरपी','मुख्य डॅशबोर्ड','डॅशबोर्ड','एआय अकाउंटंट','व्हाउचर आणि बिलिंग','व्हाउचर यादी','विक्री / खरेदी','खाते आणि ताळेबंद','ताळेबंद','नफा आणि तोटा (P&L)','इन्व्हेंटरी आणि स्टॉक','स्टॉक / इन्व्हेंटरी','ग्राहक / पुरवठादार','जीएसटी आणि कर','जीएसटी तपशील','कंपनी व्यवस्थापन','कंपनी संपादन','अ‍ॅप सेटिंग्ज','+ नवीन कंपनी तयार करा','कंपनी संपादित करा','लॉगआउट','एकूण विक्री','एकूण खरेदी','निव्वळ नफा','रोख','बँक','स्टॉक मूल्य','तुमच्या व्यवसायाचा संपूर्ण हिशोब आणि आर्थिक स्थिती येथे पहा.','सेटिंग्ज','भाषा','थीम','शोधा'],
+  gu: ['એકાઉન્ટિંગ અને ઇઆરપી','મુખ્ય ડેશબોર્ડ','ડેશબોર્ડ','એઆઈ એકાઉન્ટન્ટ','વાઉચર અને બિલિંગ','વાઉચર યાદી','વેચાણ / ખરીદી','ખાતું અને બેલેન્સ શીટ','બેલેન્સ શીટ','નફો અને નુકસાન (P&L)','ઇન્વેન્ટરી અને સ્ટોક','સ્ટોક / ઇન્વેન્ટરી','ગ્રાહક / સપ્લાયર','જીએસટી અને ટેક્સ','જીએસટી વિગત','કંપની મેનેજમેન્ટ','કંપની સુધારો','એપ સેટિંગ્સ','+ નવી કંપની બનાવો','કંપની સુધારો','લોગઆઉટ','કુલ વેચાણ','કુલ ખરીદી','ચોખ્ખો નફો','રોકડ','બેંક','સ્ટોક મૂલ્ય','તમારા વ્યવસાયનો સંપૂર્ણ હિસાબ અને નાણાકીય સ્થિતિ અહીં જુઓ.','સેટિંગ્સ','ભાષા','થીમ','શોધો'],
+  ta: ['கணக்கியல் மற்றும் ஈஆர்பி','முதன்மை டாஷ்போர்டு','டாஷ்போர்டு','AI கணக்காளர்','வவுச்சர் மற்றும் பில்லிங்','வவுச்சர் பட்டியல்','விற்பனை / கொள்முதல்','கணக்கு மற்றும் இருப்புநிலை','இருப்புநிலைக் குறிப்பு','லாபம் மற்றும் நட்டம் (P&L)','சரக்கு மற்றும் இருப்பு','இருப்பு / சரக்கு','வாடிக்கையாளர் / சப்ளையர்','ஜிஎஸ்டி மற்றும் வரி','ஜிஎஸ்டி விவரம்','நிறுவன மேலாண்மை','நிறுவனத்தை திருத்து','செயலி அமைப்புகள்','+ புதிய நிறுவனம் உருவாக்கு','நிறுவனத்தை திருத்து','வெளியேறு','மொத்த விற்பனை','மொத்த கொள்முதல்','நிகர லாபம்','பணம்','வங்கி','இருப்பு மதிப்பு','உங்கள் வணிகத்தின் முழு கணக்கையும் நிதி நிலையையும் இங்கே பாருங்கள்.','அமைப்புகள்','மொழி','தீம்','தேடு'],
+  te: ['అకౌంటింగ్ & ఈఆర్‌పి','ప్రధాన డాష్‌బోర్డ్','డాష్‌బోర్డ్','AI అకౌంటెంట్','వౌచర్లు & బిల్లింగ్','వౌచర్ జాబితా','అమ్మకాలు / కొనుగోళ్లు','ఖాతా & బ్యాలెన్స్ షీట్','బ్యాలెన్స్ షీట్','లాభం & నష్టం (P&L)','ఇన్వెంటరీ & స్టాక్','స్టాక్ / ఇన్వెంటరీ','కస్టమర్లు / సప్లయర్లు','జీఎస్టీ & పన్ను','జీఎస్టీ వివరాలు','కంపెనీ నిర్వహణ','కంపెనీ సవరణ','యాప్ సెట్టింగ్స్','+ కొత్త కంపెనీ సృష్టించండి','కంపెనీ సవరించండి','లాగౌట్','మొత్తం అమ్మకాలు','మొత్తం కొనుగోళ్లు','నికర లాభం','నగదు','బ్యాంక్','స్టాక్ విలువ','మీ వ్యాపారం పూర్తి లెక్కలు, ఆర్థిక స్థితి ఇక్కడ చూడండి.','సెట్టింగ్స్','భాష','థీమ్','వెతకండి'],
+  ne: ['लेखा र ईआरपी','मुख्य ड्यासबोर्ड','ड्यासबोर्ड','एआई लेखापाल','भौचर र बिलिङ','भौचर सूची','बिक्री / खरिद','खाता र ब्यालेन्स सिट','ब्यालेन्स सिट','नाफा र नोक्सान (P&L)','इन्भेन्टरी र स्टक','स्टक / इन्भेन्टरी','ग्राहक / आपूर्तिकर्ता','जीएसटी र कर','जीएसटी विवरण','कम्पनी व्यवस्थापन','कम्पनी सम्पादन','एप सेटिङ','+ नयाँ कम्पनी बनाउनुहोस्','कम्पनी सम्पादन','लगआउट','कुल बिक्री','कुल खरिद','खुद नाफा','नगद','बैंक','स्टकको मूल्य','आफ्नो व्यवसायको पूरा हिसाबकिताब र आर्थिक अवस्था यहाँ हेर्नुहोस्।','सेटिङ','भाषा','थिम','खोज्नुहोस्'],
+  ar: ['المحاسبة وتخطيط الموارد','لوحة التحكم الرئيسية','لوحة التحكم','المحاسب الذكي','القسائم والفواتير','قائمة القسائم','المبيعات / المشتريات','الحسابات والميزانية','الميزانية العمومية','الأرباح والخسائر','المخزون والبضائع','المنتجات / المخزون','العملاء / الموردون','ضريبة GST','تفاصيل GST','إدارة الشركة','تعديل الشركة','إعدادات التطبيق','+ إنشاء شركة جديدة','تعديل الشركة','تسجيل الخروج','إجمالي المبيعات','إجمالي المشتريات','صافي الربح','النقد','البنك','قيمة المخزون','اطّلع هنا على الحسابات الكاملة والوضع المالي لعملك.','الإعدادات','اللغة','المظهر','بحث'],
+  fr: ['Comptabilité et ERP','Tableau de bord principal','Tableau de bord','Comptable IA','Pièces et facturation','Liste des pièces','Ventes / Achats','Comptes et bilan','Bilan','Pertes et profits (P&L)','Inventaire et stock','Produits / Inventaire','Clients / Fournisseurs','GST et taxes','Détail GST','Gestion de l’entreprise','Modifier l’entreprise','Paramètres de l’app','+ Créer une entreprise','Modifier l’entreprise','Déconnexion','Ventes totales','Achats totaux','Bénéfice net','Espèces','Banque','Valeur du stock','Consultez ici toute la comptabilité et la situation financière de votre entreprise.','Paramètres','Langue','Thème','Rechercher'],
+  de: ['Buchhaltung & ERP','Haupt-Dashboard','Dashboard','KI-Buchhalter','Belege & Rechnungen','Belegliste','Verkäufe / Einkäufe','Konten & Bilanz','Bilanz','Gewinn und Verlust (GuV)','Inventar & Lager','Produkte / Inventar','Kunden / Lieferanten','GST & Steuern','GST-Aufschlüsselung','Unternehmensverwaltung','Unternehmen bearbeiten','App-Einstellungen','+ Unternehmen erstellen','Unternehmen bearbeiten','Abmelden','Gesamtumsatz','Gesamteinkäufe','Reingewinn','Bargeld','Bank','Lagerwert','Sehen Sie hier die komplette Buchhaltung und Finanzlage Ihres Unternehmens.','Einstellungen','Sprache','Design','Suchen'],
+  es: ['Contabilidad y ERP','Panel principal','Panel','Contador IA','Comprobantes y facturación','Lista de comprobantes','Ventas / Compras','Cuentas y balance','Balance general','Pérdidas y ganancias (P&L)','Inventario y stock','Productos / Inventario','Clientes / Proveedores','GST e impuestos','Desglose de GST','Gestión de la empresa','Editar empresa','Ajustes de la app','+ Crear empresa','Editar empresa','Cerrar sesión','Ventas totales','Compras totales','Beneficio neto','Efectivo','Banco','Valor del inventario','Consulte aquí toda la contabilidad y la situación financiera de su negocio.','Ajustes','Idioma','Tema','Buscar'],
+  ja: ['会計とERP','メインダッシュボード','ダッシュボード','AI会計士','伝票と請求','伝票一覧','売上 / 仕入','勘定と貸借対照表','貸借対照表','損益計算書 (P&L)','在庫と棚卸','商品 / 在庫','顧客 / 仕入先','GSTと税金','GST内訳','会社管理','会社を編集','アプリ設定','+ 会社を作成','会社を編集','ログアウト','売上合計','仕入合計','純利益','現金','銀行','在庫評価額','ビジネスの会計と財務状況をここで確認できます。','設定','言語','テーマ','検索'],
+  zh: ['会计与ERP','主仪表板','仪表板','AI会计','凭证与开票','凭证列表','销售 / 采购','账户与资产负债表','资产负债表','损益表 (P&L)','库存与存货','商品 / 库存','客户 / 供应商','GST与税务','GST明细','公司管理','编辑公司','应用设置','+ 创建公司','编辑公司','退出登录','销售总额','采购总额','净利润','现金','银行','库存价值','在此查看您企业的完整账目和财务状况。','设置','语言','主题','搜索']
+};
+Object.assign(dict.hi, { settingsTitle:'सेटिंग्स', languageLbl:'भाषा', themeLbl:'थीम', searchLbl:'खोजें' });
+Object.assign(dict.en, { settingsTitle:'Settings', languageLbl:'Language', themeLbl:'Theme', searchLbl:'Search' });
+Object.keys(DICT_PACK).forEach(code => { dict[code] = Object.fromEntries(DICT_KEYS.map((k, i) => [k, DICT_PACK[code][i]])); });
+const t = (key) => dict[state.lang]?.[key] || dict['en'][key] || key;
 
 const PULSE_ICON = (size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
 
@@ -335,17 +375,52 @@ function qrSvg(text,size=220){
 }
 
 // Updated openSettingsModal function with a vertical sidebar layout
+function injectSettingsCss(){
+  if (document.getElementById('settings-big-css')) return;
+  const s = document.createElement('style'); s.id = 'settings-big-css';
+  s.textContent = `
+  .settings-big{position:relative;display:flex;flex-direction:column;width:min(1100px,94vw);height:min(700px,90vh);background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55);}
+  .st-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:54px;border-bottom:1px solid var(--border);font-weight:600;font-size:17px;}
+  .st-bodywrap{flex:1;display:flex;min-height:0;}
+  .st-div{height:1px;background:var(--border);margin:8px 6px;}
+  .st-side{width:250px;flex:none;border-inline-end:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+  .st-side input{width:100%;margin:0;padding:9px 12px;border-radius:10px;box-sizing:border-box;}
+  #settings-tabs{display:flex;flex-direction:column;gap:2px;}
+  .st-tab{border:none;background:transparent;color:var(--text);text-align:start;padding:10px 12px;border-radius:10px;font-size:14px;cursor:pointer;display:flex;gap:10px;align-items:center;width:100%;}
+  .st-tab:hover{background:rgba(127,127,127,.12);}
+  .st-tab.active{background:rgba(127,127,127,.22);font-weight:600;}
+  .st-main{flex:1;min-width:0;padding:24px 32px;overflow-y:auto;}
+  .st-main h3{margin:0 0 16px;font-size:18px;}
+  .st-close{background:transparent;border:none;color:var(--text);font-size:20px;cursor:pointer;}
+  @media(max-width:700px){.settings-big{width:100vw;height:100vh;border-radius:0}.st-bodywrap{flex-direction:column}.st-side{width:auto;border-inline-end:none;border-bottom:1px solid var(--border);padding:10px}#settings-tabs{flex-direction:row;overflow-x:auto}.st-tab{white-space:nowrap;width:auto}.st-main{padding:16px}}`;
+  document.head.appendChild(s);
+}
+
+// Big Settings: ek hi vertical menu (left) + selected option ka kaam (right)
 function openSettingsModal(startTab){
+  document.getElementById('settings-big-wrap')?.remove();
   const hi=state.lang==='hi';
-  const tabs=[['general',hi?'सामान्य':'General'],['profile',hi?'बिज़नेस प्रोफ़ाइल':'Business Profile'],['invoice',hi?'इनवॉइस':'Invoice'],['reminders',hi?'रिमाइंडर और सूचनाएँ':'Reminders'],['personal',hi?'AI सेटिंग':'AI'],['account',hi?'अकाउंट और सुरक्षा':'Account & Security'],['data',hi?'बैकअप / डेटा':'Backup & Data'],['help',hi?'मदद':'Help'],['about',hi?'जानकारी':'About']];
-  const m=modal(hi?'सेटिंग्स':'Settings',`
-    <div style="display:flex; gap:16px; align-items:flex-start; min-height:400px;">
-      <div id="settings-tabs" style="display:flex; flex-direction:column; gap:4px; width:190px; border-right:1px solid var(--border); padding-right:10px; flex-shrink:0;">
-        ${tabs.map(([k,l])=>`<button type="button" data-tab="${k}" style="border:none; cursor:pointer; padding:9px 12px; border-radius:8px; font-size:13px; text-align:left; color:var(--text); background:transparent; width:100%;">${l}</button>`).join('')}
-      </div>
-      <div id="settings-body" style="flex:1; max-height:60vh; overflow-y:auto; padding-right:4px; color:var(--text);"></div>
+  const tabs=[['general','⚙️ '+(hi?'सामान्य':'General')],['profile','🏢 '+(hi?'बिज़नेस प्रोफ़ाइल / कंपनी बदलें':'Business Profile / Alter Company')],['invoice','🧾 '+(hi?'इनवॉइस':'Invoice')],['reminders','🔔 '+(hi?'रिमाइंडर और सूचनाएँ':'Reminders')],['personal','🤖 '+(hi?'AI सेटिंग':'AI')],['account','🔐 '+(hi?'अकाउंट और सुरक्षा':'Account & Security')],['data','💾 '+(hi?'बैकअप / डेटा':'Backup & Data')],['help','❓ '+(hi?'मदद':'Help')],['about','ℹ️ '+(hi?'जानकारी':'About')]];
+  injectSettingsCss();
+  const m=document.createElement('div');
+  m.id='settings-big-wrap'; m.className='modal-backdrop';
+  m.style.cssText='position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);';
+  m.innerHTML=`<section class="settings-big" role="dialog" aria-modal="true">
+    <div class="st-head"><span>${esc(t('settingsTitle'))}</span><button type="button" id="st-close" class="st-close" aria-label="Close">✕</button></div>
+    <div class="st-bodywrap">
+      <aside class="st-side">
+        <input id="st-search" type="search" placeholder="${esc(t('searchLbl'))}">
+        <div id="settings-tabs">${tabs.map(([k,l])=>(k==='personal'||k==='help'?'<div class="st-div"></div>':'')+`<button type="button" class="st-tab" data-tab="${k}">${l}</button>`).join('')}</div>
+      </aside>
+      <div class="st-main"><h3 id="st-title"></h3><div id="settings-body" style="color:var(--text);"></div></div>
     </div>
-  `);
+  </section>`;
+  document.body.appendChild(m);
+  const onKey=e=>{ if(!m.isConnected){document.removeEventListener('keydown',onKey);return;} if(e.key==='Escape') closeIt(); };
+  const closeIt=()=>{ m.remove(); document.removeEventListener('keydown',onKey); };
+  document.addEventListener('keydown',onKey);
+  m.addEventListener('mousedown',e=>{ if(e.target===m) closeIt(); });
+  m.querySelector('#st-close').onclick=closeIt;
   const body=m.querySelector('#settings-body');
   const row='display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);';
   const sel='padding:5px 8px; border-radius:6px; background:rgba(255,255,255,0.1); color:var(--text); border:1px solid var(--border); width:auto; margin:0;';
@@ -354,7 +429,7 @@ function openSettingsModal(startTab){
 
   const panels={
     general:()=>`<div style="${row}"><span>${hi?'थीम':'Theme'}</span><select id="st-theme" style="${sel}"><option value="dark" ${state.theme==='dark'?'selected':''}>Dark</option><option value="light" ${state.theme==='light'?'selected':''}>Light</option></select></div>
-      <div style="${row}"><span>${hi?'भाषा':'Language'}</span><select id="st-lang" style="${sel}"><option value="hi" ${state.lang==='hi'?'selected':''}>हिंदी (Hindi)</option><option value="en" ${state.lang==='en'?'selected':''}>English</option></select></div>
+      <div style="${row}"><span>${esc(t('languageLbl'))}</span><select id="st-lang" style="${sel}">${LANGS.map(l=>`<option value="${l[0]}" ${state.lang===l[0]?'selected':''}>${l[1]}</option>`).join('')}</select></div>
       <div style="${row}"><span>${hi?'फ़ॉन्ट (पूरे ऐप का)':'Font (whole app)'}</span><select id="st-font" style="${sel}">${Object.entries(FONT_PRESETS).map(([k,f])=>`<option value="${k}" ${state.font===k?'selected':''}>${f.label}</option>`).join('')}</select></div>
       <p class="muted" style="font-size:13px; margin:10px 0 0;">Aa Bb Cc - नमस्ते, Apna Business ₹1,25,000</p>
       <button type="button" id="st-save-general" class="btn primary" style="margin-top:14px;">${hi?'सेटिंग्स सहेजें':'Save settings'}</button>`,
@@ -399,12 +474,14 @@ function openSettingsModal(startTab){
       <label style="margin-top:10px;">${hi?'सुझाव / समस्या भेजें':'Send feedback'}<textarea id="hp-text" rows="4" style="width:100%; padding:8px; border-radius:8px; background:#0A0A0A; color:var(--text); border:1px solid var(--border); font-family:inherit;"></textarea></label>
       <button type="button" id="hp-send" class="btn primary" style="margin-top:10px;">${hi?'भेजें':'Send'}</button>`,
     about:()=>`<div style="${row}"><span>${hi?'ऐप':'App'}</span><strong>APNA BUSINESS</strong></div>
-      <div style="${row}"><span>${hi?'वर्शन':'Version'}</span><strong>0.9.0</strong></div>
+      <div style="${row}"><span>${hi?'वर्शन':'Version'}</span><strong>0.9.1</strong></div>
       <p class="muted" style="font-size:12px; margin-top:12px;">${hi?'GST और नॉन-GST दोनों तरह के बिज़नेस के लिए अकाउंटिंग और ऑटोमेशन।':'Accounting and automation for GST and non-GST businesses.'}</p>`
   };
 
   const binders={
-    general:()=>{m.querySelector('#st-font').onchange=e=>setFont(e.target.value);m.querySelector('#st-save-general').onclick=()=>{
+    general:()=>{m.querySelector('#st-font').onchange=e=>setFont(e.target.value);
+      m.querySelector('#st-lang').onchange=e=>{state.lang=e.target.value;try{localStorage.setItem('apna_lang',state.lang);}catch{}render();openSettingsModal('general');};
+      m.querySelector('#st-theme').onchange=e=>{state.theme=e.target.value;try{localStorage.setItem('apna_theme',state.theme);}catch{}render();};m.querySelector('#st-save-general').onclick=()=>{
       state.lang=m.querySelector('#st-lang').value; state.theme=m.querySelector('#st-theme').value;
       try{localStorage.setItem('apna_lang',state.lang);localStorage.setItem('apna_theme',state.theme);}catch{}
       m.remove(); toast(state.lang==='hi'?'सेटिंग्स सहेज ली गई हैं!':'Settings saved successfully!'); render();
@@ -469,13 +546,12 @@ function openSettingsModal(startTab){
   };
 
   function show(k){
-    m.querySelectorAll('[data-tab]').forEach(b=>{
-      b.style.background = b.dataset.tab === k ? 'rgba(255,255,255,0.12)' : 'transparent';
-      b.style.fontWeight = b.dataset.tab === k ? '600' : 'normal';
-    });
+    m.querySelectorAll('.st-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===k));
+    m.querySelector('#st-title').textContent=(tabs.find(x=>x[0]===k)||['',''])[1].replace(/^\S+\s/,'');
     body.innerHTML=panels[k](); binders[k]();
   }
-  m.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>show(b.dataset.tab));
+  m.querySelectorAll('.st-tab').forEach(b=>b.onclick=()=>show(b.dataset.tab));
+  m.querySelector('#st-search').oninput=e=>{const q=e.target.value.trim().toLowerCase();m.querySelectorAll('.st-tab').forEach(b=>{b.style.display=(!q||b.textContent.toLowerCase().includes(q))?'':'none';});};
   show(startTab&&panels[startTab]?startTab:'general');
 }
 
@@ -625,12 +701,12 @@ function layout(){
   <main><header class="topbar"><div><h2>${c?esc(c.name):'Create your business'}</h2><p>${c?`${esc(c.business_state||'')} · GST: ${esc(c.gst_type||'Tax setup required')}`:'One platform for GST and Non-GST businesses'}</p></div><div class="status" id="logout" style="cursor:pointer;" title="Logout">${state.user?esc(state.user.email):''}</div></header><div id="content" class="content"></div></main></div>`;
   
   $('company-select')?.addEventListener('change',e=>{state.companyId=e.target.value;state.page='dashboard';resetAiPanel();render();cfgSyncFromServer().then(ch=>{if(ch)render();});});
-  document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{if(b.dataset.page==='chat'){setAiPanel(true);return;}if(state.aiPanel)setAiPanel(false);state.page=b.dataset.page;renderPage();});
+  document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{if(b.dataset.page==='chat'){setAiPanel(true);return;}if(b.dataset.page==='settings'){openSettingsModal('profile');return;}if(state.aiPanel)setAiPanel(false);state.page=b.dataset.page;renderPage();});
   
   $('ai-panel-toggle')?.addEventListener('click', () => setAiPanel(!state.aiPanel));
   if (state.aiPanelPending) { state.aiPanelPending = false; setAiPanel(true); }
   $('top-create-company')?.addEventListener('click', createCompanyForm);
-  $('top-alter-company')?.addEventListener('click', () => { state.page = 'settings'; renderPage(); });
+  $('top-alter-company')?.addEventListener('click', () => { openSettingsModal('profile'); });
   $('sidebar-user-profile')?.addEventListener('click', (e) => { openGeminiStyleAccountPopup(e.currentTarget); });
 
   $('logout')?.addEventListener('click', async()=>{try{await api('/api/auth/logout',{method:'POST',body:{}});}finally{state.user=null;state.csrf=null;state.companies=[];state.companyId=null;state.chats={};authView('login');}});
@@ -639,6 +715,7 @@ function layout(){
 function render(){
   if(!state.user){authView();return;}
   document.body.classList.toggle('light', state.theme === 'light');
+  applyLangDir();
   layout();
   renderPage();
 }
@@ -782,7 +859,7 @@ async function sendChat(raw){
   msgs.push(pending);state.chatBusy=true;renderChatLog();
   try{
     const history=chatHistory(msgs);
-    const r=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:textValue,history}});
+    const r=await api(`/api/companies/${cid}/chat`,{method:'POST',body:{message:textValue,history,lang:state.lang,lang_name:langMeta()[4]}});
     pending.text=r.reply||'Samajh nahi aaya, dobara likhiye.';pending.typing=false;
     if(r.mode==='DRAFT_CREATED'&&r.draft_id) pending.draft={id:r.draft_id,preview:r.preview||[],status:'PENDING'};
     persistExchange(cid,textValue,pending.text);
@@ -858,7 +935,7 @@ function startVoice(input){
     return;
   }
   recognition=new SpeechRecognition();
-  recognition.lang = state.lang==='en' ? 'en-IN' : 'hi-IN';
+  recognition.lang = langMeta()[3];
   recognition.interimResults=true;
   recognition.continuous=false;
   recognition.onstart=()=>{
@@ -1398,7 +1475,16 @@ async function products(){const rows=await api(`/api/companies/${state.companyId
 
 function table(rows,cols){if(!rows?.length)return '<div class="empty">No records yet.</div>';return `<div class="table-wrap"><table class="table"><thead><tr>${cols.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[0].includes('_paise')?money(r[c[0]]):c[0]==='gst_bps'?`${Number(r[c[0]]||0)/100}%`:esc(r[c[0]])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;}
 
-async function invoices(){const rows=await api(`/api/companies/${state.companyId}/invoices`);$('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>Invoices (Sales / Purchases)</h3><div class="actions"><button class="btn primary" id="sale">+ Sales invoice</button><button class="btn" id="purchase">+ Purchase invoice</button></div></div>${table(rows,[['number','Invoice'],['kind','Type'],['date','Date'],['contact_name','Party'],['subtotal_paise','Taxable'],['gst_paise','GST'],['total_paise','Total'],['outstanding_paise','Outstanding']])}</section>`;$('sale').onclick=()=>invoiceForm('SALE');$('purchase').onclick=()=>invoiceForm('PURCHASE');}
+async function invoices(){
+  const cid=state.companyId;
+  const rows=await api(`/api/companies/${cid}/invoices`);
+  const tbl=rows.length?`<div class="table-wrap"><table class="table"><thead><tr><th>${HL('बिल','Invoice')}</th><th>${HL('प्रकार','Type')}</th><th>${HL('तारीख','Date')}</th><th>${HL('पार्टी','Party')}</th><th>${HL('टैक्सेबल','Taxable')}</th><th>GST</th><th>${HL('कुल','Total')}</th><th>${HL('बाकी','Outstanding')}</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.number)}</td><td>${esc(r.kind)}</td><td>${esc(r.date)}</td><td>${esc(r.contact_name)}</td><td>${money(r.subtotal_paise)}</td><td>${money(r.gst_paise)}</td><td>${money(r.total_paise)}</td><td>${money(r.outstanding_paise)}</td><td style="white-space:nowrap;"><button class="btn" data-view="${esc(r.id)}">${HL('देखें / प्रिंट','View / Print')}</button> ${Number(r.outstanding_paise)>0?`<button class="btn" data-pay="${esc(r.id)}" data-out="${Number(r.outstanding_paise)}">${HL('पेमेंट','Payment')}</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No records yet.</div>';
+  $('content').innerHTML=`<section class="panel"><div class="panel-head"><h3>${HL('बिक्री / खरीद बिल','Invoices (Sales / Purchases)')}</h3><div class="actions"><button class="btn primary" id="sale">+ ${HL('बिक्री बिल','Sales invoice')}</button><button class="btn" id="purchase">+ ${HL('खरीद बिल','Purchase invoice')}</button></div></div>${tbl}</section>`;
+  $('sale').onclick=()=>invoiceForm('SALE');
+  $('purchase').onclick=()=>invoiceForm('PURCHASE');
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>invoiceView(b.dataset.view));
+  document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>paymentForm(b.dataset.pay,Number(b.dataset.out)));
+}
 
 async function reports(){const [pl,bs,stock,gst]=await Promise.all([api(`/api/companies/${state.companyId}/reports/profit-loss`),api(`/api/companies/${state.companyId}/reports/balance-sheet`),api(`/api/companies/${state.companyId}/reports/stock`),api(`/api/companies/${state.companyId}/reports/gst`)]);$('content').innerHTML=`<section class="panel"><h3>Profit & Loss</h3><p>Revenue: <strong>${money(pl.revenue_paise)}</strong></p><p>Net profit: <strong>${money(pl.net_profit_paise)}</strong></p></section><section class="panel"><h3>Stock Summary</h3>${table(stock,[['sku','SKU'],['name','Product'],['qty','Qty'],['stock_value_paise','Stock value']])}</section>`;}
 
@@ -1412,8 +1498,151 @@ function contactForm(){const m=modal('Add contact',`<form id="f"><label>Type<sel
 
 function productForm(){const m=modal('Add product',`<form id="f"><label>SKU<input name="sku" required></label><label>Product name<input name="name" required></label><label>HSN / SAC<input name="hsn"></label><label>GST rate %<input name="gst_rate" type="number" value="18" step="0.01" min="0"></label><label>Sale price ₹<input name="sale_rupees" type="number" value="100" step="0.01" min="0"></label><label>Purchase cost ₹<input name="cost_rupees" type="number" value="70" step="0.01" min="0"></label><label>Low-stock level<input name="reorder_level" type="number" value="5" min="0"></label><button class="btn primary">Save product</button></form>`);m.querySelector('#f').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api(`/api/companies/${state.companyId}/products`,{method:'POST',body:{sku:f.get('sku'),name:f.get('name'),hsn:f.get('hsn'),gst_bps:Math.round(Number(f.get('gst_rate'))*100),sale_price_paise:Math.round(Number(f.get('sale_rupees'))*100),cost_price_paise:Math.round(Number(f.get('cost_rupees'))*100),reorder_level:Number(f.get('reorder_level'))}});m.remove();products();}catch(err){toast(err.message);}};}
 
-function invoiceForm(kind){
-  // invoice creation/landings
+function invoiceForm(kind){ return invoiceFormAsync(kind); }
+
+async function invoiceFormAsync(kind){
+  const sale=kind==='SALE', cid=state.companyId;
+  let cons,prods;
+  try{
+    [cons,prods]=await Promise.all([api(`/api/companies/${cid}/contacts?kind=${sale?'CUSTOMER':'SUPPLIER'}`),api(`/api/companies/${cid}/products`)]);
+  }catch(err){toast(err.message);return;}
+  prods=(prods||[]).filter(p=>p.active!==0);
+  if(!cons.length){toast(sale?HL('पहले एक ग्राहक जोड़ें (ग्राहक / सप्लायर पेज)','Add a Customer first (Customers / Suppliers page)'):HL('पहले एक सप्लायर जोड़ें (ग्राहक / सप्लायर पेज)','Add a Supplier first (Customers / Suppliers page)'));return;}
+  if(!prods.length){toast(HL('पहले स्टॉक / इन्वेंटरी में प्रोडक्ट जोड़ें','Add a product first (Products / Inventory page)'));return;}
+  const key=newKey();
+  const gstDefault=Number((cfgGet().invoice||{}).gst);
+  const m=modal(sale?HL('नया बिक्री बिल','New Sales invoice'):HL('नया खरीद बिल','New Purchase invoice'),`<form id="inv-form">
+    <label>${sale?HL('ग्राहक','Customer'):HL('सप्लायर','Supplier')}<select name="contact_id" required>${cons.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select></label>
+    <label>${HL('तारीख','Date')}<input name="date" type="date" value="${ymd()}" required></label>
+    <div style="overflow-x:auto;"><div id="inv-items" style="min-width:640px;"></div></div>
+    <button type="button" class="btn" id="inv-add" style="margin:4px 0 10px;">+ ${HL('आइटम जोड़ें','Add item')}</button>
+    <div id="inv-totals" class="note"></div>
+    <label>${HL('अभी मिला / दिया (₹)','Paid now (₹)')}<input name="paid" type="number" min="0" step="0.01" value="0"></label>
+    <label>${HL('तरीका','Method')}<select name="method"><option value="CASH">${HL('नकद','Cash')}</option><option value="BANK">${HL('बैंक','Bank')}</option></select></label>
+    <button class="btn primary" type="submit">${HL('बिल सेव करें','Save invoice')}</button></form>`);
+  m.querySelector('.modal').style.maxWidth='860px';
+  const form=m.querySelector('#inv-form'), box=m.querySelector('#inv-items');
+  const rowHtml=()=>`<div class="inv-row" style="display:grid;grid-template-columns:2.2fr .7fr 1fr 1fr .7fr auto;gap:6px;align-items:end;margin-bottom:8px;">
+    <label style="margin:0;">${HL('प्रोडक्ट','Product')}<select class="ir-prod">${prods.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.sku)}) · ${HL('स्टॉक','stock')} ${Number(p.stock_qty||0)}</option>`).join('')}</select></label>
+    <label style="margin:0;">${HL('मात्रा','Qty')}<input class="ir-qty" type="number" min="1" step="1" value="1"></label>
+    <label style="margin:0;">${HL('दर ₹','Rate ₹')}<input class="ir-rate" type="number" min="0" step="0.01"></label>
+    <label style="margin:0;">${HL('छूट ₹','Discount ₹')}<input class="ir-disc" type="number" min="0" step="0.01" value="0"></label>
+    <label style="margin:0;">GST %<input class="ir-gst" type="number" min="0" step="0.01"></label>
+    <button type="button" class="btn ir-del" title="${HL('हटाएँ','Remove')}">✕</button></div>`;
+  function fillFromProduct(row){
+    const p=prods.find(x=>x.id===row.querySelector('.ir-prod').value)||{};
+    row.querySelector('.ir-rate').value=(Number(sale?p.sale_price_paise:p.cost_price_paise||0)/100).toFixed(2);
+    const g=Number.isFinite(gstDefault)&&!Number(p.gst_bps)?gstDefault:Number(p.gst_bps||0)/100;
+    row.querySelector('.ir-gst').value=g;
+  }
+  function recalc(){
+    let sub=0,tax=0;
+    box.querySelectorAll('.inv-row').forEach(r=>{
+      const q=Number(r.querySelector('.ir-qty').value)||0, rate=Math.round((Number(r.querySelector('.ir-rate').value)||0)*100), disc=Math.round((Number(r.querySelector('.ir-disc').value)||0)*100), bps=Math.round((Number(r.querySelector('.ir-gst').value)||0)*100);
+      const taxable=Math.max(0,q*rate-disc); sub+=taxable; tax+=Math.floor((taxable*bps+5000)/10000);
+    });
+    m.querySelector('#inv-totals').textContent=`${HL('टैक्सेबल','Taxable')}: ${money(sub)}  |  GST (${HL('अनुमान','approx')}): ${money(tax)}  |  ${HL('कुल','Total')}: ${money(sub+tax)}  — ${HL('असली GST कंपनी के GST प्रकार के हिसाब से लगेगा','final GST depends on the company GST type')}`;
+  }
+  function addRow(){
+    box.insertAdjacentHTML('beforeend',rowHtml());
+    const row=box.lastElementChild;
+    fillFromProduct(row);
+    row.querySelector('.ir-prod').onchange=()=>{fillFromProduct(row);recalc();};
+    row.querySelectorAll('input').forEach(i=>i.oninput=recalc);
+    row.querySelector('.ir-del').onclick=()=>{if(box.children.length>1){row.remove();recalc();}};
+    recalc();
+  }
+  m.querySelector('#inv-add').onclick=addRow;
+  addRow();
+  form.onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(form);
+    const items=[...box.querySelectorAll('.inv-row')].map(r=>({
+      product_id:r.querySelector('.ir-prod').value,
+      qty:Number(r.querySelector('.ir-qty').value),
+      unit_paise:Math.round(Number(r.querySelector('.ir-rate').value||0)*100),
+      discount_paise:Math.round(Number(r.querySelector('.ir-disc').value||0)*100),
+      gst_bps:Math.round(Number(r.querySelector('.ir-gst').value||0)*100)
+    }));
+    if(items.some(i=>!Number.isInteger(i.qty)||i.qty<1)){toast(HL('मात्रा पूरी संख्या (1, 2, 3…) में डालें','Quantity must be a whole number (1, 2, 3…)'));return;}
+    const btn=form.querySelector('button[type=submit]'); btn.disabled=true;
+    try{
+      const res=await api(`/api/companies/${cid}/invoices`,{method:'POST',body:{kind,contact_id:fd.get('contact_id'),date:fd.get('date'),items,paid_paise:Math.round(Number(fd.get('paid')||0)*100),payment_method:fd.get('method'),idempotency_key:key}});
+      m.remove();
+      toast(HL('बिल बन गया: ','Invoice created: ')+res.number);
+      await invoices();
+      invoiceView(res.id);
+    }catch(err){toast(err.message);btn.disabled=false;}
+  };
+}
+
+function ymd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function newKey(){try{return crypto.randomUUID();}catch{return 'k'+Date.now()+Math.random().toString(16).slice(2);}}
+function HL(h,e){return state.lang==='hi'?h:e;}
+
+function invoiceHtml(inv,party,co,cfg){
+  const prof=cfg.profile||{}, ivc=cfg.invoice||{}, sale=inv.kind==='SALE';
+  const sum=k=>(inv.items||[]).reduce((s,x)=>s+Number(x[k]||0),0);
+  const paid=(inv.payments||[]).reduce((s,x)=>s+Number(x.amount_paise||0),0);
+  const out=Number(inv.total_paise||0)-paid;
+  const collects=['IGST','CGST_SGST'].includes(inv.tax_treatment);
+  const title=!sale?'PURCHASE BILL':collects?'TAX INVOICE':inv.tax_treatment==='BILL_OF_SUPPLY_COMPOSITION'?'BILL OF SUPPLY':'INVOICE';
+  const upi=(sale&&ivc.upi&&out>0)?`upi://pay?pa=${encodeURIComponent(ivc.upi)}&pn=${encodeURIComponent(co.name||'')}&am=${(out/100).toFixed(2)}&cu=INR&tn=${encodeURIComponent(inv.number)}`:'';
+  const qr=upi?qrSvg(upi,110):'';
+  const cell='border:1px solid #bbb;padding:6px 8px;font-size:13px;';
+  return `<div style="font-family:Arial,sans-serif;color:#111;">
+   <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+    <div>${prof.logo?`<img src="${esc(prof.logo)}" alt="" style="max-height:56px;margin-bottom:6px;"><br>`:''}<strong style="font-size:18px;">${esc(co.name||'')}</strong><br>${prof.address?esc(prof.address)+'<br>':''}${prof.phone?'Ph: '+esc(prof.phone)+'<br>':''}${co.gstin?'GSTIN: '+esc(co.gstin):''}</div>
+    <div style="text-align:right;"><strong style="font-size:16px;">${title}</strong><br>${esc(inv.number)}<br>${esc(inv.date)}</div>
+   </div>
+   <p style="margin:12px 0 8px;"><strong>${sale?'Bill to':'Supplier'}:</strong> ${esc(party.name||'')}${party.gstin?' · GSTIN: '+esc(party.gstin):''}${party.phone?' · '+esc(party.phone):''}</p>
+   <table style="border-collapse:collapse;width:100%;"><thead><tr style="background:#f2f2f2;">${['#','Item','Qty','Rate','Disc','Taxable','GST %','GST','Total'].map(h=>`<th style="${cell}text-align:left;">${h}</th>`).join('')}</tr></thead><tbody>
+   ${(inv.items||[]).map((it,i)=>`<tr><td style="${cell}">${i+1}</td><td style="${cell}">${esc(it.product_name)} <small>(${esc(it.sku)})</small></td><td style="${cell}">${Number(it.qty)}</td><td style="${cell}">${money(it.unit_paise)}</td><td style="${cell}">${money(it.discount_paise)}</td><td style="${cell}">${money(it.taxable_paise)}</td><td style="${cell}">${Number(it.gst_bps||0)/100}%</td><td style="${cell}">${money(Number(it.cgst_paise||0)+Number(it.sgst_paise||0)+Number(it.igst_paise||0))}</td><td style="${cell}">${money(it.total_paise)}</td></tr>`).join('')}
+   </tbody></table>
+   <div style="display:flex;justify-content:space-between;gap:16px;margin-top:12px;align-items:flex-start;">
+    <div style="font-size:12px;max-width:55%;">${qr?`<div>${qr}</div><div>UPI: ${esc(ivc.upi)}</div>`:''}${ivc.bank?`<p style="white-space:pre-wrap;"><strong>Bank:</strong><br>${esc(ivc.bank)}</p>`:''}${ivc.terms?`<p style="white-space:pre-wrap;"><strong>Terms:</strong><br>${esc(ivc.terms)}</p>`:''}${ivc.note?`<p style="white-space:pre-wrap;">${esc(ivc.note)}</p>`:''}</div>
+    <table style="border-collapse:collapse;font-size:13px;min-width:230px;">
+     <tr><td style="padding:3px 8px;">Taxable</td><td style="padding:3px 8px;text-align:right;">${money(inv.subtotal_paise)}</td></tr>
+     ${sum('cgst_paise')?`<tr><td style="padding:3px 8px;">CGST</td><td style="padding:3px 8px;text-align:right;">${money(sum('cgst_paise'))}</td></tr>`:''}
+     ${sum('sgst_paise')?`<tr><td style="padding:3px 8px;">SGST / UTGST</td><td style="padding:3px 8px;text-align:right;">${money(sum('sgst_paise'))}</td></tr>`:''}
+     ${sum('igst_paise')?`<tr><td style="padding:3px 8px;">IGST</td><td style="padding:3px 8px;text-align:right;">${money(sum('igst_paise'))}</td></tr>`:''}
+     <tr><td style="padding:3px 8px;"><strong>Total</strong></td><td style="padding:3px 8px;text-align:right;"><strong>${money(inv.total_paise)}</strong></td></tr>
+     <tr><td style="padding:3px 8px;">Paid</td><td style="padding:3px 8px;text-align:right;">${money(paid)}</td></tr>
+     <tr><td style="padding:3px 8px;">Balance</td><td style="padding:3px 8px;text-align:right;">${money(out)}</td></tr>
+    </table>
+   </div></div>`;
+}
+
+function printHtml(title,html){
+  const w=window.open('','_blank');
+  if(!w){toast(HL('पॉपअप ब्लॉक है, इजाज़त दें','Popup blocked: please allow popups'));return;}
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{margin:24px;background:#fff;}@media print{body{margin:8mm;}}</style></head><body>${html}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+async function invoiceView(id){
+  const cid=state.companyId;
+  try{
+    const [inv,cons]=await Promise.all([api(`/api/companies/${cid}/invoices/${id}`),api(`/api/companies/${cid}/contacts`)]);
+    const party=cons.find(c=>c.id===inv.contact_id)||{};
+    const co=state.companies.find(c=>c.id===cid)||{};
+    const html=invoiceHtml(inv,party,co,cfgGet());
+    const m=modal(esc(inv.number),`<div style="background:#fff;color:#111;border-radius:10px;padding:16px;max-height:62vh;overflow:auto;">${html}</div><div style="margin-top:12px;"><button class="btn primary" id="inv-print-btn">${HL('प्रिंट / PDF सेव','Print / Save PDF')}</button></div>`);
+    m.querySelector('.modal').style.maxWidth='900px';
+    m.querySelector('#inv-print-btn').onclick=()=>printHtml(inv.number,html);
+  }catch(err){toast(err.message);}
+}
+
+function paymentForm(id,outstanding){
+  const cid=state.companyId, key=newKey();
+  const m=modal(HL('पेमेंट दर्ज करें','Record payment'),`<form id="pf"><label>${HL('रकम (₹)','Amount (₹)')}<input name="amt" type="number" step="0.01" min="0.01" max="${outstanding/100}" value="${outstanding/100}" required></label><label>${HL('तरीका','Method')}<select name="method"><option value="CASH">${HL('नकद','Cash')}</option><option value="BANK">${HL('बैंक','Bank')}</option></select></label><label>${HL('तारीख','Date')}<input name="date" type="date" value="${ymd()}" required></label><button class="btn primary" type="submit">${HL('पेमेंट सेव करें','Save payment')}</button></form>`);
+  m.querySelector('#pf').onsubmit=async e=>{
+    e.preventDefault(); const fd=new FormData(e.currentTarget);
+    try{
+      await api(`/api/companies/${cid}/invoices/${id}/payments`,{method:'POST',body:{amount_paise:Math.round(Number(fd.get('amt'))*100),method:fd.get('method'),date:fd.get('date'),idempotency_key:key}});
+      m.remove(); toast(HL('पेमेंट दर्ज हो गया','Payment recorded')); invoices();
+    }catch(err){toast(err.message);}
+  };
 }
 
 (function splashAndIcon(){
@@ -1429,4 +1658,5 @@ function invoiceForm(kind){
   } catch {}
 })();
 
+applyLangDir();
 (async()=>{if(await refreshSession()) render(); else authView('login');})();
