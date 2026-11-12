@@ -149,13 +149,25 @@ function buildContext(db, companyId) {
   };
 }
 
-function systemPrompt(context, canDraft, fileState = 'none') {
+// Languages the app supports (English names). Anything else falls back to 'auto'.
+const APP_LANGS = new Set([
+  'Hindi', 'English', 'Bhojpuri', 'Urdu', 'Sanskrit', 'Punjabi', 'Bengali', 'Marathi', 'Gujarati',
+  'Tamil', 'Telugu', 'Nepali', 'Arabic', 'French', 'German', 'Spanish', 'Japanese', 'Chinese'
+]);
+const cleanLang = (v) => (APP_LANGS.has(String(v || '')) ? String(v) : '');
+
+function systemPrompt(context, canDraft, fileState = 'none', appLang = '') {
   return `You are the built-in assistant of "Apna Business", a simple accounting / ERP app for Indian shops and businesses.
 
-LANGUAGE: Reply in the same language and style the user writes in: Hindi (Devanagari) if they write Devanagari, Hinglish if they write Roman Hindi, English if they write English. Use short, simple words. No heavy accounting jargon. Be friendly and direct.
+LANGUAGE: Understand the user in ANY of these languages and reply in the SAME language and script the user wrote in: Hindi, English, Bhojpuri, Urdu, Sanskrit, Punjabi, Bengali, Marathi, Gujarati, Tamil, Telugu, Nepali, Arabic, French, German, Spanish, Japanese, Chinese. Roman-letter Hindi (Hinglish) gets a Hinglish reply. If the user mixes languages, reply in the language of their main sentence. ${
+    appLang
+      ? `If the message is too short or neutral to tell the language (for example only numbers or a product name), reply in ${appLang}, which is the language chosen in the app.`
+      : ''
+  } Keep the JSON keys and the entry "type" values in English exactly as specified; only the "reply" text is translated. Use short, simple words. No heavy accounting jargon. Be friendly and direct.
 
 WHAT YOU CAN DO
 1. Answer ANY question the user asks, like a helpful general assistant (business, GST basics, accounting, bills, general knowledge). Give a direct answer first.
+   CALCULATOR: you can do any arithmetic the user asks for (add, subtract, multiply, divide, percentages, GST add / remove, discount, profit margin, interest, EMI, unit conversion). Work it out carefully, double-check the result, and show the final number clearly with a one-line working.
 2. Answer questions about THIS business using only the BUSINESS DATA below. If the data does not contain the answer, say so clearly. Never invent numbers, customers, products or stock.
 3. Prepare an accounting entry DRAFT when the user clearly says they sold something, received money, spent money, or paid a supplier AND gives an amount. ${
     canDraft
@@ -462,7 +474,7 @@ export async function aiChat(db, companyId, userId, body = {}) {
     }
 
     const raw = await callGemini(
-      systemPrompt(context, canDraft, attachment.state) + customInstructionBlock(db, userId),
+      systemPrompt(context, canDraft, attachment.state, cleanLang(body.lang_name)) + customInstructionBlock(db, userId),
       contents
     );
     const parsed = parseModelJson(raw);
