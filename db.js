@@ -24,6 +24,7 @@ export function openDatabase() {
 function migrate(db) {
   resetMismatchedTables(db);
   fixOldJournalLines(db);
+  fixOldInvoiceTables(db);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -189,88 +190,90 @@ function migrate(db) {
 
     CREATE TABLE IF NOT EXISTS invoices (
       id TEXT PRIMARY KEY,
-      company_id TEXT NOT NULL,
+      company_id TEXT NOT NULL REFERENCES companies(id),
+      kind TEXT NOT NULL CHECK(kind IN ('SALE','PURCHASE')),
       number TEXT NOT NULL,
-      kind TEXT NOT NULL,
       date TEXT NOT NULL,
-      contact_id TEXT NOT NULL,
-      subtotal_paise INTEGER NOT NULL DEFAULT 0,
-      discount_paise INTEGER NOT NULL DEFAULT 0,
-      cgst_paise INTEGER NOT NULL DEFAULT 0,
-      sgst_paise INTEGER NOT NULL DEFAULT 0,
-      igst_paise INTEGER NOT NULL DEFAULT 0,
-      gst_paise INTEGER NOT NULL DEFAULT 0,
-      total_paise INTEGER NOT NULL DEFAULT 0,
-      paid_paise INTEGER NOT NULL DEFAULT 0,
-      outstanding_paise INTEGER NOT NULL DEFAULT 0,
-      journal_id TEXT,
-      created_by TEXT NOT NULL,
+      contact_id TEXT NOT NULL REFERENCES contacts(id),
+      party_state TEXT NOT NULL,
+      subtotal_paise INTEGER NOT NULL,
+      gst_paise INTEGER NOT NULL,
+      total_paise INTEGER NOT NULL,
+      voucher_id TEXT NOT NULL REFERENCES vouchers(id),
+      tax_treatment TEXT NOT NULL DEFAULT 'NON_GST',
       created_at TEXT NOT NULL,
-      FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
-      FOREIGN KEY(contact_id) REFERENCES contacts(id),
-      FOREIGN KEY(journal_id) REFERENCES journal_entries(id),
-      FOREIGN KEY(created_by) REFERENCES users(id)
+      UNIQUE(company_id, kind, number)
     );
 
     CREATE TABLE IF NOT EXISTS invoice_items (
       id TEXT PRIMARY KEY,
-      invoice_id TEXT NOT NULL,
-      product_id TEXT NOT NULL,
-      qty REAL NOT NULL,
-      unit_paise INTEGER NOT NULL,
+      invoice_id TEXT NOT NULL REFERENCES invoices(id),
+      product_id TEXT NOT NULL REFERENCES products(id),
+      qty INTEGER NOT NULL CHECK(qty>0),
+      unit_paise INTEGER NOT NULL CHECK(unit_paise>=0),
       discount_paise INTEGER NOT NULL DEFAULT 0,
-      taxable_paise INTEGER NOT NULL,
-      gst_bps INTEGER NOT NULL DEFAULT 0,
+      taxable_paise INTEGER NOT NULL CHECK(taxable_paise>=0),
+      gst_bps INTEGER NOT NULL,
       cgst_paise INTEGER NOT NULL DEFAULT 0,
       sgst_paise INTEGER NOT NULL DEFAULT 0,
       igst_paise INTEGER NOT NULL DEFAULT 0,
       total_paise INTEGER NOT NULL,
-      FOREIGN KEY(invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
-      FOREIGN KEY(product_id) REFERENCES products(id)
+      cogs_paise INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS stock_layers (
       id TEXT PRIMARY KEY,
-      company_id TEXT NOT NULL,
-      product_id TEXT NOT NULL,
-      invoice_id TEXT,
-      qty REAL NOT NULL,
-      qty_remaining REAL NOT NULL,
-      unit_cost_paise INTEGER NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
-      FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE,
-      FOREIGN KEY(invoice_id) REFERENCES invoices(id) ON DELETE SET NULL
+      company_id TEXT NOT NULL REFERENCES companies(id),
+      product_id TEXT NOT NULL REFERENCES products(id),
+      source_voucher_id TEXT NOT NULL REFERENCES vouchers(id),
+      qty_original INTEGER NOT NULL CHECK(qty_original>0),
+      qty_remaining INTEGER NOT NULL CHECK(qty_remaining>=0),
+      unit_cost_paise INTEGER NOT NULL CHECK(unit_cost_paise>=0),
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS stock_moves (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL REFERENCES companies(id),
+      product_id TEXT NOT NULL REFERENCES products(id),
+      voucher_id TEXT NOT NULL REFERENCES vouchers(id),
+      qty_signed INTEGER NOT NULL,
+      cost_paise INTEGER NOT NULL,
+      date TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      token_hash TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
-      company_id TEXT NOT NULL,
-      invoice_id TEXT NOT NULL,
+      company_id TEXT NOT NULL REFERENCES companies(id),
+      invoice_id TEXT NOT NULL REFERENCES invoices(id),
+      voucher_id TEXT NOT NULL REFERENCES vouchers(id),
+      amount_paise INTEGER NOT NULL CHECK(amount_paise>0),
+      method TEXT NOT NULL,
       date TEXT NOT NULL,
-      amount_paise INTEGER NOT NULL,
-      method TEXT,
-      voucher_id TEXT,
-      created_by TEXT,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
-      FOREIGN KEY(invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+      created_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS invoice_returns (
       id TEXT PRIMARY KEY,
-      company_id TEXT NOT NULL,
-      invoice_id TEXT NOT NULL,
-      number TEXT,
+      company_id TEXT NOT NULL REFERENCES companies(id),
+      invoice_id TEXT NOT NULL REFERENCES invoices(id),
+      kind TEXT NOT NULL,
+      number TEXT NOT NULL,
       date TEXT NOT NULL,
-      subtotal_paise INTEGER NOT NULL DEFAULT 0,
-      gst_paise INTEGER NOT NULL DEFAULT 0,
-      total_paise INTEGER NOT NULL DEFAULT 0,
-      voucher_id TEXT,
+      subtotal_paise INTEGER NOT NULL,
+      gst_paise INTEGER NOT NULL,
+      total_paise INTEGER NOT NULL,
+      voucher_id TEXT NOT NULL REFERENCES vouchers(id),
       created_by TEXT,
       created_at TEXT NOT NULL,
-      FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
-      FOREIGN KEY(invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+      UNIQUE(company_id, number)
     );
 
     CREATE TABLE IF NOT EXISTS returns (
@@ -467,6 +470,28 @@ function fixOldJournalLines(db) {
   db.exec('PRAGMA foreign_keys = OFF;');
   db.exec('DROP TABLE IF EXISTS journal_lines');
   db.exec('PRAGMA foreign_keys = ON;');
+}
+
+
+// Purane (galat shape wale) invoice tables ko naye sahi shape se badalta hai.
+// Sirf tab, jab in sab tables mein ek bhi record nahi hai. Agar data hai to kuch nahi badalta.
+function fixOldInvoiceTables(db) {
+  const has = (t) => db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(t);
+  if (!has('invoices')) return;
+  const cols = db.prepare('PRAGMA table_info(invoices)').all().map((c) => c.name);
+  if (cols.includes('party_state') && cols.includes('voucher_id') && cols.includes('tax_treatment')) return;
+
+  const tables = ['invoice_items', 'payments', 'invoice_returns', 'stock_layers', 'invoices'];
+  let rows = 0;
+  for (const t of tables) if (has(t)) rows += db.prepare(`SELECT COUNT(*) n FROM ${t}`).get().n;
+  if (rows > 0) {
+    console.warn('[db] Invoice tables have the old shape AND contain data, so they were NOT changed. A manual migration is needed.');
+    return;
+  }
+  db.exec('PRAGMA foreign_keys = OFF;');
+  for (const t of tables) db.exec(`DROP TABLE IF EXISTS ${t}`);
+  db.exec('PRAGMA foreign_keys = ON;');
+  console.log('[db] Old invoice tables (empty) were replaced with the correct shape.');
 }
 
 function resetMismatchedTables(db) {
