@@ -1172,16 +1172,16 @@ function renderChatGPTStyleLayout(c) {
       mainAreaContent = `<div id="work-box" style="padding:30px 24px; max-width:800px; width:100%; height:100%; overflow-y:auto; box-sizing:border-box;">…</div>`;
     } else {
       mainAreaContent = `
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
-          <div class="hero-el" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:56px;">
-          <h1 style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
+        <div class="ai-home" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; width:100%; height:100%; box-sizing:border-box; text-align:center;">
+          <div class="hero-el ai-hero" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:56px;">
+          <h1 class="ai-title" style="font-size:42px; margin-bottom:8px; font-weight:600; letter-spacing:-0.5px;">How can I help you?</h1>
           <p style="color:var(--muted); margin-bottom:28px; font-size:16px;">${state.lang==='hi'?'अपने बिजनेस का काम आसान भाषा में पूछें।':'Ask about your business in simple language.'}</p>
           </div>
           
-          <div id="chat-log" style="width:100%; max-width:820px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
+          <div id="chat-log" class="ai-log" style="width:100%; max-width:820px; margin-bottom:16px; flex:1; min-height:0; max-height:62vh; overflow-y:auto;"></div>
 
-          <div id="composer" style="width:100%; max-width:820px; margin-bottom:7vh;">
-          <div style="width:100%; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:36px; padding:26px 30px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
+          <div id="composer" class="ai-composer" style="width:100%; max-width:820px; margin-bottom:7vh;">
+          <div class="ai-form" style="width:100%; position:relative; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:36px; padding:26px 30px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 14px rgba(0,0,0,0.35);">
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
@@ -1192,7 +1192,7 @@ function renderChatGPTStyleLayout(c) {
             <button type="button" id="chat-send" style="background:var(--text); color:var(--bg); border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Send">➤</button>
           </div>
 
-          <div class="hero-el" style="width:100%; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
+          <div class="hero-el ai-suggest" style="width:100%; margin-top:14px; display:flex; flex-direction:column; align-items:flex-start;">
             ${(state.lang==='hi'
               ? ['आज की बिक्री बताओ','नया बिल बनाओ','कम स्टॉक वाला सामान दिखाओ','किस ग्राहक का पैसा बाकी है?']
               : ["Show today's sales",'Create a new invoice','Show low-stock items','Which customers owe me money?']
@@ -1245,10 +1245,10 @@ function renderChatGPTStyleLayout(c) {
   const iconBtn = 'background:none; border:none; color:var(--text); border-radius:8px; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none;';
 
   $('app').innerHTML = `
-    <div style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
-      
+    <div class="ai-shell" style="display:flex; height:100vh; width:100vw; background:var(--bg); overflow:hidden; position:fixed; top:0; left:0; margin:0; padding:0; box-sizing:border-box;">
+      ${open?'<div class="ai-backdrop" id="ai-backdrop"></div>':''}
       <!-- Left Fixed Sidebar -->
-      <div style="${open?'':'display:none; '}width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
+      <div class="ai-side ${open?'is-open':'is-closed'}" style="${open?'':'display:none; '}width:${open?260:56}px; min-width:${open?260:56}px; border-right:1px solid var(--border); padding:${open?'16px 12px':'12px 6px'}; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.4); height:100vh; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; justify-content:${open?'flex-start':'center'};">
           ${open?`<button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn} margin-left:auto;">${sbIcon}</button>`:''}
         </div>
@@ -1277,20 +1277,20 @@ function renderChatGPTStyleLayout(c) {
       </div>
 
       <!-- Right Main Workspace Area -->
-      <div style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
-        <header style="padding:10px 16px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; box-sizing:border-box; gap:8px;">
+      <div class="ai-main" style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); height:100vh;">
+        <header class="ai-header" style="padding:10px 16px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:100%; box-sizing:border-box; gap:8px;">
           <div style="display:flex; align-items:center; gap:6px; min-width:0;">
             ${open?'':`<button id="sidebar-toggle" title="Toggle sidebar" style="${iconBtn}">${sbIcon}</button>`}
             <button id="ai-back" title="Back" style="${iconBtn}${state.embed?' display:none;':''}">${backIcon}</button>
             <span style="font-size:14px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:4px;">${c?esc(c.name):''}</span>
           </div>
-          <div style="display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:5px;">
+          <div class="ai-toggle" style="display:flex; background:rgba(255,255,255,0.08); border-radius:999px; padding:5px;">
             <button id="mode-chat" style="border:none; cursor:pointer; padding:11px 38px; border-radius:999px; font-size:16px; font-weight:600; background:${state.aiMode!=='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Chat</button>
             <button id="mode-work" style="border:none; cursor:pointer; padding:11px 38px; border-radius:999px; font-size:16px; font-weight:600; background:${state.aiMode==='task'?'rgba(255,255,255,0.18)':'transparent'}; color:var(--text);">Work</button>
           </div>
           <div></div>
         </header>
-        <div style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box; justify-content:center; align-items:center;">
+        <div class="ai-body" style="flex:1; display:flex; flex-direction:column; width:100%; height:calc(100vh - 53px); overflow:hidden; box-sizing:border-box; justify-content:center; align-items:center;">
           ${mainAreaContent}
         </div>
       </div>
@@ -1310,6 +1310,10 @@ function renderChatGPTStyleLayout(c) {
     else { if (state.embed) { closeEmbed(); return; } state.page = 'dashboard'; render(); }
   };
   $('sidebar-toggle').onclick = () => { state.sidebarOpen = !state.sidebarOpen; renderChatGPTStyleLayout(c); };
+  const _bk = $('ai-backdrop'); if (_bk) _bk.onclick = () => { state.sidebarOpen = false; renderChatGPTStyleLayout(c); };
+  if (window.innerWidth <= 820) {
+    document.querySelectorAll('.ai-side button[id^="ai-nav-"], #new-chat-btn').forEach(b => b.addEventListener('click', () => { state.sidebarOpen = false; }, true));
+  }
   $('mode-chat').onclick = () => { state.aiMode = 'chat'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
   $('mode-work').onclick = () => { state.aiMode = 'task'; state.aiSection = 'home'; renderChatGPTStyleLayout(c); };
 
