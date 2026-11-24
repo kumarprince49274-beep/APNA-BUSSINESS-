@@ -65,7 +65,11 @@ async function transcribeAudio(userId, body = {}) {
     }),
     signal: AbortSignal.timeout(25000)
   });
-  if (!res.ok) fail('Voice service is busy, please try again', 502);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    console.error('[voice] Gemini error', res.status, VT_MODEL, detail.slice(0, 300));
+    fail(`Voice service error (code ${res.status}). Check GEMINI_API_KEY / model on Render.`, 502);
+  }
   const data = await res.json();
   const parts = data?.candidates?.[0]?.content?.parts || [];
   const text = parts.map((p) => p.text || '').join('').trim().slice(0, 1500);
