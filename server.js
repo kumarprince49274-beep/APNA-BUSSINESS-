@@ -990,6 +990,7 @@ export function createServer(
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Permissions-Policy', 'microphone=(self), camera=(self)');
 
     res.setHeader(
       'Content-Security-Policy',
