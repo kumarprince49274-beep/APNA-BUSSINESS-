@@ -15,7 +15,7 @@ const state = {
   sidebarOpen: window.innerWidth > 820, 
   threads: [], threadId: null, threadsCompany: null, threadSearch: '', 
   aiSection: 'home', 
-  lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
+  lang: (() => { try { return localStorage.getItem('apna_lang') || (window.innerWidth <= 820 ? 'en' : 'hi'); } catch { return window.innerWidth <= 820 ? 'en' : 'hi'; } })(), 
   theme: (() => { try { return localStorage.getItem('apna_theme') || 'dark'; } catch { return 'dark'; } })() 
 };
 // --- Side-by-side AI panel: ERP ke saath chat ek iframe mein khulti hai ---
@@ -1192,7 +1192,7 @@ function renderChatGPTStyleLayout(c) {
             <input type="file" id="chat-photo" accept="image/*" style="display:none;">
             <input type="file" id="chat-document" accept=".pdf,.doc,.docx,.txt" style="display:none;">
             <button type="button" id="chat-plus" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:18px;" title="Attach">+</button>
-            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?'अपने बिज़नेस के बारे में पूछें…':'Ask anything about your business'}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:18px; max-height:140px;"></textarea>
+            <textarea id="chat-input" rows="1" maxlength="1500" placeholder="${state.lang==='hi'?(window.innerWidth<=820?'कुछ भी पूछें…':'अपने बिज़नेस के बारे में पूछें…'):(window.innerWidth<=820?'Ask anything':'Ask anything about your business')}" style="flex:1; background:none; border:none; color:var(--text); resize:none; outline:none; font-size:18px; max-height:140px;"></textarea>
             <button type="button" id="chat-mic" style="background:none; border:none; color:var(--text); cursor:pointer; font-size:20px;" title="Voice input">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
             </button>
