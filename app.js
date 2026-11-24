@@ -84,6 +84,7 @@ function setAiPanel(open){
       panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;z-index:50;background:var(--bg);clip-path:inset(0 100% 0 0);transition:clip-path .28s ease;';
       const f = document.createElement('iframe');
       f.title = 'AI Accountant';
+      f.setAttribute('allow', 'microphone; clipboard-write');
       f.src = '/?embed=chat&company=' + encodeURIComponent(state.companyId || '');
       f.style.cssText = 'width:100%;height:100%;border:0;display:block;';
       panel.appendChild(f);
@@ -932,43 +933,59 @@ async function decideDraft(msg,act){
 }
 
 function startVoice(input){
+  const hi = state.lang==='hi';
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){
-    toast('Mic is browser mein support nahi karta. Chrome try karo.');
+    toast(hi?'इस ब्राउज़र में माइक काम नहीं करता। Chrome में खोलें।':'Mic is not supported in this browser. Please open in Chrome.');
     return;
   }
   if(listening){
-    recognition?.stop();
+    try{ recognition?.stop(); }catch{}
     return;
   }
-  recognition=new SpeechRecognition();
-  recognition.lang = langMeta()[3];
-  recognition.interimResults=true;
-  recognition.continuous=false;
+  const mic=$('chat-mic');
+  const stopUi=()=>{ listening=false; mic?.classList.remove('listening'); };
+  let base=input.value ? input.value.replace(/\s+$/,'')+' ' : '';
+  let gotText=false;
+  try{
+    recognition=new SpeechRecognition();
+    recognition.lang = langMeta()[3];
+    recognition.interimResults=true;
+    recognition.continuous=false;
+    recognition.maxAlternatives=1;
+  }catch{
+    toast(hi?'माइक शुरू नहीं हो सका।':'Could not start the mic.');
+    return;
+  }
   recognition.onstart=()=>{
     listening=true;
-    $('chat-mic')?.classList.add('listening');
-    toast('Boliye…');
+    mic?.classList.add('listening');
+    toast(hi?'बोलिए…':'Listening…');
   };
   recognition.onresult=e=>{
     let text='';
     for(let i=0;i<e.results.length;i++){
       text+=e.results[i][0].transcript;
     }
-    input.value=text;
+    if(text) gotText=true;
+    input.value=base+text;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
   };
   recognition.onerror=e=>{
-    listening=false;
-    $('chat-mic')?.classList.remove('listening');
-    if(e.error==='not-allowed') toast('Mic permission Allow karo');
-    else if(e.error==='no-speech') toast('Awaaz sunai nahi di');
-    else toast('Mic error: '+e.error);
+    stopUi();
+    const err=e.error;
+    if(err==='not-allowed'||err==='service-not-allowed') toast(hi?'माइक की अनुमति दें: ब्राउज़र की सेटिंग में Microphone → Allow':'Please allow Microphone permission in your browser settings.');
+    else if(err==='no-speech') toast(hi?'आवाज़ सुनाई नहीं दी, फिर कोशिश करें':'Could not hear you, please try again.');
+    else if(err==='audio-capture') toast(hi?'माइक नहीं मिला':'No microphone found.');
+    else if(err==='network') toast(hi?'वॉइस के लिए इंटरनेट चाहिए':'Internet is needed for voice input.');
+    else if(err!=='aborted') toast((hi?'माइक में दिक्कत: ':'Mic error: ')+err);
   };
   recognition.onend=()=>{
-    listening=false;
-    $('chat-mic')?.classList.remove('listening');
+    stopUi();
+    if(gotText) input.focus();
   };
-  recognition.start();
+  try{ recognition.start(); }
+  catch{ stopUi(); toast(hi?'माइक शुरू नहीं हो सका, फिर कोशिश करें।':'Could not start the mic, please try again.'); }
 }
 
 
