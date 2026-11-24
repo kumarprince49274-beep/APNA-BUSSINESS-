@@ -21,8 +21,57 @@ import { createDraft, listDrafts, approveDraft, rejectDraft } from './drafts.js'
 import { saveDocument, listDocuments, getDocument, deleteDocument } from './documents.js';
 import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chats.js';
 import { requestPasswordReset, resetPassword } from './password-reset.js';
-import { transcribeAudio } from './transcribe.js';
 import { sendResetEmail, hasResetEmailProvider } from './email-service.js';
+
+// ---- Voice -> text (Brave / in-app browser fallback), isi file me taaki alag file na chahiye ----
+// Voice -> text fallback (Brave / in-app browsers jaha browser ka mic kaam nahi karta).
+// Audio sirf transcribe hone ke liye Gemini ko jaata hai, kahin save nahi hota.
+const VT_MODEL = process.env.GEMINI_TRANSCRIBE_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const VT_ALLOWED = /^audio\/(webm|ogg|mp4|mpeg|mp3|wav|x-wav|aac|x-m4a|m4a)(;.*)?$/i;
+const VT_MAX_B64 = 700 * 1024;          // ~500 KB audio, about 45-60 sec
+const vtHits = new Map();
+
+function vtCheckRate(userId) {
+  const now = Date.now();
+  const list = (vtHits.get(userId) || []).filter((t) => now - t < 60000);
+  if (list.length >= 12) fail('Too many voice requests, wait a minute', 429);
+  list.push(now);
+  vtHits.set(userId, list);
+}
+
+async function transcribeAudio(userId, body = {}) {
+  vtCheckRate(userId);
+  if (!process.env.GEMINI_API_KEY) fail('Voice input is not set up on the server yet', 503);
+
+  const mime = String(body.mime || '').slice(0, 60);
+  const audio = String(body.audio || '');
+  if (!VT_ALLOWED.test(mime)) fail('Unsupported audio format');
+  if (!audio || audio.length > VT_MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(audio)) fail('Audio is empty or too long');
+
+  const langName = String(body.language || 'the spoken language').replace(/[^\p{L}\p{N} ()\-]/gu, '').slice(0, 40);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(VT_MODEL)}:generateContent`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+    body: JSON.stringify({
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: `Transcribe this short voice message exactly as spoken (language: ${langName}). Use the natural script of that language. Return ONLY the transcript text, nothing else. If there is no speech, return an empty string.` },
+          { inline_data: { mime_type: mime.split(';')[0], data: audio } }
+        ]
+      }],
+      generationConfig: { temperature: 0, maxOutputTokens: 600 }
+    }),
+    signal: AbortSignal.timeout(25000)
+  });
+  if (!res.ok) fail('Voice service is busy, please try again', 502);
+  const data = await res.json();
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const text = parts.map((p) => p.text || '').join('').trim().slice(0, 1500);
+  return { text };
+}
+
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
