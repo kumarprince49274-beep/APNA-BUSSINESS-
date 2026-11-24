@@ -21,6 +21,7 @@ import { createDraft, listDrafts, approveDraft, rejectDraft } from './drafts.js'
 import { saveDocument, listDocuments, getDocument, deleteDocument } from './documents.js';
 import { listThreads, createThread, getThread, renameThread, deleteThread, addMessages, getPrefs, setPrefs } from './chats.js';
 import { requestPasswordReset, resetPassword } from './password-reset.js';
+import { transcribeAudio } from './transcribe.js';
 import { sendResetEmail, hasResetEmailProvider } from './email-service.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -845,6 +846,10 @@ export function createServer(
 
   add('POST', '/api/companies/:companyId/chat', 'read', ({ params, body, session }) =>
     aiChat(db, params.companyId, session.user.id, body)
+  );
+
+  add('POST', '/api/companies/:companyId/transcribe', 'read', ({ body, session }) =>
+    transcribeAudio(session.user.id, body)
   );
 
   add('GET', '/api/companies/:companyId/chats', 'read', ({ params, session }) =>
