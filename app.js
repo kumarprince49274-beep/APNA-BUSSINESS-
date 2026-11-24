@@ -12,7 +12,7 @@ const state = {
   chats: {}, 
   chatBusy: false, 
   aiMode: 'chat', 
-  sidebarOpen: window.innerWidth > 800, 
+  sidebarOpen: window.innerWidth > 820, 
   threads: [], threadId: null, threadsCompany: null, threadSearch: '', 
   aiSection: 'home', 
   lang: (() => { try { return localStorage.getItem('apna_lang') || 'hi'; } catch { return 'hi'; } })(), 
@@ -66,7 +66,7 @@ window.addEventListener('storage', e => {
 applyFont();
 function closeEmbed(){ try { parent.postMessage({ type: 'apna-close-ai' }, location.origin); } catch {} }
 function aiPanelLeft(){
-  if (window.innerWidth <= 800) return 0;
+  if (window.innerWidth <= 820) return 0;
   const sb = document.querySelector('.workspace .sidebar');
   return sb ? Math.round(sb.getBoundingClientRect().width) : 270;
 }
@@ -653,7 +653,7 @@ function layout(){
   const userEmail = state.user?.email || 'kumarprince49274@gmail.com';
   const userInitial = userName[0].toUpperCase();
 
-  $('app').innerHTML=`<div class="workspace"><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>${t('brandSub')}</small></div></div>
+  $('app').innerHTML=`<div class="workspace"><header class="m-bar"><button class="m-ico" id="m-menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button><div class="m-title" translate="no">APNA BUSINESS</div><button class="m-ico" id="m-ai" aria-label="AI Accountant"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button></header><div class="m-backdrop" id="m-backdrop"></div><aside class="sidebar"><div class="brand" translate="no"><div class="logo small-logo">${PULSE_ICON(22)}</div><div><strong translate="no">APNA BUSINESS</strong><small>${t('brandSub')}</small></div></div>
   
   <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
     <button class="btn primary full" id="top-create-company" style="font-size:13px;padding:8px;">${t('createCompanyBtn')}</button>
@@ -704,6 +704,13 @@ function layout(){
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{if(b.dataset.page==='chat'){setAiPanel(true);return;}if(b.dataset.page==='settings'){openSettingsModal('profile');return;}if(state.aiPanel)setAiPanel(false);state.page=b.dataset.page;renderPage();});
   
   $('ai-panel-toggle')?.addEventListener('click', () => setAiPanel(!state.aiPanel));
+  // Mobile: sidebar drawer (desktop par ye sab hidden rehta hai)
+  const _ws = document.querySelector('.workspace');
+  const setNav = o => _ws && _ws.classList.toggle('nav-open', o);
+  $('m-menu')?.addEventListener('click', () => setNav(!_ws.classList.contains('nav-open')));
+  $('m-backdrop')?.addEventListener('click', () => setNav(false));
+  $('m-ai')?.addEventListener('click', () => { setNav(false); setAiPanel(true); });
+  document.querySelectorAll('.sidebar [data-page], #top-create-company, #top-alter-company, #sidebar-user-profile').forEach(b => b.addEventListener('click', () => setNav(false)));
   if (state.aiPanelPending) { state.aiPanelPending = false; setAiPanel(true); }
   $('top-create-company')?.addEventListener('click', createCompanyForm);
   $('top-alter-company')?.addEventListener('click', () => { openSettingsModal('profile'); });
