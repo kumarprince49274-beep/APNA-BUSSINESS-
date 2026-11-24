@@ -1,3 +1,4 @@
+
 import crypto from 'node:crypto';
 import {one,run,transaction} from './db.js';
 import {now,fail} from './utils.js';
@@ -5,7 +6,7 @@ import {now,fail} from './utils.js';
 const sha256 = value=>crypto.createHash('sha256').update(value).digest('hex');
 const generic = {message:'If that email is registered, a reset link will be sent.'};
 function newHash(password){
- if(typeof password!=='string'||password.length<12||password.length>256)fail('Password must be 12–256 characters');
+ if(typeof password!=='string'||password.length<6||password.length>256)fail('Password must be 6–256 characters');
  const salt=crypto.randomBytes(24).toString('hex');
  return `${salt}:${crypto.scryptSync(password,salt,64).toString('hex')}`;
 }
