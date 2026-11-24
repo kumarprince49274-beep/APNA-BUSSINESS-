@@ -975,14 +975,59 @@ async function decideDraft(msg,act){
   finally{state.chatBusy=false;if(state.page==='chat'&&state.companyId===cid)renderChatLog();}
 }
 
-function startVoice(input){
+// Server-side voice (Brave / in-app browser / iPhone): audio record karke server se text banwata hai
+let recorder=null, recStream=null, recTimer=null;
+async function recordVoice(input){
   const hi = state.lang==='hi';
-  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SpeechRecognition){
+  const mic=$('chat-mic');
+  const stopUi=()=>{ listening=false; mic?.classList.remove('listening'); };
+  if(listening){ try{ recorder?.stop(); }catch{} return; }
+  if(!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder==='undefined'){
     toast(hi?'इस ब्राउज़र में माइक काम नहीं करता। Chrome में खोलें।':'Mic is not supported in this browser. Please open in Chrome.');
     return;
   }
+  try{
+    recStream=await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(err){
+    toast(err&&err.name==='NotFoundError'
+      ?(hi?'माइक नहीं मिला':'No microphone found.')
+      :(hi?'माइक की अनुमति दें: ब्राउज़र की सेटिंग में Microphone → Allow':'Please allow Microphone permission in your browser settings.'));
+    return;
+  }
+  const types=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+  const mimeType=types.find(t=>MediaRecorder.isTypeSupported?.(t))||'';
+  const chunks=[];
+  const base=input.value ? input.value.replace(/\s+$/,'')+' ' : '';
+  try{ recorder=new MediaRecorder(recStream, mimeType?{mimeType}:undefined); }
+  catch{ recStream.getTracks().forEach(t=>t.stop()); toast(hi?'माइक शुरू नहीं हो सका।':'Could not start the mic.'); return; }
+  recorder.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+  recorder.onstop=async()=>{
+    clearTimeout(recTimer);
+    recStream?.getTracks().forEach(t=>t.stop());
+    stopUi();
+    const blob=new Blob(chunks,{type:recorder.mimeType||mimeType||'audio/webm'});
+    if(blob.size<1500){ toast(hi?'आवाज़ सुनाई नहीं दी, फिर कोशिश करें':'Could not hear you, please try again.'); return; }
+    toast(hi?'लिख रहा हूँ…':'Converting to text…');
+    try{
+      const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]||''); r.onerror=rej; r.readAsDataURL(blob); });
+      const r=await api(`/api/companies/${state.companyId}/transcribe`,{method:'POST',body:{audio:b64,mime:blob.type,language:langMeta()[4]}});
+      if(r&&r.text){ input.value=base+r.text; input.dispatchEvent(new Event('input',{bubbles:true})); input.focus(); }
+      else toast(hi?'आवाज़ सुनाई नहीं दी, फिर कोशिश करें':'Could not hear you, please try again.');
+    }catch(err){ toast(err.message); }
+  };
+  recorder.start();
+  listening=true; mic?.classList.add('listening');
+  toast(hi?'बोलिए… पूरा होने पर माइक दोबारा दबाएँ':'Listening… tap the mic again when done');
+  recTimer=setTimeout(()=>{ try{ recorder.stop(); }catch{} },45000);
+}
+
+function startVoice(input){
+  const hi = state.lang==='hi';
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  // Brave me Google ka voice service band hota hai -> seedha server wala tareeka
+  if(!SpeechRecognition || navigator.brave){ recordVoice(input); return; }
   if(listening){
+    if(recorder && recorder.state==='recording'){ try{ recorder.stop(); }catch{} return; }
     try{ recognition?.stop(); }catch{}
     return;
   }
@@ -997,7 +1042,7 @@ function startVoice(input){
     recognition.continuous=false;
     recognition.maxAlternatives=1;
   }catch{
-    toast(hi?'माइक शुरू नहीं हो सका।':'Could not start the mic.');
+    recordVoice(input);
     return;
   }
   recognition.onstart=()=>{
@@ -1017,18 +1062,18 @@ function startVoice(input){
   recognition.onerror=e=>{
     stopUi();
     const err=e.error;
-    if(err==='not-allowed'||err==='service-not-allowed') toast(hi?'माइक की अनुमति दें: ब्राउज़र की सेटिंग में Microphone → Allow':'Please allow Microphone permission in your browser settings.');
+    if(err==='not-allowed') toast(hi?'माइक की अनुमति दें: ब्राउज़र की सेटिंग में Microphone → Allow':'Please allow Microphone permission in your browser settings.');
     else if(err==='no-speech') toast(hi?'आवाज़ सुनाई नहीं दी, फिर कोशिश करें':'Could not hear you, please try again.');
     else if(err==='audio-capture') toast(hi?'माइक नहीं मिला':'No microphone found.');
-    else if(err==='network') toast(hi?'वॉइस के लिए इंटरनेट चाहिए':'Internet is needed for voice input.');
+    else if(err==='network'||err==='service-not-allowed') recordVoice(input);
     else if(err!=='aborted') toast((hi?'माइक में दिक्कत: ':'Mic error: ')+err);
   };
   recognition.onend=()=>{
-    stopUi();
+    if(!recorder||recorder.state!=='recording') stopUi();
     if(gotText) input.focus();
   };
   try{ recognition.start(); }
-  catch{ stopUi(); toast(hi?'माइक शुरू नहीं हो सका, फिर कोशिश करें।':'Could not start the mic, please try again.'); }
+  catch{ stopUi(); recordVoice(input); }
 }
 
 
