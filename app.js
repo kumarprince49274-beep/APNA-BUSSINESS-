@@ -259,6 +259,7 @@ function authView(mode='login'){
     <form id="auth-form"><div id="name-wrap" class="${mode==='register'?'':'hidden'}"><label>${state.lang==='hi'?'नाम':'Name'}<input name="name" placeholder="${state.lang==='hi'?'आपका नाम':'Your name'}"></label></div>
     <label>${state.lang==='hi'?'ईमेल':'Email'}<input name="email" type="email" required placeholder="you@example.com"></label>
     <label>${state.lang==='hi'?'पासवर्ड':'Password'}<input name="password" type="password" required minlength="6" placeholder="${state.lang==='hi'?'कम से कम 6 अक्षर':'At least 6 characters'}"></label>
+    ${mode==='login'?`<div style="text-align:right;margin:-6px 0 14px;"><a href="#" id="forgot-link" style="color:var(--muted);font-size:13px;font-weight:600;text-decoration:underline;padding:6px 0;display:inline-block;">${state.lang==='hi'?'पासवर्ड भूल गए?':'Forget password?'}</a></div>`:''}
     <button class="btn primary full" type="submit">${mode==='login'?(state.lang==='hi'?'लॉगिन':'Login'):(state.lang==='hi'?'अकाउंट बनाएं':'Create account')}</button>
     
     <div style="display:flex;align-items:center;justify-content:center;margin:18px auto;width:100%;color:var(--muted);font-size:13px;">
@@ -277,6 +278,7 @@ function authView(mode='login'){
   
   $('login-tab').onclick=()=>authView('login');
   $('register-tab').onclick=()=>authView('register');
+  $('forgot-link')?.addEventListener('click',e=>{e.preventDefault();recoveryView('forgot');});
   
   $('google-login-btn').onclick=() => {
     toast(state.lang==='hi'?'Google Sign-In ke liye Google API credentials required hain.':'Google Sign-In requires OAuth client setup.');
@@ -306,6 +308,47 @@ function authView(mode='login'){
     }catch(err){
       $('auth-error').textContent=err.message;
     }
+  };
+}
+
+function recoveryView(mode){
+  removeAiPanel();
+  const hi=state.lang==='hi';
+  const isReset=mode==='reset';
+  const token=isReset?decodeURIComponent((location.hash.match(/^#reset=(.+)$/)||[])[1]||''):'';
+  $('app').innerHTML=`<main class="auth-shell"><section class="auth-card" translate="no">
+    <div class="logo">${PULSE_ICON(26)}</div><h1 translate="no">APNA BUSINESS</h1>
+    <p class="muted">${isReset?(hi?'अपना नया पासवर्ड डालें।':'Enter your new password.'):(hi?'अपना ईमेल डालें, हम पासवर्ड रीसेट का लिंक भेजेंगे।':'Enter your email and we will send you a password reset link.')}</p>
+    <form id="rec-form">
+      ${isReset
+        ?`<label>${hi?'नया पासवर्ड':'New password'}<input name="pw" type="password" required minlength="6" autocomplete="new-password" placeholder="${hi?'कम से कम 6 अक्षर':'At least 6 characters'}"></label>
+          <label>${hi?'पासवर्ड दोबारा लिखें':'Confirm password'}<input name="pw2" type="password" required minlength="6" autocomplete="new-password"></label>`
+        :`<label>${hi?'ईमेल':'Email'}<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>`}
+      <button class="btn primary full" type="submit" id="rec-btn">${isReset?(hi?'पासवर्ड बदलें':'Change password'):(hi?'रीसेट लिंक भेजें':'Send reset link')}</button>
+      <div id="rec-msg" class="error" style="min-height:20px;"></div>
+      <button type="button" class="btn full" id="rec-back" style="margin-top:6px;">${hi?'← लॉगिन पर वापस':'← Back to login'}</button>
+    </form>
+  </section></main>`;
+  const msg=$('rec-msg'), btn=$('rec-btn');
+  $('rec-back').onclick=()=>{ if(location.hash.startsWith('#reset=')) history.replaceState(null,'',location.pathname+location.search); authView('login'); };
+  $('rec-form').onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(e.currentTarget);
+    msg.style.color='var(--danger)'; msg.textContent=''; btn.disabled=true;
+    try{
+      if(isReset){
+        if(fd.get('pw')!==fd.get('pw2')){ msg.textContent=hi?'दोनों पासवर्ड एक जैसे नहीं हैं':'Passwords do not match'; return; }
+        await api('/api/auth/reset-password',{method:'POST',body:{token,new_password:fd.get('pw')}});
+        history.replaceState(null,'',location.pathname+location.search);
+        authView('login');
+        toast(hi?'पासवर्ड बदल गया। अब लॉगिन करें।':'Password changed. Please log in.');
+      }else{
+        await api('/api/auth/forgot-password',{method:'POST',body:{email:String(fd.get('email')||'').trim()}});
+        msg.style.color='var(--primary)';
+        msg.textContent=hi?'अगर यह ईमेल रजिस्टर्ड है तो रीसेट लिंक भेज दिया गया है। इनबॉक्स (और स्पैम) देखें। लिंक 20 मिनट चलेगा।':'If this email is registered, a reset link has been sent. Check your inbox (and spam). The link works for 20 minutes.';
+      }
+    }catch(err){ msg.textContent=err.message; }
+    finally{ btn.disabled=false; }
   };
 }
 
@@ -1687,4 +1730,4 @@ function paymentForm(id,outstanding){
 })();
 
 applyLangDir();
-(async()=>{if(await refreshSession()) render(); else authView('login');})();
+(async()=>{if(/^#reset=[a-f0-9]{64}$/i.test(location.hash)){recoveryView('reset');return;} if(await refreshSession()) render(); else authView('login');})();
